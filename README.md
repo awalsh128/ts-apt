@@ -1,5 +1,9 @@
 # ts-apt
 
+[![License: Apache2](https://shields.io/badge/license-apache2-blue.svg)](https://github.com/awalsh128/ts-apt/blob/master/LICENSE)
+[![Master Test status](https://github.com/awalsh128/ts-apt/actions/workflows/master_test.yml/badge.svg)](https://github.com/awalsh128/cache-apt-pkgs-action-ci/actions/workflows/master_test.yml)
+[![Dev Test status](https://github.com/awalsh128/cache-apt-pkgs-action-ci/actions/workflows/dev_test.yml/badge.svg)](https://github.com/awalsh128/cache-apt-pkgs-action-ci/actions/workflows/dev_test.yml)
+
 TypeScript library for APT and APT-fast package operations on Debian-based Linux systems.
 
 This package is library-only (no bundled CLI executable).
