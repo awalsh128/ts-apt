@@ -13,5 +13,6 @@
   "sort": [
     "source-order"
   ],
-  "readme": "none"
+  "readme": "none",
+  "gitRevision": "main"
 }
