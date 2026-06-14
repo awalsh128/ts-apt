@@ -1,0 +1,3 @@
+bash 5.2.15-2+b2
+vim 2:9.0.1378-2+deb12u2
+libssl3:amd64 3.0.11-1~deb12u2

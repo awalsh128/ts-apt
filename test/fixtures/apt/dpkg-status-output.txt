@@ -1,0 +1,3 @@
+vim install ok installed 2:9.0.1378-2+deb12u2
+vim-common install ok installed 2:9.0.1378-2+deb12u2
+vim-tiny deinstall ok config-files 2:9.0.1378-2+deb12u2

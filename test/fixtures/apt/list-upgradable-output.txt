@@ -1,0 +1,3 @@
+Listing... Done
+bash/stable 5.2.15-2+b9 amd64 [upgradable from: 5.2.15-2+b2]
+vim/stable 2:9.0.1378-2+deb12u3 amd64 [upgradable from: 2:9.0.1378-2+deb12u2]
