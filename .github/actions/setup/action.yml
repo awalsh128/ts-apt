@@ -4,6 +4,12 @@ description: "Checks out code, sets up Node.js, and installs dependencies"
 runs:
   using: "composite"
   steps:
+    # Create a symlink for action referencing and allow action pathing to handle forks
+    - uses: wei18/local-composite-action@v1
+      with:
+        action_repository: ${{ github.action_repository }}
+        action_path: ${{ github.action_path }}
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
