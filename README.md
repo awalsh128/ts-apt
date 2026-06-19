@@ -2,6 +2,7 @@
 
 [![License: Apache2](https://shields.io/badge/license-apache2-blue.svg)](https://github.com/awalsh128/ts-apt/blob/master/LICENSE)
 [![CI status](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml/badge.svg)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/ts-apt)]
 
 TypeScript library for APT and APT-fast package operations on Debian-based Linux systems.
 
@@ -18,7 +19,7 @@ This package is library-only (no bundled CLI executable).
 
 ## Runtime
 
-- Node.js 20+
+- Node.js 24+
 - Linux with APT tooling available
 
 ## Install
@@ -51,14 +52,8 @@ Generated output is written to [docs/api](docs/api).
 CI verifies API docs are synchronized with source changes by regenerating docs
 and failing when the checked-in [docs/api](docs/api) directory is out of date.
 
-API docs can be published to GitHub Pages using
-[.github/workflows/docs-pages.yml](.github/workflows/docs-pages.yml).
-
-GitHub Pages setup:
-
-- In repository settings, set Pages source to GitHub Actions.
-- Push to `main` or `master`, or trigger `docs-pages` manually.
-- The workflow deploys the generated [docs/api](docs/api) output.
+API docs are published with NPM package and to GitHub Pages on release
+[.github/workflows/release.yml](.github/workflows/release.yml).
 
 ## Release
 
@@ -72,7 +67,7 @@ Trigger modes:
 The workflow will:
 
 - Validate that the release tag matches `package.json` version.
-- Run lint, typecheck, unit tests, and build.
+- Run lint, typecheck, build, unit tests, and integration tests.
 - Generate and verify API docs are up to date.
 - Publish to npm with provenance:
   - Stable tags (for example `v1.2.3`) publish to `latest`.
@@ -81,7 +76,6 @@ The workflow will:
 
 Repository setup requirements:
 
-- Add repository secret `NPM_TOKEN` with publish access to npm.
 - Ensure package version in `package.json` matches the release tag.
 
 Tag-based release example:
