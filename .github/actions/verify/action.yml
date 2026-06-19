@@ -4,9 +4,6 @@ description: "Runs build, linters, typechecks, unit tests, and generates API doc
 runs:
   using: "composite"
   steps:
-    - name: Setup
-      uses: $/.github/actions/setup
-
     - name: Lint
       shell: bash
       run: npm run lint
