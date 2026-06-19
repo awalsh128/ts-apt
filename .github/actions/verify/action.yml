@@ -4,14 +4,14 @@ description: "Runs build, linters, typechecks, unit tests, and generates API doc
 runs:
   using: "composite"
   steps:
-    # Create a symlink for action referencing and allow action pathing to handle forks
+    # Required when this composite action calls another local composite action.
     - uses: wei18/local-composite-action@v1
       with:
         action_repository: ${{ github.action_repository }}
         action_path: ${{ github.action_path }}
 
     - name: Setup
-      uses: ./../awalsh128/ts-apt/.github/actions/setup
+      uses: ./.github/actions/setup
 
     - name: Lint
       shell: bash
