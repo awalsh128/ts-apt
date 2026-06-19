@@ -11,7 +11,7 @@ runs:
         action_path: ${{ github.action_path }}
 
     - name: Setup
-      uses: ./.github/actions/setup
+      uses: ./../awalsh128/ts-apt/.github/actions/setup
 
     - name: Lint
       shell: bash
