@@ -4,13 +4,8 @@ description: "Runs build, linters, typechecks, unit tests, and generates API doc
 runs:
   using: "composite"
   steps:
-    # Required when this composite action calls another local composite action.
-    - uses: wei18/local-composite-action@v1
-      with:
-        action_repository: wei18/local-composite-action@v1
-
     - name: Setup
-      uses: ./../awalsh128/ts-apt/.github/actions/setup
+      uses: $/.github/actions/setup
 
     - name: Lint
       shell: bash
