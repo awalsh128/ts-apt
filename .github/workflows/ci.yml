@@ -9,11 +9,14 @@ jobs:
   verification:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      # Create a symlink for action referencing and allow action pathing to handle forks
+      - uses: wei18/local-composite-action@v1
+        with:
+          action_repository: ${{ github.action_repository }}
+          action_path: ${{ github.action_path }}
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./../awalsh128/ts-apt/.github/actions/setup
 
       - name: Verify code health and quality
-        uses: ./.github/actions/verify
+        uses: ./../awalsh128/ts-apt/.github/actions/verify

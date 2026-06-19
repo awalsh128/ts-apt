@@ -1,16 +1,17 @@
-name: "Verify"
+name: "Verify code health and quality"
 description: "Runs build, linters, typechecks, unit tests, and generates API docs to verify the code is in a good state"
 
 runs:
   using: "composite"
   steps:
-    # Ensure the action relative path is available for the next steps
-    - uses: actions/checkout@v4
+    # Create a symlink for action referencing and allow action pathing to handle forks
+    - uses: wei18/local-composite-action@v1
       with:
-        sparse-checkout: .github/actions
+        action_repository: ${{ github.action_repository }}
+        action_path: ${{ github.action_path }}
 
     - name: Setup
-      uses: ./.github/actions/setup
+      uses: ./../awalsh128/ts-apt/.github/actions/setup
 
     - name: Lint
       shell: bash
