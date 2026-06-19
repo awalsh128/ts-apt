@@ -10,7 +10,7 @@ import type {
   PackageManager,
   PackageManagerOptions,
 } from "../../types.js";
-import { APT_ENV, APT_FLAGS, TIMEOUTS, normalizeOptions } from "./constants.js";
+import { APT_ENV, APT_FLAGS, TIMEOUTS, normalizeOptions } from "./options.js";
 import {
   parseDeletedOutput,
   parseDpkgStatusOutput,

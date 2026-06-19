@@ -17,8 +17,7 @@ jobs:
     env:
       RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
     steps:
-      - name: Setup
-        uses: ./.github/actions/setup
+      uses: ./.github/workflows/reusable-node-job.yml
 
       - name: Release preflight (tag/version)
         run: npm run release:preflight

@@ -1,19 +1,21 @@
-# .github/actions/setup-project/action.yml
-name: "Setup"
-description: "Checks out branch, sets up Node.js, installs dependencies, and builds the project. Used as a reusable workflow for other workflows to avoid duplication."
+name: 'Setup'
+description: 'Checks out code, sets up Node.js, and installs dependencies'
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: Checkout
-      uses: actions/checkout@v6
+    # Step 1: Checkout
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-    - name: Setup Node
-      uses: actions/setup-node@v6
+    # Step 2: Setup Node
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        node-version: 26
-        cache: npm
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
 
+    # Step 3: Install (Must specify shell: bash)
     - name: Install dependencies
       shell: bash
       run: npm ci
