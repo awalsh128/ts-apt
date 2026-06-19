@@ -1,8 +1,8 @@
-name: 'Setup'
-description: 'Checks out code, sets up Node.js, and installs dependencies'
+name: "Setup"
+description: "Checks out code, sets up Node.js, and installs dependencies"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     # Step 1: Checkout
     - name: Checkout repository
@@ -12,8 +12,8 @@ runs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ inputs.node-version }}
-        cache: 'npm'
+        node-version: 24
+        cache: "npm"
 
     # Step 3: Install (Must specify shell: bash)
     - name: Install dependencies

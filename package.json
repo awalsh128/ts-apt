@@ -2,12 +2,41 @@
   "name": "ts-apt",
   "version": "0.1.0",
   "description": "TypeScript APT and APT-fast package management library",
-  "license": "MIT",
+  "author": "Andrew Walsh",
+  "license": "Apache-2.0",
+  "keywords": [
+    "apt",
+    "apt-fast",
+    "helper"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awalsh128/ts-apt.git"
+  },
+  "files": [
+    "dist/src",
+    "!dist/test",
+    "docs/api",
+    "LICENSE",
+    "README.md"
+  ],
   "type": "module",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
   "engines": {
-    "node": ">=20"
+    "node": ">=26"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

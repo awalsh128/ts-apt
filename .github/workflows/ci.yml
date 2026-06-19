@@ -2,30 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
 
 jobs:
-  unit-lint-typecheck:
+  verification:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup
-        uses: ./.github/workflows/actions/setup
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Unit tests
-        run: npm run test:unit
-
-      - name: Build
-        run: npm run build
-
-      - name: Generate API docs
-        run: npm run docs:api
-
-      - name: Verify API docs are up to date
-        run: git diff --exit-code -- docs/api
+      - name: Verify code health and quality
+        uses: ./.github/actions/verify

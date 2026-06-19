@@ -1,4 +1,4 @@
-name: Release
+name: Publish
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
         type: string
 
 jobs:
-  verify:
+  validate:
     runs-on: ubuntu-latest
     env:
       RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
@@ -20,30 +20,16 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # Preflight checks (validate tag format, version consistency, etc.)
       - name: Release preflight (tag/version)
         run: npm run release:preflight
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Unit tests
-        run: npm run test:unit
-
-      - name: Build
-        run: npm run build
-
-      - name: Generate API docs
-        run: npm run docs:api
-
-      - name: Verify API docs are up to date
-        run: git diff --exit-code -- docs/api
+      - name: Verify code health and quality
+        uses: ./.github/actions/verify
 
   publish:
     runs-on: ubuntu-latest
-    needs: verify
+    needs: validate
     permissions:
       contents: write
       id-token: write
@@ -63,13 +49,28 @@ jobs:
             echo "NPM_DIST_TAG=latest" >> "$GITHUB_ENV"
           fi
 
+      - name: Generate API docs
+        run: npm run docs:api
+
       - name: Publish to npm
         run: npm publish --access public --provenance --tag "$NPM_DIST_TAG"
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           tag_name: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/api
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
