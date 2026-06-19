@@ -4,6 +4,11 @@ description: "Runs build, linters, typechecks, unit tests, and generates API doc
 runs:
   using: "composite"
   steps:
+    # Ensure the action relative path is available for the next steps
+    - uses: actions/checkout@v4
+      with:
+        sparse-checkout: .github/actions
+
     - name: Setup
       uses: ./.github/actions/setup
 
