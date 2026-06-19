@@ -9,7 +9,11 @@ jobs:
   verification:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup
         uses: ./.github/actions/setup
+
       - name: Verify code health and quality
         uses: ./.github/actions/verify
