@@ -9,6 +9,9 @@ jobs:
   verification:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       # Create a symlink for action referencing and allow action pathing to handle forks
       - uses: wei18/local-composite-action@v1
         with:
