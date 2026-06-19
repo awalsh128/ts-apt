@@ -7,8 +7,7 @@ runs:
     # Required when this composite action calls another local composite action.
     - uses: wei18/local-composite-action@v1
       with:
-        action_repository: ${{ github.action_repository }}
-        action_path: ${{ github.action_path }}
+        action_repository: wei18/local-composite-action@v1
 
     - name: Setup
       uses: ./../awalsh128/ts-apt/.github/actions/setup
