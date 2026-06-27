@@ -18,38 +18,31 @@ interface BinaryMeta {
   defaultArgs: string[];
 }
 
-const UNIVERSAL_ARGS = ["--quiet=0", "--force-yes"];
-
 const Binary = {
   Apt: {
     name: "apt",
     path: "/usr/bin/apt",
-    defaultArgs: [...UNIVERSAL_ARGS, "--no-all-versions"],
+    defaultArgs: ["--quiet=0"],
   },
   AptCache: {
     name: "apt-cache",
     path: "/usr/bin/apt-cache",
-    defaultArgs: [...UNIVERSAL_ARGS, "--no-all-versions"],
+    defaultArgs: ["--quiet=0", "--no-all-versions"],
   },
   AptFast: {
     name: "apt-fast",
     path: "/usr/bin/apt-fast",
-    defaultArgs: [...UNIVERSAL_ARGS],
+    defaultArgs: ["--quiet=0", APT_FLAGS.assumeYes],
   },
   AptGet: {
     name: "apt-get",
     path: "/usr/bin/apt-get",
-    defaultArgs: [...UNIVERSAL_ARGS],
+    defaultArgs: ["--quiet=0", APT_FLAGS.assumeYes],
   },
   DpkgQuery: {
     name: "dpkg-query",
     path: "/usr/bin/dpkg-query",
-    defaultArgs: [
-      ...UNIVERSAL_ARGS,
-      "-W",
-      "-f",
-      "${binary:Package}=${Version}\\n",
-    ],
+    defaultArgs: [],
   },
 } as const satisfies Record<string, BinaryMeta>;
 
@@ -254,7 +247,7 @@ export class AptPackageManager implements PackageManager {
   ): Promise<PackageInfo[]> {
     validatePackageNames(pkgs);
     const args = ["remove", APT_FLAGS.fixBroken, ...pkgs];
-    if (!autoremoveEnabled) {
+    if (autoremoveEnabled) {
       args.push(APT_FLAGS.autoRemove);
     }
     const result = await this.runAptCommand(
@@ -368,7 +361,7 @@ export class AptPackageManager implements PackageManager {
     validatePackageNames(pkgs);
     const result = await this.runAptCommand(
       Binary.AptCache,
-      ["--quiet=0", "--no-all-versions", "show", ...pkgs],
+      ["show", ...pkgs],
       TIMEOUTS.getPackageInfo,
     );
     return this.parser.parseCacheShowOutput(result);
@@ -406,6 +399,21 @@ export class AptPackageManager implements PackageManager {
   }
 }
 
+/**
+ * Checks whether apt-fast can be used by verifying the aria2 dependency.
+ *
+ * Command executed:
+ * `dpkg-query -W aria2`
+ *
+ * Example output:
+ * ```text
+ * desired=Unknown/Install/Remove/Purge/Hold
+ * | Status=Not/Inst/Conf-files/Unpacked/half-conf/Half-inst/trig-aWait/Trig-pend
+ * |/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
+ * ||/ Name   Version      Architecture Description
+ * ii  aria2  1.36.0-1     amd64        High speed download utility
+ * ```
+ */
 async function isAptFastAvailable(
   runner: CommandRunner,
   logger: winston.Logger,
@@ -424,6 +432,15 @@ async function isAptFastAvailable(
 
 /**
  * Creates a package manager instance.
+ *
+ * Commands executed during setup:
+ * - Always: no external command (logger and runner are initialized in-process).
+ * - When `enableAptFast` is true: `dpkg-query -W aria2` to verify apt-fast prerequisites.
+ *
+ * Example output parsed during apt-fast check:
+ * ```text
+ * ii  aria2  1.36.0-1 amd64 High speed download utility
+ * ```
  *
  * @param enableAptFast Whether to enable APT-fast which is a wrapper for apt to speed up package downloads.
  * @param appLogger Logger instance for application logs.

@@ -32,6 +32,12 @@ function jsonToPackageInfos(
   }));
 }
 
+function withoutUndefinedFields<T extends object>(value: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, fieldValue]) => fieldValue !== undefined),
+  ) as Partial<T>;
+}
+
 function deserialize(path: string): CommandResult {
   return deserializeCommandResult(resolve(DATA_DIR, path));
 }
@@ -78,7 +84,13 @@ describe("apt output parser", () => {
       return;
     }
 
-    expect(parsed).toEqual(expect.arrayContaining(expected));
+    expect(parsed).toEqual(
+      expect.arrayContaining(
+        expected.map((pkg) =>
+          expect.objectContaining(withoutUndefinedFields(pkg)),
+        ),
+      ),
+    );
   }
 
   it.each([
@@ -223,6 +235,36 @@ describe("apt output parser", () => {
       expect(parsed).toBe(expectedValue);
     },
   );
+
+  test("parseInstallOutput captures architecture when present", () => {
+    const parsed = parser.parseInstallOutput({
+      cmdLine: "apt-get install -f libc6",
+      exitCode: 0,
+      stdout: "Setting up libc6:amd64 (2.39-0ubuntu8.4) ...\n",
+      stderr: "",
+    });
+
+    expect(parsed).toEqual([
+      expect.objectContaining({
+        name: "libc6",
+        arch: "amd64",
+        version: "2.39-0ubuntu8.4",
+        status: "installed",
+      }),
+    ]);
+  });
+
+  test("parseUpdateOutput extracts upgradable package count", () => {
+    const count = parser.parseUpdateOutput({
+      cmdLine: "apt update",
+      exitCode: 0,
+      stdout:
+        "Hit:1 http://archive.ubuntu.com/ubuntu jammy InRelease\n3 packages can be upgraded. Run 'apt list --upgradable' to see them.\n",
+      stderr: "",
+    });
+
+    expect(count).toBe(3);
+  });
 
   it.each([
     [

@@ -17,7 +17,8 @@ const CACHE_SHOW_STANZA_REGEX = /.+?((?:\r\n|\r|\n)\s*(?:\r\n|\r|\n))|.+$/gs;
 /** Matches package removal lines emitted by apt remove/autoremove. */
 const REMOVE_REGEX = /^Removing\s+(\S+?)(?::(\S+))?\s+\(([^)]+)\)/;
 /** Matches package installation lines emitted by apt install/upgrade. */
-const INSTALL_OR_UPDATE_REGEX = /^Setting up [^\s]+ \([^\s)]+\)/;
+const INSTALL_OR_UPDATE_REGEX =
+  /^Setting up\s+([^\s:]+)(?::([^\s]+))?\s+\(([^)]+)\)/;
 /**
  * Matches package lines emitted by dpkg-query in format
  * "${binary:Package}:${Architecture}=${Version}" format.
@@ -85,7 +86,7 @@ export class AptOutputParser {
               ? message.getHeader("Installed")!
               : message.getHeader("Candidate")!,
             status: isInstalled ? "installed" : "available",
-            metadata: new Map(Object.entries(message.headers)),
+            metadata: new Map(Object.entries(message.headers.toObject())),
           };
         }),
     );
@@ -119,7 +120,7 @@ export class AptOutputParser {
             ? "installed"
             : "available",
           metadata: includeMetadata
-            ? new Map(Object.entries(message.headers))
+            ? new Map(Object.entries(message.headers.toObject()))
             : undefined,
         };
       });
@@ -366,10 +367,11 @@ export class AptOutputParser {
         continue;
       }
 
-      const [, name, version] = match;
+      const [, name, arch, version] = match;
 
       packages.push({
         name: name!,
+        arch,
         version: version!,
         status: "installed",
       });
