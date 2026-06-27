@@ -110,4 +110,104 @@ describe("apt manager", () => {
     );
     expect(out.every((pkg) => pkg.status === "installed")).toBe(true);
   });
+
+  test("remove includes --autoremove when enabled", async () => {
+    const cmd = "/usr/bin/apt-get --quiet=0 -y remove -f vim --autoremove";
+    const runner = new FakeCommandRunner(
+      new Map([
+        [
+          cmd,
+          {
+            cmdLine: cmd,
+            stdout: "Removing vim (2:9.0) ...\n",
+            stderr: "",
+            exitCode: 0,
+          },
+        ],
+      ]),
+    );
+
+    const manager = new AptPackageManager(
+      false,
+      runner,
+      new AptOutputParser(logger),
+      logger,
+    );
+    const out = await manager.remove(["vim"], true);
+
+    expect(out).toEqual([
+      expect.objectContaining({
+        name: "vim",
+        version: "2:9.0",
+        status: "available",
+      }),
+    ]);
+  });
+
+  test("remove omits --autoremove when disabled", async () => {
+    const cmd = "/usr/bin/apt-get --quiet=0 -y remove -f vim";
+    const runner = new FakeCommandRunner(
+      new Map([
+        [
+          cmd,
+          {
+            cmdLine: cmd,
+            stdout: "Removing vim (2:9.0) ...\n",
+            stderr: "",
+            exitCode: 0,
+          },
+        ],
+      ]),
+    );
+
+    const manager = new AptPackageManager(
+      false,
+      runner,
+      new AptOutputParser(logger),
+      logger,
+    );
+    const out = await manager.remove(["vim"], false);
+
+    expect(out).toEqual([
+      expect.objectContaining({
+        name: "vim",
+        version: "2:9.0",
+        status: "available",
+      }),
+    ]);
+  });
+
+  test("getPackageInfo uses apt-cache defaults once", async () => {
+    const cmd = "/usr/bin/apt-cache --quiet=0 --no-all-versions show bash";
+    const runner = new FakeCommandRunner(
+      new Map([
+        [
+          cmd,
+          {
+            cmdLine: cmd,
+            stdout:
+              "Package: bash\nVersion: 5.0-6ubuntu1\nArchitecture: amd64\n\n",
+            stderr: "",
+            exitCode: 0,
+          },
+        ],
+      ]),
+    );
+
+    const manager = new AptPackageManager(
+      false,
+      runner,
+      new AptOutputParser(logger),
+      logger,
+    );
+    const out = await manager.getPackageInfo(["bash"]);
+
+    expect(out).toEqual([
+      expect.objectContaining({
+        name: "bash",
+        version: "5.0-6ubuntu1",
+        arch: "amd64",
+      }),
+    ]);
+  });
 });
