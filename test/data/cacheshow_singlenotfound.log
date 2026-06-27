@@ -1,0 +1,5 @@
+*** CMD_LINE apt-cache show nonexistentpackage
+*** EXIT_CODE 100
+*** STDOUT
+*** STDERR
+E: No packages found

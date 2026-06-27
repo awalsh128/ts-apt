@@ -16,6 +16,7 @@
   "files": [
     "dist/src",
     "!dist/test",
+    "scripts",
     "docs/api",
     "LICENSE",
     "README.md"
@@ -26,24 +27,24 @@
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
       },
       "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
+        "types": "./dist/src/index.d.cts",
+        "default": "./dist/src/index.cjs"
       }
     }
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=20"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rm -rf dist coverage",
     "docs:api": "typedoc",
     "docs:api:check": "npm run docs:api && git diff --exit-code -- docs/api",
-    "release:preflight": "node scripts/check-release-tag.mjs",
+    "release:preflight": "node dev_scripts/check_release_tag.mjs",
     "lint": "eslint src test --ext .ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
@@ -52,12 +53,15 @@
     "dev": "vitest"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.35.0",
-    "@typescript-eslint/parser": "^8.35.0",
-    "eslint": "^9.29.0",
+    "@types/node": "^26.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/parser": "^8.61.1",
+    "eslint": "^10.5.0",
+    "internet-message": "^1.0.0",
+    "type-coverage": "^2.29.7",
     "typedoc": "^0.28.19",
     "typescript": "^5.8.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9",
+    "winston": "^3.19.0"
   }
 }

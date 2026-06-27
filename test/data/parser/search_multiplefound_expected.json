@@ -1,0 +1,962 @@
+[
+  {
+    "name": "alot",
+    "version": "0.9-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Text mode MUA using notmuch mail",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "alot-doc",
+    "version": "0.9-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Text mode MUA using notmuch mail - documentation",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "biosyntax-vim",
+    "version": "1.0.0b-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Syntax Highlighting for Computational Biology (vim)",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "bleachbit",
+    "version": "3.9.0-1",
+    "arch": "all",
+    "metadata": {
+      "description": "delete unnecessary files from the system",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "cernlib-base",
+    "version": "20061220+dfsg3-4.4build1",
+    "arch": "all",
+    "metadata": {
+      "description": "CERNLIB data analysis suite - common files",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "colordiff",
+    "version": "1.0.18-1",
+    "arch": "all",
+    "metadata": {
+      "description": "tool to colorize 'diff' output",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "context-modules",
+    "version": "20190710-1",
+    "arch": "all",
+    "metadata": {
+      "description": "additional ConTeXt modules",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "cpl-plugin-vimos-calib",
+    "version": "3.3.0+dfsg-1build1",
+    "arch": "all",
+    "metadata": {
+      "description": "ESO data reduction pipeline calibration data downloader for VIMOS",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "cpl-plugin-vimos-doc",
+    "version": "3.3.0+dfsg-1build1",
+    "arch": "all",
+    "metadata": {
+      "description": "ESO data reduction pipeline documentation for VIMOS",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "cream",
+    "version": "0.43-3",
+    "arch": "all",
+    "metadata": {
+      "description": "VIM macros that make the VIM easier to use for beginners",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "dh-vim-addon",
+    "version": "0.2",
+    "arch": "all",
+    "metadata": {
+      "description": "debhelper addon to help package Vim/Neovim addons",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "elpa-anzu",
+    "version": "0.62-4",
+    "arch": "all",
+    "metadata": {
+      "description": "show number of matches in mode-line while searching",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "elpa-bind-map",
+    "version": "1.1.1-5",
+    "arch": "all",
+    "metadata": {
+      "description": "bind personal keymaps in multiple locations",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "elpa-color-theme-modern",
+    "version": "0.0.3-1",
+    "arch": "all",
+    "metadata": {
+      "description": "deftheme reimplementation of classic Emacs color-themes",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "elpa-evil",
+    "version": "1.12.17-1",
+    "arch": "all",
+    "metadata": {
+      "description": "extensible vi layer for Emacs",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "elpa-neotree",
+    "version": "0.5.2-2",
+    "arch": "all",
+    "metadata": {
+      "description": "directory tree sidebar for Emacs that is like NERDTree for Vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "elpa-powerline",
+    "version": "2.4-3",
+    "arch": "all",
+    "metadata": {
+      "description": "Emacs version of the Vim powerline",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "elpa-smeargle",
+    "version": "0.03-4",
+    "arch": "all",
+    "metadata": {
+      "description": "highlight region by last updated time",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "elpa-solarized-theme",
+    "version": "1.3.1-1",
+    "arch": "all",
+    "metadata": {
+      "description": "port of Solarized theme to Emacs",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "elpa-vimish-fold",
+    "version": "0.2.3-4",
+    "arch": "all",
+    "metadata": {
+      "description": "fold text in GNU Emacs like in Vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "elpa-zenburn-theme",
+    "version": "2.6-2",
+    "arch": "all",
+    "metadata": {
+      "description": "low contrast color theme for Emacs",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "env2",
+    "version": "1.1.0-4",
+    "arch": "all",
+    "metadata": {
+      "description": "convert environment variables between scripting languages",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "fonts-powerline",
+    "version": "2.7-3",
+    "arch": "all",
+    "metadata": {
+      "description": "prompt and statusline utility (symbols font)",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "formiko",
+    "version": "1.3.0-1",
+    "arch": "all",
+    "metadata": {
+      "description": "reStructuredText and MarkDown editor and live previewer",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "get-flash-videos",
+    "version": "1.25.99.03-1",
+    "arch": "all",
+    "metadata": {
+      "description": "video downloader for various Flash-based video hosting sites",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "golang-github-vimeo-go-magic-dev",
+    "version": "1.0.0-1",
+    "arch": "all",
+    "metadata": { "description": "Go bindings for libmagic", "repos": "focal" }
+  },
+  {
+    "name": "gramadoir",
+    "version": "0.7-4",
+    "arch": "all",
+    "metadata": {
+      "description": "Irish language grammar checker (integration scripts)",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "imediff",
+    "version": "2.2-1",
+    "arch": "all",
+    "metadata": {
+      "description": "interactive full screen 2/3-way merge tool",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "kdesdk-scripts",
+    "version": "4:19.12.3-0ubuntu1",
+    "arch": "all",
+    "metadata": {
+      "description": "scripts and data files for development",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "libghc-pandoc-doc",
+    "version": "2.5-3build2",
+    "arch": "all",
+    "metadata": {
+      "description": "general markup converter - library documentation",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "libghc-yi-keymap-vim-doc",
+    "version": "0.18.0-2",
+    "arch": "all",
+    "metadata": {
+      "description": "Vim keymap for Yi editor; documentation",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "libjs-xterm",
+    "version": "3.8.1-3",
+    "arch": "all",
+    "metadata": {
+      "description": "terminal front-end component for the browser - browser library",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "liblatex-table-perl",
+    "version": "1.0.6-3",
+    "arch": "all",
+    "metadata": {
+      "description": "Perl extension for the automatic generation of LaTeX tables",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "libtext-findindent-perl",
+    "version": "0.11-1",
+    "arch": "all",
+    "metadata": {
+      "description": "module to heuristically determine indentation style",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "libvi-quickfix-perl",
+    "version": "1.135-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Perl support for vim's QuickFix mode",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "movim",
+    "version": "0.14.1-6",
+    "arch": "all",
+    "metadata": {
+      "description": "decentralised social network fully based on XMPP",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "neovim-runtime",
+    "version": "0.4.3-3",
+    "arch": "all",
+    "metadata": {
+      "description": "heavily refactored vim fork (runtime files)",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "node-xterm",
+    "version": "3.8.1-3",
+    "arch": "all",
+    "metadata": {
+      "description": "terminal front-end component for the browser - NodeJS modules",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "notmuch-vim",
+    "version": "0.29.3-1ubuntu2",
+    "arch": "all",
+    "metadata": {
+      "description": "thread-based email index, search and tagging (vim interface)",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "nvi-doc",
+    "version": "1.81.6-15build1",
+    "arch": "all",
+    "metadata": {
+      "description": "4.4BSD re-implementation of vi - documentation files",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "ocaml-tools",
+    "version": "20120103-6build1",
+    "arch": "all",
+    "metadata": {
+      "description": "tools for OCaml developers",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "openshot-qt",
+    "version": "2.4.3+dfsg1-1",
+    "arch": "all",
+    "metadata": {
+      "description": "create and edit videos and movies",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "php-embed",
+    "version": "3.3.9-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Get info from any web service or page",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "powerline-doc",
+    "version": "2.7-3",
+    "arch": "all",
+    "metadata": {
+      "description": "prompt and statusline utility (documentation)",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "powerline-gitstatus",
+    "version": "1.3.1-1",
+    "arch": "all",
+    "metadata": { "description": "Powerline Git segment", "repos": "focal" }
+  },
+  {
+    "name": "python-django-allauth-doc",
+    "version": "0.41.0+ds-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Django app for local and social authentication (Documentation)",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "python3-django-allauth",
+    "version": "0.41.0+ds-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Django app for local and social authentication (Python 3 version)",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "python3-editor",
+    "version": "1.0.3-2",
+    "arch": "all",
+    "metadata": {
+      "description": "programmatically open an editor, capture the result - Python 3.x",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "python3-neovim",
+    "version": "0.4.1-1",
+    "arch": "all",
+    "metadata": {
+      "description": "transitional dummy package",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "python3-powerline",
+    "version": "2.7-3",
+    "arch": "all",
+    "metadata": {
+      "description": "prompt and statusline utility (Python 3.x module)",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "python3-powerline-gitstatus",
+    "version": "1.3.1-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Powerline Git segment for Python (3.x)",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "python3-pynvim",
+    "version": "0.4.1-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Python3 library for scripting Neovim processes through its msgpack-rpc API",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "python3-searx",
+    "version": "0.16.0+dfsg1-2",
+    "arch": "all",
+    "metadata": {
+      "description": "Privacy-respecting metasearch engine - library package",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "qutebrowser",
+    "version": "1.10.1-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Keyboard-driven, vim-like browser based on PyQt5",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "qutebrowser-qtwebengine",
+    "version": "1.10.1-1",
+    "arch": "all",
+    "metadata": {
+      "description": "QtWebEngine backend dependency package for qutebrowser",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "qutebrowser-qtwebkit",
+    "version": "1.10.1-1",
+    "arch": "all",
+    "metadata": {
+      "description": "QtWebKit backend dependency package for qutebrowser",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "ruby-ace-rails-ap",
+    "version": "4.1.1-1",
+    "arch": "all",
+    "metadata": {
+      "description": "ajax.org Cloud9 Editor (Ace) for the Rails asset pipeline",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "ruby-fuubar",
+    "version": "2.5.0-1",
+    "arch": "all",
+    "metadata": {
+      "description": "instafailing RSpec progress bar formatter",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "ruby-neovim",
+    "version": "0.8.1-1",
+    "arch": "all",
+    "metadata": { "description": "Ruby client for Neovim", "repos": "focal" }
+  },
+  {
+    "name": "searx",
+    "version": "0.16.0+dfsg1-2",
+    "arch": "all",
+    "metadata": {
+      "description": "Privacy-respecting metasearch engine",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "sen",
+    "version": "0.6.1-0.1",
+    "arch": "all",
+    "metadata": {
+      "description": "Terminal user interface for docker engine",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "sisu",
+    "version": "7.2.0-1",
+    "arch": "all",
+    "metadata": {
+      "description": "documents - structuring, publishing in multiple formats and search",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "supercollider-vim",
+    "version": "1:3.10.0+repack-1ubuntu2",
+    "arch": "all",
+    "metadata": {
+      "description": "SuperCollider mode for Vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "tpp",
+    "version": "1.3.1-7",
+    "arch": "all",
+    "metadata": { "description": "text presentation program", "repos": "focal" }
+  },
+  {
+    "name": "txt2regex",
+    "version": "0.8-5",
+    "arch": "all",
+    "metadata": {
+      "description": "A Regular Expression \"wizard\", all written with bash2 builtins",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vcsh",
+    "version": "1.20151229-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Version Control System for $HOME - multiple Git repositories in $HOME",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-addon-manager",
+    "version": "0.5.10",
+    "arch": "all",
+    "metadata": {
+      "description": "manager of addons for the Vim editor",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-addon-mw-utils",
+    "version": "0.2-4",
+    "arch": "all",
+    "metadata": { "description": "Vim funcref library", "repos": "focal" }
+  },
+  {
+    "name": "vim-airline",
+    "version": "0.11-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Lean & mean status/tabline for vim that's light as air",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-airline-themes",
+    "version": "0+git.20180730-6e798f9-1",
+    "arch": "all",
+    "metadata": {
+      "description": "official theme collection for vim-airline",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-asciidoc",
+    "version": "9.0.0~rc1-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Vim syntax highlighting files for asciidoc",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-autopep8",
+    "version": "1.2.0-2",
+    "arch": "all",
+    "metadata": {
+      "description": "vim plugin to apply autopep8",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-bitbake",
+    "version": "0~git20190420-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Vim plugin to interact with Yocto bitbake-based recipes",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-ctrlp",
+    "version": "1.80-1",
+    "arch": "all",
+    "metadata": {
+      "description": "fuzzy file, buffer, mru, tag, etc. finder for Vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-doc",
+    "version": "2:8.1.2269-1ubuntu5.32",
+    "arch": "all",
+    "metadata": {
+      "description": "Vi IMproved - HTML documentation",
+      "repos": "focal-updates,focal-security"
+    }
+  },
+  {
+    "name": "vim-editorconfig",
+    "version": "0.3.3+dfsg-2",
+    "arch": "all",
+    "metadata": {
+      "description": "EditorConfig Plugin for Vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-fugitive",
+    "version": "3.2-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Vim plugin to work with Git",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-gocomplete",
+    "version": "20170907-3",
+    "arch": "all",
+    "metadata": {
+      "description": "gocode integration for Vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-gtk",
+    "version": "2:8.1.2269-1ubuntu5.32",
+    "arch": "all",
+    "metadata": {
+      "description": "Vi IMproved - enhanced vi editor (dummy package)",
+      "repos": "focal-updates,focal-security"
+    }
+  },
+  {
+    "name": "vim-gui-common",
+    "version": "2:8.1.2269-1ubuntu5.32",
+    "arch": "all",
+    "metadata": {
+      "description": "Vi IMproved - Common GUI files",
+      "repos": "focal-updates,focal-security"
+    }
+  },
+  {
+    "name": "vim-haproxy",
+    "version": "2.0.33-0ubuntu0.1",
+    "arch": "all",
+    "metadata": {
+      "description": "syntax highlighting for HAProxy configuration files",
+      "repos": "focal-updates"
+    }
+  },
+  {
+    "name": "vim-icinga2",
+    "version": "2.11.2-1ubuntu3",
+    "arch": "all",
+    "metadata": {
+      "description": "syntax highlighting for Icinga 2 config files in VIM",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-julia",
+    "version": "0.0~git20200213.8c0b9e8-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Vim support for Julia language",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-khuno",
+    "version": "1.0.3-1",
+    "arch": "all",
+    "metadata": { "description": "Python flakes Vim plugin", "repos": "focal" }
+  },
+  {
+    "name": "vim-lastplace",
+    "version": "3.1.1-2",
+    "arch": "all",
+    "metadata": {
+      "description": "Vim script to reopen files at your last edit position",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-latexsuite",
+    "version": "1:1.9.0-1",
+    "arch": "all",
+    "metadata": {
+      "description": "view, edit and compile LaTeX documents from within Vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-ledger",
+    "version": "1.2.0-1",
+    "arch": "all",
+    "metadata": { "description": "Vim plugin for Ledger", "repos": "focal" }
+  },
+  {
+    "name": "vim-migemo",
+    "version": "1:1.2+gh0.20150404-7",
+    "arch": "all",
+    "metadata": { "description": "VIM plugin for C/Migemo", "repos": "focal" }
+  },
+  {
+    "name": "vim-pathogen",
+    "version": "2.4-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Manage your runtimepath with ease",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-puppet",
+    "version": "4~20181115+git4793b074-1",
+    "arch": "all",
+    "metadata": {
+      "description": "syntax highlighting for puppet manifests in vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-python-jedi",
+    "version": "0.15.2-1",
+    "arch": "all",
+    "metadata": {
+      "description": "autocompletion tool for Python - VIM addon files",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-rails",
+    "version": "4.5~20110829-1",
+    "arch": "all",
+    "metadata": {
+      "description": "vim development tools for Rails development",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-scripts",
+    "version": "20180807ubuntu1",
+    "arch": "all",
+    "metadata": {
+      "description": "plugins for vim, adding bells and whistles",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-snipmate",
+    "version": "0.87-3",
+    "arch": "all",
+    "metadata": {
+      "description": "Vim script that implements some of TextMate's snippets features.",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-snippets",
+    "version": "1.0.0-4",
+    "arch": "all",
+    "metadata": {
+      "description": "Snippets files for various programming languages.",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-syntastic",
+    "version": "3.10.0-2",
+    "arch": "all",
+    "metadata": {
+      "description": "Syntax checking hacks for vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-syntax-docker",
+    "version": "20.10.21-0ubuntu1~20.04.6",
+    "arch": "all",
+    "metadata": {
+      "description": "Docker container engine - Vim highlighting syntax files",
+      "repos": "focal-updates,focal-security"
+    }
+  },
+  {
+    "name": "vim-syntax-gtk",
+    "version": "20110314-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Syntax files to highlight GTK+ keywords in vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-tabular",
+    "version": "1.0-3",
+    "arch": "all",
+    "metadata": {
+      "description": "Vim script for text filtering and alignment",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-textobj-user",
+    "version": "0.7.6-1",
+    "arch": "all",
+    "metadata": {
+      "description": "Vim plugin for user-defined text objects",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-tjp",
+    "version": "3.6.0-6",
+    "arch": "all",
+    "metadata": {
+      "description": "vim addon for TaskJuggler .tjp files",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-tlib",
+    "version": "1.27-2",
+    "arch": "all",
+    "metadata": {
+      "description": "Some vim utility functions",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vim-ultisnips",
+    "version": "3.1-3build1",
+    "arch": "all",
+    "metadata": { "description": "snippet solution for Vim", "repos": "focal" }
+  },
+  {
+    "name": "vim-vimerl",
+    "version": "1.4.1+git20120509.89111c7-2",
+    "arch": "all",
+    "metadata": { "description": "Erlang plugin for Vim", "repos": "focal" }
+  },
+  {
+    "name": "vim-vimerl-syntax",
+    "version": "1.4.1+git20120509.89111c7-2",
+    "arch": "all",
+    "metadata": { "description": "Erlang syntax for Vim", "repos": "focal" }
+  },
+  {
+    "name": "vim-voom",
+    "version": "5.3-3",
+    "arch": "all",
+    "metadata": { "description": "Vim two-pane outliner", "repos": "focal" }
+  },
+  {
+    "name": "vim-youcompleteme",
+    "version": "0+20191218+git9e2ab00+ds-1",
+    "arch": "all",
+    "metadata": {
+      "description": "fast, as-you-type, fuzzy-search code completion engine for Vim",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "vit",
+    "version": "2.0.0-1",
+    "arch": "all",
+    "metadata": {
+      "description": "full-screen terminal interface for Taskwarrior",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "youtube-dl",
+    "version": "2020.03.24-1",
+    "arch": "all",
+    "metadata": {
+      "description": "downloader of videos from YouTube and other sites",
+      "repos": "focal"
+    }
+  },
+  {
+    "name": "yt-dlp",
+    "version": "2022.03.08.1-1~bpo20.04.1",
+    "arch": "all",
+    "metadata": {
+      "description": "downloader of videos from YouTube and other sites",
+      "repos": "focal-backports"
+    }
+  },
+  {
+    "name": "zsh-antigen",
+    "version": "2.2.3-2",
+    "arch": "all",
+    "metadata": { "description": "manage your zsh plugins", "repos": "focal" }
+  }
+]
