@@ -1,6 +1,10 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { CommandResult, PackageInfo } from "../src/types.js";
+import type {
+  CommandResult,
+  PackageInfo,
+  PackageStatus,
+} from "../src/types.js";
 import { AptOutputParser } from "../src/parser.js";
 import { deserializeCommandResult, nullLogger } from "./common.js";
 
@@ -21,15 +25,18 @@ function dumpPackages(packages: PackageInfo[]): string {
 function jsonToPackageInfos(
   jsonArray: Record<string, unknown>[],
 ): PackageInfo[] {
-  return jsonArray.map((json) => ({
-    name: json.name as string,
-    version: json.version as string,
-    status: json.status as "installed" | "upgradeable" | "available",
-    arch: json.arch as string | undefined,
-    metadata: json.metadata
-      ? new Map(Object.entries(json.metadata as Record<string, string>))
-      : undefined,
-  }));
+  return jsonArray.map(
+    (json) =>
+      ({
+        name: json.name,
+        version: json.version,
+        status: json.status,
+        arch: json.arch,
+        metadata: json.metadata
+          ? new Map(Object.entries(json.metadata as Record<string, string>))
+          : undefined,
+      }) as PackageInfo,
+  );
 }
 
 function withoutUndefinedFields<T extends object>(value: T): Partial<T> {
