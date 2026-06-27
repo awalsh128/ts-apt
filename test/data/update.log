@@ -1,0 +1,15 @@
+*** CMD_LINE apt-get update -y
+*** EXIT_CODE 0
+*** STDOUT
+Hit:1 https://cli.github.com/packages stable InRelease
+Hit:2 https://deb.nodesource.com/node_20.x nodistro InRelease
+Get:3 http://security.ubuntu.com/ubuntu focal-security InRelease [128 kB]
+Hit:4 http://archive.ubuntu.com/ubuntu focal InRelease
+Get:5 http://archive.ubuntu.com/ubuntu focal-updates InRelease [128 kB]
+Hit:6 http://ppa.launchpad.net/apt-fast/stable/ubuntu focal InRelease
+Get:7 http://archive.ubuntu.com/ubuntu focal-backports InRelease [128 kB]
+Hit:8 http://ppa.launchpad.net/longsleep/golang-backports/ubuntu focal InRelease
+Hit:9 http://ppa.launchpad.net/thomas-schiex/blender/ubuntu focal InRelease
+Fetched 383 kB in 1s (396 kB/s)
+Reading package lists...
+*** STDERR

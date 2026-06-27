@@ -1,28 +1,50 @@
+// {
+//   "compilerOptions": {
+//     "target": "ES2023",
+//     "module": "NodeNext",
+//     "moduleResolution": "NodeNext",
+//     "outDir": "./dist",
+//     "rootDir": "./src",
+//     "strict": true,
+//     "noUncheckedIndexedAccess": true,
+//     "declaration": true,
+//     "sourceMap": true,
+//     "esModuleInterop": true,
+//     "forceConsistentCasingInFileNames": true,
+//     "skipLibCheck": true,
+//     "types": [
+//       "node",
+//       "vitest/globals"
+//     ],
+//     "lib": [
+//       "ES2023"
+//     ]
+//   },
+//   "include": [
+//     "src/**/*.ts",
+//     "test/**/*.ts"
+//   ],
+//   "exclude": [
+//     "dist",
+//     "node_modules",
+//     "test/common.ts"
+//   ]
+// }
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "dist",
-    "rootDir": ".",
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "declaration": true,
-    "sourceMap": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "types": [
-      "node",
-      "vitest/globals"
-    ]
-  },
+  "extends": "./tsconfig.base.json",
   "include": [
     "src/**/*.ts",
     "test/**/*.ts"
   ],
   "exclude": [
-    "dist",
-    "node_modules"
-  ]
+    "node_modules",
+    "dist"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node",
+      "vitest/globals"
+    ],
+    "noEmit": true
+  }
 }

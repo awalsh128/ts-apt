@@ -1,0 +1,42 @@
+*** CMD_LINE dpkg-query -L xdot
+*** EXIT_CODE 0
+*** STDOUT
+/.
+/usr
+/usr/bin
+/usr/bin/xdot
+/usr/lib
+/usr/lib/python3
+/usr/lib/python3/dist-packages
+/usr/lib/python3/dist-packages/xdot
+/usr/lib/python3/dist-packages/xdot/__init__.py
+/usr/lib/python3/dist-packages/xdot/__main__.py
+/usr/lib/python3/dist-packages/xdot/dot
+/usr/lib/python3/dist-packages/xdot/dot/__init__.py
+/usr/lib/python3/dist-packages/xdot/dot/lexer.py
+/usr/lib/python3/dist-packages/xdot/dot/parser.py
+/usr/lib/python3/dist-packages/xdot/dot/scanner.py
+/usr/lib/python3/dist-packages/xdot/ui
+/usr/lib/python3/dist-packages/xdot/ui/__init__.py
+/usr/lib/python3/dist-packages/xdot/ui/actions.py
+/usr/lib/python3/dist-packages/xdot/ui/animation.py
+/usr/lib/python3/dist-packages/xdot/ui/colors.py
+/usr/lib/python3/dist-packages/xdot/ui/elements.py
+/usr/lib/python3/dist-packages/xdot/ui/pen.py
+/usr/lib/python3/dist-packages/xdot/ui/window.py
+/usr/lib/python3/dist-packages/xdot-1.1.egg-info
+/usr/lib/python3/dist-packages/xdot-1.1.egg-info/PKG-INFO
+/usr/lib/python3/dist-packages/xdot-1.1.egg-info/dependency_links.txt
+/usr/lib/python3/dist-packages/xdot-1.1.egg-info/entry_points.txt
+/usr/lib/python3/dist-packages/xdot-1.1.egg-info/top_level.txt
+/usr/share
+/usr/share/applications
+/usr/share/applications/xdot.desktop
+/usr/share/doc
+/usr/share/doc/xdot
+/usr/share/doc/xdot/changelog.Debian.gz
+/usr/share/doc/xdot/copyright
+/usr/share/man
+/usr/share/man/man1
+/usr/share/man/man1/xdot.1.gz
+*** STDERR

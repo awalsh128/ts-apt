@@ -1,12 +1,14 @@
 # ts-apt
 
+[![npm version](https://img.shields.io/npm/v/ts-apt)](https://www.npmjs.com/package/ts-apt)
 [![License: Apache2](https://shields.io/badge/license-apache2-blue.svg)](https://github.com/awalsh128/ts-apt/blob/master/LICENSE)
 [![CI status](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml/badge.svg)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/ts-apt)]
+[![codecov](https://codecov.io/gh/awalsh128/ts-apt/branch/main/graph/badge.svg)](https://codecov.io/gh/awalsh128/ts-apt)
 
-TypeScript library for APT and APT-fast package operations on Debian-based Linux systems.
+<!-- TODO enable once active -->
+<!-- ![npm downloads](https://img.shields.io/npm/dt/ts-apt.svg) -->
 
-This package is library-only (no bundled CLI executable).
+TypeScript library for APT (Advanced Package Tool) package operations on Debian-based Linux systems. Also supports the [ilikenwf/apt-fast](https://github.com/ilikenwf/apt-fast) wrapper for optimized download times.
 
 ## Scope
 

@@ -1,0 +1,45 @@
+name: "Verify code health and quality"
+description: "Runs build, linters, type, tests, and generates API docs to verify the code is in a good state"
+
+inputs:
+  run_tests:
+    description: "Whether to run tests as part of verification (default: true)"
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Lint
+      shell: bash
+      run: npm run lint
+
+    - name: Typecheck
+      shell: bash
+      run: npm run typecheck
+
+    - name: Type Coverage
+      shell: bash
+      run: npx type-coverage --at-least 95
+
+    - name: Build
+      shell: bash
+      run: npm run build
+
+    - name: Unit tests
+      if: ${{ inputs.run_tests == 'true' }}
+      shell: bash
+      run: npm run test:unit
+
+    - name: Integration tests
+      if: ${{ inputs.run_tests == 'true' }}
+      shell: bash
+      run: npm run test:integration
+
+    - name: Generate API docs
+      shell: bash
+      run: npm run docs:api
+
+    - name: Verify API docs are up to date
+      shell: bash
+      run: git diff --exit-code -- docs/api
