@@ -1,40 +1,9 @@
-// {
-//   "compilerOptions": {
-//     "target": "ES2023",
-//     "module": "NodeNext",
-//     "moduleResolution": "NodeNext",
-//     "outDir": "./dist",
-//     "rootDir": "./src",
-//     "strict": true,
-//     "noUncheckedIndexedAccess": true,
-//     "declaration": true,
-//     "sourceMap": true,
-//     "esModuleInterop": true,
-//     "forceConsistentCasingInFileNames": true,
-//     "skipLibCheck": true,
-//     "types": [
-//       "node",
-//       "vitest/globals"
-//     ],
-//     "lib": [
-//       "ES2023"
-//     ]
-//   },
-//   "include": [
-//     "src/**/*.ts",
-//     "test/**/*.ts"
-//   ],
-//   "exclude": [
-//     "dist",
-//     "node_modules",
-//     "test/common.ts"
-//   ]
-// }
 {
   "extends": "./tsconfig.base.json",
   "include": [
     "src/**/*.ts",
-    "test/**/*.ts"
+    "test/**/*.ts",
+    "scripts/**/*"
   ],
   "exclude": [
     "node_modules",

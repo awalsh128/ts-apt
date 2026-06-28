@@ -8,7 +8,18 @@
 <!-- TODO enable once active -->
 <!-- ![npm downloads](https://img.shields.io/npm/dt/ts-apt.svg) -->
 
+> [!NOTE]
+> The open source projects that I maintain are a labor of love. If you find this useful and want to support open source, **please consider donating and [Buy Me a Coffe](http://buymeacoffee.com/awalsh128)**.
+
 TypeScript library for APT (Advanced Package Tool) package operations on Debian-based Linux systems. Also supports the [ilikenwf/apt-fast](https://github.com/ilikenwf/apt-fast) wrapper for optimized download times.
+
+## Credit
+
+- [ilikenwf/apt-fast](https://github.com/ilikenwf/apt-fast) for optimized download times.
+- [moll/js-internet-message](https://github.com/moll/js-internet-message) for RFC compliant internet message parsing which is emitted by APT for some commands.
+  - RFC 733 (ARPA Network Text Message)
+  - RFC 822 (ARPA Internet Text Messages)
+  - RFC 2822 (Internet Message Format)
 
 ## Scope
 
@@ -29,6 +40,15 @@ TypeScript library for APT (Advanced Package Tool) package operations on Debian-
 ```bash
 npm install
 npm run build
+```
+
+## Testing
+
+Integration tests run APT commands inside the repository devcontainer for host isolation.
+
+```bash
+npm run test:unit
+npm run test:integration
 ```
 
 ## Quick Example

@@ -9,8 +9,6 @@ import { parseMessage } from "./internetMessage.js";
 /** Matches the cache search line emitted by apt search in '<name>/<repos> <version> <arch>\n<description>' format. */
 const SEARCH_REGEX =
   /^([^ \n\/]+)\/([^\s]+)\s+([^\s]+)\s+(\w+)\n\s*(.+?)(?=\n\n|\n[^ \n]|$)/gm;
-/** Matches the cache policy line emitted by apt-cache policy. */
-const CACHE_POLICY_STANZA_REGEX = /^(.*):\n[\s\S]*?(?=^[^:\n]+:|\n$)/gm;
 /** Matches the prefix of a stanza in apt-cache show output in order to separate stanzas for parsing. */
 const CACHE_SHOW_STANZA_REGEX = /.+?((?:\r\n|\r|\n)\s*(?:\r\n|\r|\n))|.+$/gs;
 
@@ -25,15 +23,16 @@ const INSTALL_OR_UPDATE_REGEX =
  */
 const DPKG_QUERY_LIST_INSTALLED_REGEX = /(.+):(.*)\=(.*)/;
 
-/** Allow list regex used to validate package names and keyword tokens. */
-export const PACKAGE_NAME_REGEX = /^[a-z0-9\-_.+=:/]+$/;
-
 /**
  * Matches package lines emitted by apt list --upgradable in format
  * '<name>/<category> <newVersion> <arch> [upgradable from: <oldVersion>]'
  */
 const LIST_UPGRADEABLE_REGEX =
   /^([^\/\s]+)\/[\w\-]+,\S+\s+([^\s]+)\s+(\w+)\s+\[upgradable from:\s+([^\s]+)\]/;
+
+function normText(text: string): string {
+  return text.replace(/\r\n/g, "\n").trimEnd();
+}
 
 /**
  * Concrete implementation of AptOutputParser for system package output parsing.
@@ -70,26 +69,24 @@ export class AptOutputParser {
    * ```
    */
   parseCachePolicyOutput(result: CommandResult): PackageInfo[] {
-    return Array.from(
-      result.stdout
-        .split(CACHE_POLICY_STANZA_REGEX)
-        .map((stanza) => {
-          const name = stanza.split("\n", 1)[0]!.slice(0, -1);
-          const body = stanza.slice(stanza.indexOf("\n") + 1);
-          return { name, message: parseMessage(body) };
-        })
-        .map(({ name, message }): PackageInfo => {
-          const isInstalled = message.getHeader("Installed") !== "(none)";
-          return {
-            name: name,
-            version: isInstalled
-              ? message.getHeader("Installed")!
-              : message.getHeader("Candidate")!,
-            status: isInstalled ? "installed" : "available",
-            metadata: new Map(Object.entries(message.headers.toObject())),
-          };
-        }),
+    const stanzas = Array.from(
+      normText(result.stdout).matchAll(/^([^:\n]+):\n((?:^[ \t].*\n?)*)/gm),
     );
+    return stanzas.map((match): PackageInfo => {
+      const name = match[1]!.trim();
+      const bodyRaw = match[2] ?? "";
+      const body = bodyRaw.endsWith("\n") ? bodyRaw : `${bodyRaw}\n`;
+      const message = parseMessage(body);
+      const isInstalled = message.getHeader("Installed") !== "(none)";
+      return {
+        name,
+        version: isInstalled
+          ? message.getHeader("Installed")!
+          : message.getHeader("Candidate")!,
+        status: isInstalled ? "installed" : "available",
+        metadata: new Map(Object.entries(message.headers.toObject())),
+      };
+    });
   }
 
   /**
@@ -107,10 +104,11 @@ export class AptOutputParser {
     result: CommandResult,
     includeMetadata: boolean = false,
   ): PackageInfo[] {
-    const stanzas = result.stdout.match(CACHE_SHOW_STANZA_REGEX) ?? [];
+    const stanzas =
+      normText(result.stdout).match(CACHE_SHOW_STANZA_REGEX) ?? [];
     this.logger.debug(`Found ${stanzas.length} stanzas in cache show output`);
     return stanzas
-      .map((stanza) => parseMessage(stanza))
+      .map((stanza) => parseMessage(stanza.trimEnd() + "\n\n"))
       .map((message): PackageInfo => {
         return {
           name: message.getHeader("Package") ?? "",
@@ -137,7 +135,7 @@ export class AptOutputParser {
    */
   parseInstallOutput(result: CommandResult): PackageInfo[] {
     const packages: PackageInfo[] = [];
-    const lines = result.stdout.replace(/\r\n/g, "\n").trimEnd().split("\n");
+    const lines = normText(result.stdout).split("\n");
 
     for (const line of lines) {
       const match = INSTALL_OR_UPDATE_REGEX.exec(line);
@@ -146,12 +144,8 @@ export class AptOutputParser {
       }
 
       const [, name, archPart, version] = match;
-      if (!name) {
-        continue;
-      }
-
       packages.push({
-        name,
+        name: name!,
         arch: archPart,
         version: version!,
         status: "installed",
@@ -172,7 +166,7 @@ export class AptOutputParser {
    */
   parseRemoveOutput(result: CommandResult): PackageInfo[] {
     const packages: PackageInfo[] = [];
-    const lines = result.stdout.replace(/\r\n/g, "\n").trimEnd().split("\n");
+    const lines = normText(result.stdout).split("\n");
 
     for (const rawLine of lines) {
       const line = rawLine.trim();
@@ -183,12 +177,8 @@ export class AptOutputParser {
       }
 
       const [, name, arch = undefined, version] = match;
-      if (!name) {
-        continue;
-      }
-
       packages.push({
-        name,
+        name: name!,
         arch,
         version: version!,
         status: "available",
@@ -210,7 +200,10 @@ export class AptOutputParser {
    */
   parseListInstalledOutput(result: CommandResult): PackageInfo[] {
     const packages: PackageInfo[] = [];
-    const lines = result.stdout.replace(/\r\n/g, "\n").trimEnd().split("\n");
+    const lines = normText(result.stdout)
+      .replace(/\r\n/g, "\n")
+      .trimEnd()
+      .split("\n");
 
     for (const line of lines) {
       if (!line.trim()) {
@@ -247,7 +240,10 @@ export class AptOutputParser {
    */
   parseListUpgradableOutput(result: CommandResult): PackageInfo[] {
     const packages: PackageInfo[] = [];
-    const lines = result.stdout.replace(/\r\n/g, "\n").trimEnd().split("\n");
+    const lines = normText(result.stdout)
+      .replace(/\r\n/g, "\n")
+      .trimEnd()
+      .split("\n");
 
     for (const line of lines) {
       const matched = LIST_UPGRADEABLE_REGEX.exec(line.trim());
@@ -280,7 +276,10 @@ export class AptOutputParser {
    */
   parseQueryOutput(result: CommandResult): PackageInfo[] {
     const packages: PackageInfo[] = [];
-    const lines = result.stdout.replace(/\r\n/g, "\n").trim().split("\n");
+    const lines = normText(result.stdout)
+      .replace(/\r\n/g, "\n")
+      .trim()
+      .split("\n");
 
     for (const line of lines) {
       const trimmedLine = line.trim();
@@ -312,12 +311,7 @@ export class AptOutputParser {
    */
   parseSearchOutput(result: CommandResult): PackageInfo[] {
     const packages: PackageInfo[] = [];
-    const matches = result.stdout.matchAll(SEARCH_REGEX);
-    if (!matches) {
-      return packages;
-    }
-
-    for (const match of matches) {
+    for (const match of normText(result.stdout).matchAll(SEARCH_REGEX)) {
       const [, name, repos, version, arch, description] = match;
       packages.push({
         name: name!,
@@ -342,7 +336,10 @@ export class AptOutputParser {
    * ```
    */
   parseUpdateOutput(result: CommandResult): number {
-    const lines = result.stdout.replace(/\r\n/g, "\n").trimEnd().split("\n");
+    const lines = normText(result.stdout)
+      .replace(/\r\n/g, "\n")
+      .trimEnd()
+      .split("\n");
     const lastLine = lines[lines.length - 1] ?? "";
     const match = lastLine.match(/(\d+) packages can be upgraded/);
     return match ? parseInt(match[1]!, 10) : 0;
@@ -359,7 +356,10 @@ export class AptOutputParser {
    */
   parseUpgradeOutput(result: CommandResult): PackageInfo[] {
     const packages: PackageInfo[] = [];
-    const lines = result.stdout.replace(/\r\n/g, "\n").trimEnd().split("\n");
+    const lines = normText(result.stdout)
+      .replace(/\r\n/g, "\n")
+      .trimEnd()
+      .split("\n");
 
     for (const line of lines) {
       const match = INSTALL_OR_UPDATE_REGEX.exec(line);

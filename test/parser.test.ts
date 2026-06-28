@@ -243,6 +243,74 @@ describe("apt output parser", () => {
     },
   );
 
+  test("parseCachePolicyOutput parses installed and available entries", () => {
+    const parsed = parser.parseCachePolicyOutput({
+      cmdLine: "apt-cache policy curl vim",
+      exitCode: 0,
+      stdout: [
+        "curl:",
+        "  Installed: 8.5.0-2ubuntu10.6",
+        "  Candidate: 8.5.0-2ubuntu10.6",
+        "",
+        "vim:",
+        "  Installed: (none)",
+        "  Candidate: 2:9.0-1",
+        "",
+      ].join("\n"),
+      stderr: "",
+    });
+
+    expect(parsed).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "curl",
+          version: "8.5.0-2ubuntu10.6",
+          status: "installed",
+        }),
+        expect.objectContaining({
+          name: "vim",
+          version: "2:9.0-1",
+          status: "available",
+        }),
+      ]),
+    );
+  });
+
+  test("parseQueryOutput parses dpkg-query formatted lines", () => {
+    const parsed = parser.parseQueryOutput({
+      cmdLine: "dpkg-query -W -f=${binary:Package}:${Architecture}=${Version}",
+      exitCode: 0,
+      stdout: "openssl:amd64=3.0.13-0ubuntu3.5\ninvalid-line\n",
+      stderr: "",
+    });
+
+    expect(parsed).toEqual([
+      expect.objectContaining({
+        name: "openssl",
+        arch: "amd64",
+        version: "3.0.13-0ubuntu3.5",
+        status: "installed",
+      }),
+    ]);
+  });
+
+  test("parseListInstalledOutput skips empty lines", () => {
+    const parsed = parser.parseListInstalledOutput({
+      cmdLine: "dpkg-query -W",
+      exitCode: 0,
+      stdout: "\n\nopenssl:amd64=3.0.13-0ubuntu3.5\n",
+      stderr: "",
+    });
+
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]).toMatchObject({
+      name: "openssl",
+      arch: "amd64",
+      version: "3.0.13-0ubuntu3.5",
+      status: "installed",
+    });
+  });
+
   test("parseInstallOutput captures architecture when present", () => {
     const parsed = parser.parseInstallOutput({
       cmdLine: "apt-get install -f libc6",

@@ -3,6 +3,19 @@
  */
 export type PackageStatus = "installed" | "upgradeable" | "available";
 
+/** Package name that differentiates versioned and unversioned. */
+export interface PackageName {
+  /** Required name. */
+  name: string;
+  /** Optional version of package. */
+  version?: string;
+  /** Optional distribution of package. */
+  distro?: string;
+
+  /** Serializes the package name and version into an APT string representation. */
+  serialize(): string;
+}
+
 /**
  * Structured package metadata returned by manager operations.
  */
@@ -66,16 +79,16 @@ export interface CommandRunner {
  */
 export interface PackageManager {
   /** Installs one or more packages. */
-  install(pkgs: string[]): Promise<PackageInfo[]>;
+  install(pkgs: PackageName[]): Promise<PackageInfo[]>;
 
   /** Removes one or more packages. */
-  remove(pkgs: string[]): Promise<PackageInfo[]>;
+  remove(pkgs: PackageName[]): Promise<PackageInfo[]>;
 
   /** Searches package repositories by one or more keywords and returns name-description pairs. */
   search(keywords: string[]): Promise<PackageInfo[]>;
 
   /** Lists files installed by a package. */
-  listInstalledFiles(pkg: string): Promise<string[]>;
+  listInstalledFiles(pkg: PackageName): Promise<string[]>;
 
   /** Lists currently installed packages. */
   listInstalled(): Promise<PackageInfo[]>;
@@ -84,7 +97,7 @@ export interface PackageManager {
   listUpgradable(): Promise<PackageInfo[]>;
 
   /** Upgrades all packages or a selected package set. */
-  upgrade(pkgs: string[]): Promise<PackageInfo[]>;
+  upgrade(pkgs: PackageName[]): Promise<PackageInfo[]>;
 
   /** Upgrades all packages managed by this package manager. */
   upgradeAll(): Promise<PackageInfo[]>;
@@ -93,7 +106,7 @@ export interface PackageManager {
   update(): Promise<number>;
 
   /** Returns metadata for one or more packages. */
-  getPackageInfo(pkgs: string[]): Promise<PackageInfo[]>;
+  getPackageInfo(pkgs: PackageName[]): Promise<PackageInfo[]>;
 
   /** Cleans local package cache data. */
   autoClean(): Promise<void>;

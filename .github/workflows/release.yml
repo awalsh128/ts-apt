@@ -11,14 +11,21 @@ on:
         required: true
         type: string
 
+permissions:
+  security-events: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [24]
     env:
       RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Setup environment
         uses: ./.github/actions/setup-env
@@ -35,10 +42,11 @@ jobs:
     needs: validate
     permissions:
       contents: write
+      pages: write
       id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Setup environment
         uses: ./.github/actions/setup-env
@@ -64,19 +72,19 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: step-security/action-gh-release@277bfa82abcfdb73e5bbb19e213fd76532ee2be5 # v3.0.0
         with:
           generate_release_notes: true
           tag_name: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: docs/api
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

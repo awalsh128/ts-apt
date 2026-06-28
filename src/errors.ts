@@ -69,11 +69,12 @@ export class CommandExecutionError extends TsAptError {
     exitCode: number;
     stderr: string;
     stdout: string;
-    message?: string;
   }) {
     super(
-      params.message ??
-        `Command failed: ${params.command} ${params.args.join(" ")} (exit ${params.exitCode})`,
+      `Command failed: ${params.command} ${params.args.join(" ")}\n` +
+        `  stdout: ${params.stdout}\n` +
+        `  stderr: ${params.stderr}\n` +
+        `  exit code: ${params.exitCode})`,
     );
     this.name = "CommandExecutionError";
     this.command = params.command;

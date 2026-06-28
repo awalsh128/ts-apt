@@ -11,6 +11,8 @@
 # version 3 of the License, or (at your option) any later version.
 #
 
+# shellcheck disable=all
+
 shopt -s nullglob
 
 [ -n "$DEBUG" ] && set -xv
@@ -228,12 +230,6 @@ msg_already_running()
   msg "apt-fast already running!" "warning"
   msg "Verify that all apt-fast processes are finished then remove $LCK_FILE.lock and try again." "hint"
 }
-
-# Check if a lock file exists.
-if [ -f "$LCK_FILE.lock" ]; then
-  msg_already_running
-  exit 1
-fi
 
 
 # create the lock file and lock it, die on failure

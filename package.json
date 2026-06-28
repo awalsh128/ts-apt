@@ -6,6 +6,8 @@
   "license": "Apache-2.0",
   "keywords": [
     "apt",
+    "apt-cache",
+    "apt-get",
     "apt-fast",
     "helper"
   ],
@@ -23,7 +25,7 @@
   ],
   "type": "module",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "types": "dist/src/types.d.ts",
   "exports": {
     ".": {
       "import": {
@@ -48,20 +50,24 @@
     "lint": "eslint src test --ext .ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:unit": "vitest run test/unit",
-    "test:integration": "vitest run test/integration",
+    "test:unit": "vitest run --exclude test/ubuntu.integration.test.ts",
+    "test:integration": "vitest run test/ubuntu.integration.test.ts",
     "dev": "vitest"
   },
+  "dependencies": {
+    "async-mutex": "^0.5.0",
+    "winston": "^3.19.0"
+  },
   "devDependencies": {
-    "@types/node": "^26.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.61.1",
-    "@typescript-eslint/parser": "^8.61.1",
-    "eslint": "^10.5.0",
+    "@devcontainers/cli": "^0.81.1",
+    "@typescript-eslint/eslint-plugin": "^8.62.0",
+    "@typescript-eslint/parser": "^8.62.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "eslint": "^10.6.0",
     "internet-message": "^1.0.0",
     "type-coverage": "^2.29.7",
     "typedoc": "^0.28.19",
-    "typescript": "^5.8.3",
-    "vitest": "^4.1.9",
-    "winston": "^3.19.0"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.9"
   }
 }

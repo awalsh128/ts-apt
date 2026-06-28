@@ -1,0 +1,15 @@
+{
+  "name": "Vitest Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vitest-dev.vitest-vscode"
+      ]
+    }
+  },
+  "postCreateCommand": "npm install"
+}   

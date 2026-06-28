@@ -207,6 +207,10 @@ const testLogFiles = [
     execCmdLine: "apt search vim-vimerl-syntax",
   },
   {
+    filepath: "search_namesonlysinglefound",
+    execCmdLine: "apt search --names-only bash",
+  },
+  {
     filepath: "update",
     execCmdLine: "apt-get update -y",
   },

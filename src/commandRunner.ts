@@ -1,13 +1,11 @@
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { CommandExecutionError } from "./errors.js";
-import winston from "winston";
 import type { CommandOptions, CommandResult, CommandRunner } from "./types.js";
+import winston from "winston";
 
 /** Default process timeout for commands without an explicit timeout. */
 const DEFAULT_TIMEOUT_MS = 30_000;
-
-const APT_FAST_PATH = path.join(__dirname, "..", "scripts", "apt-fast.sh");
 
 /**
  * Production command runner backed by child_process spawn.

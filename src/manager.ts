@@ -1,24 +1,69 @@
-import { AvailabilityError } from "./errors.js";
+import { Mutex } from "async-mutex";
 import { DefaultCommandRunner } from "./commandRunner.js";
 import type {
   CommandResult,
   CommandRunner,
   PackageInfo,
   PackageManager,
+  PackageName,
 } from "./types.js";
-import { AptOutputParser, PACKAGE_NAME_REGEX } from "./parser.js";
-import { APT_ENV, APT_FLAGS, TIMEOUTS } from "./options.js";
+import { AptOutputParser } from "./parser.js";
+import { validatePackageName } from "./package.js";
 import winston from "winston";
-import { ValidationError } from "./errors.js";
+import path from "path/win32";
 
-type BinaryName = "apt" | "apt-cache" | "apt-fast" | "apt-get" | "dpkg-query";
+/** Environment overrides for non-interactive APT commands. */
+export const APT_ENV = [
+  "DEBIAN_FRONTEND=noninteractive",
+  "DEBCONF_NONINTERACTIVE_SEEN=true",
+] as const;
+
+/** Common APT flags used across operations. */
+export const APT_FLAGS = {
+  assumeYes: "-y",
+  fixBroken: "-f",
+  autoRemove: "--autoremove",
+} as const;
+
+/** Operation-specific timeout values in milliseconds. */
+export const TIMEOUTS = {
+  install: 10 * 60_000,
+  remove: 10 * 60_000,
+  refresh: 5 * 60_000,
+  search: 3 * 60_000,
+  listInstalledFiles: 60_000,
+  listInstalled: 3 * 60_000,
+  listUpgradable: 3 * 60_000,
+  upgrade: 15 * 60_000,
+  clean: 5 * 60_000,
+  getPackageInfo: 30_000,
+  autoRemove: 10 * 60_000,
+  availability: 5_000,
+  dpkgStatus: 30_000,
+} as const;
+
+/** Lock TTL in milliseconds derived from the longest manager operation timeout. */
+const GLOBAL_APT_LOCK_TTL_MS = Math.max(...Object.values(TIMEOUTS));
+
+/** Max time in seconds to wait for the global lock before failing the command. */
+export const GLOBAL_APT_LOCK_WAIT_SECONDS = String(
+  Math.ceil(GLOBAL_APT_LOCK_TTL_MS / 1000),
+);
+
+export type BinaryName =
+  | "apt"
+  | "apt-cache"
+  | "apt-fast"
+  | "apt-get"
+  | "dpkg-query";
+
 interface BinaryMeta {
   name: BinaryName;
   path: string;
   defaultArgs: string[];
 }
 
-const Binary = {
+export const Binary = {
   Apt: {
     name: "apt",
     path: "/usr/bin/apt",
@@ -31,7 +76,7 @@ const Binary = {
   },
   AptFast: {
     name: "apt-fast",
-    path: "/usr/bin/apt-fast",
+    path: path.posix.join(__dirname, "..", "scripts", "apt-fast.sh"),
     defaultArgs: ["--quiet=0", APT_FLAGS.assumeYes],
   },
   AptGet: {
@@ -46,42 +91,17 @@ const Binary = {
   },
 } as const satisfies Record<string, BinaryMeta>;
 
-/**
- * Validates a single package name or keyword token.
- *
- * @param name Package name or keyword token.
- * @throws ValidationError When the value is empty, too long, or unsafe.
- */
-function validatePackageName(name: string): void {
-  if (name.length === 0) {
-    throw new ValidationError("package name cannot be empty");
-  }
+/** APT operations require serialization since globally shared files like lock files are used. */
+const globalRunLock = new Mutex();
 
-  if (name.length > 255) {
-    throw new ValidationError("package name too long (max 255 characters)");
-  }
-
-  if (!PACKAGE_NAME_REGEX.test(name)) {
-    throw new ValidationError(
-      "invalid package name: contains potentially dangerous characters",
-    );
-  }
-}
-
-/**
- * Validates multiple package names or keyword tokens.
- *
- * @param names Values to validate.
- * @throws ValidationError When any entry is invalid.
- */
-function validatePackageNames(names: string[]): void {
-  for (const name of names) {
-    validatePackageName(name);
-  }
-}
+/** Global cross-process lock file used to serialize APT operations across processes. */
+const GLOBAL_APT_LOCK_FILE = "/tmp/ts-apt-manager.lock";
 
 /**
  * APT-backed package manager implementation.
+ *
+ * IMPORTANT: All operations are serialized to avoid concurrent access to APT lock files.
+ * This is achieved via a global mutex and flock-based locking for real command execution.
  */
 export class AptPackageManager implements PackageManager {
   /** Whether to enable apt-fast for optimized package installation and upgrades. */
@@ -92,8 +112,12 @@ export class AptPackageManager implements PackageManager {
   protected readonly parser: AptOutputParser;
   /** Logger instance for application level logging. */
   protected readonly logger: winston.Logger;
-  /** Binary used for mutating operations (install, remove, upgrade). */
+  /** Binary used for mutating operations (install, remove, upgrade, update). */
   protected readonly mutatingBinary: BinaryMeta;
+  /** Binary used for read-only apt operations (search, list). */
+  protected readonly readBinary: BinaryMeta;
+  /** Binary used for package metadata queries (show). */
+  protected readonly cacheBinary: BinaryMeta;
 
   constructor(
     aptFastEnabled: boolean,
@@ -105,10 +129,21 @@ export class AptPackageManager implements PackageManager {
     this.parser = parser;
     this.logger = logger;
     this.aptFastEnabled = aptFastEnabled;
-    this.mutatingBinary = this.aptFastEnabled ? Binary.AptFast : Binary.AptGet;
-    this.logger.info(
-      `Using ${this.mutatingBinary.name} as package manager installer`,
-    );
+    this.mutatingBinary = aptFastEnabled ? Binary.AptFast : Binary.AptGet;
+    this.readBinary = aptFastEnabled ? Binary.AptFast : Binary.Apt;
+    this.cacheBinary = aptFastEnabled ? Binary.AptFast : Binary.AptCache;
+    this.logger.info(`Using ${this.mutatingBinary.name} as package manager`);
+  }
+
+  /**
+   * Returns the path to the currently used APT binary.
+   *
+   * This is either apt-fast or apt* depending on availability and configuration.
+   *
+   * @returns Path to the APT binary.
+   */
+  get aptPath(): string {
+    return this.mutatingBinary.path;
   }
 
   /**
@@ -158,11 +193,11 @@ export class AptPackageManager implements PackageManager {
    *
    * @param pkgs Package names.
    */
-  async install(pkgs: string[]): Promise<PackageInfo[]> {
-    validatePackageNames(pkgs);
+  async install(pkgs: PackageName[]): Promise<PackageInfo[]> {
+    pkgs.forEach((pkg) => validatePackageName(pkg.serialize()));
     const result = await this.runAptCommand(
       this.mutatingBinary,
-      ["install", APT_FLAGS.fixBroken, ...pkgs],
+      ["install", APT_FLAGS.fixBroken, ...pkgs.map((pkg) => pkg.serialize())],
       TIMEOUTS.install,
     );
     return this.parser.parseInstallOutput(result);
@@ -199,11 +234,11 @@ export class AptPackageManager implements PackageManager {
    *
    * @param pkg Package name.
    */
-  async listInstalledFiles(pkg: string): Promise<string[]> {
-    validatePackageName(pkg);
+  async listInstalledFiles(pkg: PackageName): Promise<string[]> {
+    validatePackageName(pkg.serialize());
     const result = await this.runAptCommand(
       Binary.DpkgQuery,
-      ["-L", pkg],
+      ["-L", pkg.serialize()],
       TIMEOUTS.listInstalledFiles,
     );
 
@@ -223,7 +258,7 @@ export class AptPackageManager implements PackageManager {
    */
   async listUpgradable(): Promise<PackageInfo[]> {
     const result = await this.runAptCommand(
-      Binary.Apt,
+      this.readBinary,
       ["list", "--upgradable"],
       TIMEOUTS.listUpgradable,
     );
@@ -242,11 +277,15 @@ export class AptPackageManager implements PackageManager {
    * @param pkgs Package names.
    */
   async remove(
-    pkgs: string[],
+    pkgs: PackageName[],
     autoremoveEnabled: boolean = true,
   ): Promise<PackageInfo[]> {
-    validatePackageNames(pkgs);
-    const args = ["remove", APT_FLAGS.fixBroken, ...pkgs];
+    pkgs.forEach((pkg) => validatePackageName(pkg.serialize()));
+    const args = [
+      "remove",
+      APT_FLAGS.fixBroken,
+      ...pkgs.map((pkg) => pkg.serialize()),
+    ];
     if (autoremoveEnabled) {
       args.push(APT_FLAGS.autoRemove);
     }
@@ -268,13 +307,18 @@ export class AptPackageManager implements PackageManager {
    * ```
    *
    * @param keywords Search terms.
+   * @param namesOnly Whether to return only package names.
    */
-  async search(keywords: string[]): Promise<PackageInfo[]> {
-    validatePackageNames(keywords);
-
+  async search(
+    keywords: string[],
+    namesOnly: boolean = false,
+  ): Promise<PackageInfo[]> {
+    const baseArgs = namesOnly
+      ? ["search", ...keywords, "--names-only"]
+      : ["search", ...keywords];
     const result = await this.runAptCommand(
-      Binary.Apt,
-      ["search", ...keywords],
+      this.readBinary,
+      baseArgs,
       TIMEOUTS.search,
     );
 
@@ -314,15 +358,18 @@ export class AptPackageManager implements PackageManager {
    *
    * @param pkgs Optional package names.
    */
-  async upgrade(pkgs: string[] = []): Promise<PackageInfo[]> {
+  async upgrade(pkgs: PackageName[] = []): Promise<PackageInfo[]> {
     if (pkgs.length > 0) {
-      validatePackageNames(pkgs);
+      pkgs.forEach((pkg) => validatePackageName(pkg.serialize()));
     } else {
       this.logger.info(
         "Upgrading all packages since no specific package names were provided",
       );
     }
-    const args = pkgs.length > 0 ? ["install", ...pkgs] : ["upgrade"];
+    const args =
+      pkgs.length > 0
+        ? ["install", ...pkgs.map((pkg) => pkg.serialize())]
+        : ["upgrade"];
     const out = await this.runAptCommand(
       this.mutatingBinary,
       args,
@@ -357,11 +404,11 @@ export class AptPackageManager implements PackageManager {
    *
    * @param pkgs Package names.
    */
-  async getPackageInfo(pkgs: string[]): Promise<PackageInfo[]> {
-    validatePackageNames(pkgs);
+  async getPackageInfo(pkgs: PackageName[]): Promise<PackageInfo[]> {
+    pkgs.forEach((pkg) => validatePackageName(pkg.serialize()));
     const result = await this.runAptCommand(
-      Binary.AptCache,
-      ["show", ...pkgs],
+      this.cacheBinary,
+      ["show", ...pkgs.map((pkg) => pkg.serialize())],
       TIMEOUTS.getPackageInfo,
     );
     return this.parser.parseCacheShowOutput(result);
@@ -369,6 +416,9 @@ export class AptPackageManager implements PackageManager {
 
   /**
    * Executes an apt command with fixed non-interactive behavior.
+   *
+   * NOTE: Also ensures that only one apt command is executed at a time across all processes via a
+   * global lock, otherwise apt will fail with a lock acquisition error.
    *
    * Effective invocation:
    * `binary.path ...binary.defaultArgs ...baseArgs`
@@ -388,14 +438,34 @@ export class AptPackageManager implements PackageManager {
     baseArgs: string[],
     timeoutMs: number,
   ): Promise<CommandResult> {
-    const args = [...binary.defaultArgs, ...baseArgs];
+    // Even though flock is holding the global lock, using an in process mutex is much faster than
+    // spawning multiple processes for flock and waiting for lock acquisition.
+    return await globalRunLock.runExclusive(async () => {
+      const args = [...binary.defaultArgs, ...baseArgs];
 
-    const result = await this.runner.run(binary.path, args, {
-      timeoutMs,
-      env: [...APT_ENV],
+      // Apply an OS-level lock for real command execution so concurrent processes
+      // do not race on apt/apt-fast global lock files.
+      const [command, commandArgs] =
+        this.runner instanceof DefaultCommandRunner
+          ? [
+              "flock",
+              [
+                "-w",
+                GLOBAL_APT_LOCK_WAIT_SECONDS,
+                GLOBAL_APT_LOCK_FILE,
+                binary.path,
+                ...args,
+              ],
+            ]
+          : [binary.path, args];
+
+      const result = await this.runner.run(command, commandArgs, {
+        timeoutMs,
+        env: [...APT_ENV],
+      });
+
+      return result;
     });
-
-    return result;
   }
 }
 
