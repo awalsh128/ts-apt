@@ -63,9 +63,8 @@ export class FakeCommandRunner implements CommandRunner {
         command,
         args,
         exitCode: 1,
-        stderr: "",
+        stderr: `no mock for command line: ${cmdLine}`,
         stdout: "",
-        message: `no mock for command line: ${cmdLine}`,
       });
     }
 
@@ -123,9 +122,8 @@ export class MockCommandRunner implements CommandRunner {
       command,
       args,
       exitCode: 1,
-      stderr: "",
+      stderr: `no mock for command line: ${cmdLine}`,
       stdout: "",
-      message: `no mock for command line: ${cmdLine}`,
     });
   }
 }

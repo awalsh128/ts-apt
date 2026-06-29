@@ -6,8 +6,10 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": ["vitest-dev.vitest-vscode"]
+      "extensions": [
+        "vitest-dev.vitest-vscode"
+      ]
     }
   },
   "postCreateCommand": "npm install"
-}
+}   

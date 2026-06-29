@@ -13,7 +13,7 @@ const workspaceFolder = resolve(__dirname, "..");
 const devcontainerConfigPath = resolve(
   workspaceFolder,
   ".devcontainer",
-  "jsnode-20.json",
+  "jsnode-24.json",
 );
 
 type DevcontainerSupport = {
@@ -69,7 +69,7 @@ export function getDevcontainerSupport(): DevcontainerSupport {
   if (!existsSync(devcontainerConfigPath)) {
     return {
       supported: false,
-      reason: "missing .devcontainer/jsnode-20.json config",
+      reason: "missing .devcontainer/jsnode-24.json config",
     };
   }
 

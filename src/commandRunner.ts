@@ -133,8 +133,7 @@ export class DefaultCommandRunner implements CommandRunner {
               args,
               exitCode: 124,
               stdout,
-              stderr,
-              message,
+              stderr: stderr || message,
             }),
           );
         });
