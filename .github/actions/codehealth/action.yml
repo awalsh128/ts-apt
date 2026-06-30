@@ -1,0 +1,73 @@
+name: "Verify code health and quality"
+description: "Runs build, linters, type, tests, and generates API docs to verify the code is in a good state"
+
+inputs:
+  GITHUB_TOKEN:
+    description: "GitHub token to use for uploading coverage and API docs"
+    required: true
+  create_api_docs:
+    description: "Whether to generate API docs as part of verification (default: true)"
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Lint
+      shell: bash
+      run: npm run lint
+
+    - name: Typecheck
+      shell: bash
+      run: npm run typecheck
+
+    - name: Type Coverage
+      shell: bash
+      run: npx type-coverage --at-least 95
+
+    # TODO - OIDC is not working for CodeQL, so we are disabling it for now. We can re-enable it once OIDC is fixed.
+    # - name: Initialize CodeQL
+    #   uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+    #   with:
+    #     languages: javascript-typescript
+    #     build-mode: none
+    #     queries: security-extended,security-and-quality
+
+    # - name: Perform CodeQL Analysis
+    #   uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+
+    - name: Build
+      shell: bash
+      run: npm run build
+
+    - name: Test
+      shell: bash
+      run: npm run test
+
+    # NOTE: Requires GH account authorization to http://app.codecov.io
+    - name: Upload coverage info
+      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+      with:
+        use_oidc: true
+        files: ./coverage/lcov.info
+        fail_ci_if_error: true
+        slug: "${{ github.repository }}"
+
+    - name: Generate API docs
+      if: ${{ inputs.create_api_docs == 'true' }}
+      shell: bash
+      run: npm run docs:api
+
+    - name: Verify API docs are up to date
+      if: ${{ inputs.create_api_docs == 'true' }}
+      shell: bash
+      run: |
+        git diff --exit-code -- docs/api > api-docs.diff || \
+        (echo "API docs are out of date. Please run 'npm run docs:api' and commit the changes." && exit 1)
+
+    - name: Upload failed API docs diff
+      if: ${{ failure() && inputs.create_api_docs == 'true' }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: api-docs-diff
+        path: api-docs.diff

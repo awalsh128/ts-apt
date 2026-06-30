@@ -1,0 +1,16 @@
+# TODO - Once we have a dev branch, we can re-enable this workflow to prevent merges to main from any other branch. For now, we will disable it to allow merges from dev to main.
+# name: Pull Request Validation
+
+# on:
+#   pull_request:
+
+# jobs:
+#   validation:
+#     runs-on: ubuntu-latest
+#     if: ${{ github.head_ref == 'main' }}
+#     steps:
+#       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+#       - name: Fail validation
+#         run: |
+#           echo "Error: Merges to main are only allowed from 'dev' or 'staging' branches."
+#           exit 1

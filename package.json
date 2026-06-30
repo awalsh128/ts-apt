@@ -1,0 +1,123 @@
+{
+  "name": "ts-apt",
+  "version": "0.1.0",
+  "description": "TypeScript APT and APT-fast package management library",
+  "author": "Andrew Walsh",
+  "license": "Apache-2.0",
+  "keywords": [
+    "apt",
+    "apt-cache",
+    "apt-get",
+    "apt-fast",
+    "helper"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awalsh128/ts-apt.git"
+  },
+  "files": [
+    "dist/src",
+    "!dist/test",
+    "scripts",
+    "docs/api",
+    "LICENSE",
+    "README.md"
+  ],
+  "release": {
+    "branches": [
+      "main",
+      {
+        "name": "next",
+        "channel": "next",
+        "prerelease": true
+      }
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/changelog",
+        {
+          "changelogFile": "CHANGELOG.md"
+        }
+      ],
+      [
+        "@semantic-release/npm",
+        {
+          "npmPublish": true
+        }
+      ],
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "CHANGELOG.md",
+            "package.json",
+            "package-lock.json"
+          ],
+          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ],
+      "@semantic-release/github"
+    ]
+  },
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/types.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/src/index.js"
+      },
+      "require": {
+        "types": "./dist/src/index.d.cts",
+        "default": "./dist/src/index.cjs"
+      }
+    }
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "check:latest-action-pin": "node ./dev_scripts/check_latest_action_pin.mjs",
+    "check:latest-action-pins": "node ./dev_scripts/check_latest_action_pin.mjs --scan",
+    "docs:api": "typedoc",
+    "docs:api:check": "npm run docs:api && git diff --exit-code -- docs/api",
+    "release": "semantic-release",
+    "release:dry-run": "semantic-release --dry-run",
+    "release:preflight": "node dev_scripts/check_release_tag.mjs",
+    "lint": "eslint src test --ext .ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --coverage",
+    "test:unit": "vitest run --exclude test/ubuntu.integration.test.ts --coverage",
+    "test:integration": "vitest run --coverage test/ubuntu.integration.test.ts",
+    "dev": "vitest"
+  },
+  "dependencies": {
+    "async-mutex": "^0.5.0",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "@devcontainers/cli": "^0.81.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.6",
+    "@semantic-release/npm": "^12.0.2",
+    "@semantic-release/release-notes-generator": "^14.1.1",
+    "@types/node": "^26.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.62.0",
+    "@typescript-eslint/parser": "^8.62.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "eslint": "^10.6.0",
+    "internet-message": "^1.0.0",
+    "semantic-release": "^24.2.9",
+    "type-coverage": "^2.29.7",
+    "typedoc": "^0.28.19",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.9"
+  }
+}

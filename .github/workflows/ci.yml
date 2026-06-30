@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging, dev]
+  pull_request:
+  schedule:
+    - cron: "30 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  security-events: write
+  id-token: write # REQUIRED: Grant ID token write permission for OIDC
+
+jobs:
+  verification:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [24]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup
+        uses: ./.github/actions/setup-env
+
+      - name: Check code health
+        uses: ./.github/actions/codehealth
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          create_api_docs: "false"
