@@ -4,6 +4,17 @@ on:
   push:
     branches: [main, next]
   workflow_dispatch:
+    inputs:
+      preid:
+        description: "Prerelease identifier (for example rc, beta, alpha)"
+        required: false
+        default: rc
+        type: string
+      dry_run:
+        description: "Run semantic-release in dry-run mode (no publish, no tag, no release)"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -34,11 +45,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish with semantic-release
-        run: npm run release
+        run: |
+          if [[ "${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}" == "true" ]]; then
+            npm run release:dry-run
+          else
+            npm run release
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PREID: ${{ github.event_name == 'workflow_dispatch' && inputs.preid || 'rc' }}
 
       - name: Setup Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
