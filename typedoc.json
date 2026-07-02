@@ -1,18 +1,17 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
-    "src/index.ts"
+    "src/index.ts",
+    "src/types.ts"
   ],
   "out": "docs/api",
   "tsconfig": "tsconfig.json",
-  "plugin": [],
-  "excludePrivate": false,
-  "excludeProtected": false,
-  "excludeInternal": false,
+  "plugin": ["typedoc-plugin-markdown"],
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
   "includeVersion": true,
-  "sort": [
-    "source-order"
-  ],
+  "sort": ["source-order"],
   "readme": "none",
-  "gitRevision": "main"
+  "gitRevision": "{branch}" 
 }

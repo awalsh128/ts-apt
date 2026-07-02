@@ -20,10 +20,26 @@ on:
 jobs:
   merge:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # REQUIRED: Grant ID token write permission for OIDC
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: devmasx/merge-branch@854d3ac71ed1e9deb668e0074781b81fdd6e771f # v1.4.0
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup
+        uses: ./.github/actions/setup-env
+
+      - name: Check code health
+        uses: ./.github/actions/codehealth
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          create_api_docs: "false"
+
+      - name: Merge ${{ github.event.inputs.source_branch }} to ${{ github.event.inputs.target_branch }}
+        uses: devmasx/merge-branch@854d3ac71ed1e9deb668e0074781b81fdd6e771f # v1.4.0
         with:
           type: now
+          from_branch: ${{ github.event.inputs.source_branch }}
           target_branch: ${{ github.event.inputs.target_branch }}
           github_token: ${{ secrets.GITHUB_TOKEN }}

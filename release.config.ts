@@ -1,55 +1,67 @@
 import type { GlobalConfig } from "semantic-release";
 
-const preid = (process.env.PREID ?? "rc").trim() || "rc";
-
+// https://github.com/semantic-release/semantic-release
 const config: GlobalConfig = {
+  // The 'branches' array defines the release workflow and versioning strategy.
+  // Order matters: list branches from least stable to most stable.
   branches: [
-    "main", // Stable releases (latest)
-    { name: "next", channel: "next", prerelease: preid }, // Pre-releases (e.g., v1.0.0-rc.1)
+    // Feature complete, but may contain known bugs.
+    //
+    //   'dev' is for early alpha testing.
+    //   'channel: "alpha"' publishes to the '@alpha' tag on npm.
+    //   'prerelease: "alpha"' adds the '-alpha.x' suffix (e.g., v1.1.0-alpha.1).
+    { name: "dev", channel: "alpha", prerelease: "alpha" },
+
+    // Potentially final release; no known bugs found.
+    //
+    //   'staging' is for release candidates. 
+    //   'channel: "next"' publishes to the '@next' tag on npm.
+    //   'prerelease: "rc"' adds the '-rc.x' suffix (e.g., v1.1.0-rc.1).
+    { name: "staging", channel: "next", prerelease: "rc" },
+
+    // Final and stable release.
+    // 
+    // No prerelease tag and are published to the 'latest' dist-tag on npm.
+    "main",
   ],
+  
+  // Actions to perform during a release.
   plugins: [
-    // 1. Analyze commits to determine version bump (major/minor/patch)
+    // Analyzes commit messages (Conventional Commits) to determine if the next version should be a major, 
+    // minor, or patch bump.
     "@semantic-release/commit-analyzer",
 
-    // 2. Generate release notes from commit messages
+    // Generates the release notes (changelog content) based on the commit history.
     "@semantic-release/release-notes-generator",
 
-    // 3. Update CHANGELOG.md
+    // Updates the 'CHANGELOG.md' file with the new release notes.
     ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],
 
-    // 4. Update package.json/version and publish to npm
+    // Updates 'package.json' with the new version and publishes the package to npm.
+    // 'npmPublish: true' enables publishing; 'pkgRoot' sets the directory.
     [
       "@semantic-release/npm",
-      {
-        npmPublish: true, // Publishes to npm registry
-        pkgRoot: ".", // Root directory where package.json lives
-        // If you have a 'dist' folder, set pkgRoot: 'dist' and ensure package.json is copied there
-      },
+      { npmPublish: true, pkgRoot: "." },
     ],
 
-    // 5. Commit changelog and version changes back to Git
+    // Commits the updated 'CHANGELOG.md', 'package.json', and 'package-lock.json' back to the repository with 
+    // a standardized commit message.
     [
       "@semantic-release/git",
       {
         assets: ["CHANGELOG.md", "package.json", "package-lock.json"],
-        message:
-          "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
+        message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
       },
     ],
 
-    // 6. Create GitHub Release with notes and assets
+    // Creates a GitHub Release with the generated notes and uploads assets.
+    // 'successComment: true' enables automatic comments on resolved issues/PRs.
     [
       "@semantic-release/github",
-      {
-        assets: [
-          // Upload build artifacts if you have them (e.g., compiled JS, types)
-          // { path: 'dist/**', label: 'Distribution Files' },
-        ],
-        // Automatically comment on PRs/Issues resolved by this release
-        successComment: false,
-      },
+      { successComment: true },
     ],
   ],
 };
 
+// Makes config available to use.
 export default config;
