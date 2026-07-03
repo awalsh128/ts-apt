@@ -17,6 +17,7 @@ jobs:
     permissions:
       contents: write
       pages: write
+      issues: write # REQUIRED: Grant issues write permission for semantic-release to create GitHub releases
       id-token: write # REQUIRED: Grant ID token write permission for OIDC
     strategy:
       fail-fast: false
