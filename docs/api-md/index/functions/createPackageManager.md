@@ -8,7 +8,7 @@
 
 > **createPackageManager**(`enableAptFast`, `appLogger?`, `commandExecLogger?`): `Promise`\<[`PackageManager`](../../types/interfaces/PackageManager.md)\>
 
-Defined in: [src/manager.ts:553](https://github.com/awalsh128/ts-apt/blob/dev/src/manager.ts#L553)
+Defined in: [src/manager.ts:553](https://github.com/awalsh128/ts-apt/blob/staging/src/manager.ts#L553)
 
 Creates a package manager instance.
 

@@ -79,6 +79,7 @@
     "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^10.6.0",
     "internet-message": "^1.0.0",
+    "npm-run-all2": "^9.0.2",
     "semantic-release": "^25.0.5",
     "type-coverage": "^2.29.7",
     "typedoc": "^0.28.19",

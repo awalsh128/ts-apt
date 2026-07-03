@@ -159,7 +159,7 @@ function findReleaseBySha(releases, tagMap, sha) {
 }
 
 function printField(label, value) {
-  logInfo(`${label}: ${value ?? "none"}`);
+  console.log(`${label}: ${value ?? "none"}`);
 }
 
 function walkFiles(rootDir) {
