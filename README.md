@@ -33,13 +33,6 @@ TypeScript library for APT package operations on Debian-based Linux systems. It 
 npm install ts-apt
 ```
 
-For local development in this repository:
-
-```bash
-npm install
-npm run build
-```
-
 ## Usage
 
 ```ts
@@ -77,6 +70,6 @@ Generated docs are written to [docs/api](docs/api).
 - [ilikenwf/apt-fast](https://github.com/ilikenwf/apt-fast)
 - [moll/js-internet-message](https://github.com/moll/js-internet-message)
 
-## Developer Notes
+## Maintainer Notes
 
-Maintainer-focused workflows, release details, and operational concerns are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+Development workflows, CI/release behavior, and repository maintenance guidance are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
