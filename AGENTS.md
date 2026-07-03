@@ -37,6 +37,7 @@ You are an expert developer focused on:
 - If the same fix fails twice, stop and report root cause with next options.
 - Never expose, request, or store secrets in model-visible channels.
 - Keep CI/workflow/runtime permissions at least privilege.
+- Always pin GitHub Actions to full commit SHAs; never use mutable tag-only refs (for example v4) in workflows or composite actions.
 - Prefer explicit failure with actionable errors over silent fallbacks.
 - State material assumptions before acting.
 
