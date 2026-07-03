@@ -6,14 +6,21 @@ import type {
 } from "../src/types.js";
 import winston from "winston";
 import { existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { DefaultCommandRunner } from "../src/commandRunner.js";
 
 const workspaceFolder = resolve(__dirname, "..");
+const nodeVersionMajor = readFileSync(
+  resolve(workspaceFolder, ".node_ver"),
+  "utf8",
+)
+  .trim()
+  .split(".")[0];
 const devcontainerConfigPath = resolve(
   workspaceFolder,
   ".devcontainer",
-  "jsnode-24.json",
+  `jsnode-${nodeVersionMajor}.json`,
 );
 
 type DevcontainerSupport = {
@@ -69,7 +76,7 @@ export function getDevcontainerSupport(): DevcontainerSupport {
   if (!existsSync(devcontainerConfigPath)) {
     return {
       supported: false,
-      reason: "missing .devcontainer/jsnode-24.json config",
+      reason: `missing .devcontainer/jsnode-${nodeVersionMajor}.json config`,
     };
   }
 

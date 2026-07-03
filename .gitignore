@@ -3,4 +3,3 @@ dist/
 coverage/
 .vscode/
 .DS_Store
-dev_scripts/wipe_commit_history.sh

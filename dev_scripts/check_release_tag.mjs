@@ -1,12 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-
-function fail(message) {
-  console.error(message);
-  process.exit(1);
-}
+import { fail, logSuccess, readJsonFile, ROOT_DIR } from "./lib.mjs";
 
 const tag = process.env.RELEASE_TAG;
 if (!tag) {
@@ -19,8 +13,8 @@ if (!/^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(tag)) {
   );
 }
 
-const packageJsonPath = resolve(process.cwd(), "package.json");
-const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+const packageJsonPath = `${ROOT_DIR}/package.json`;
+const packageJson = readJsonFile(packageJsonPath);
 
 if (
   typeof packageJson.version !== "string" ||
@@ -36,6 +30,6 @@ if (tag !== expectedTag) {
   );
 }
 
-console.log(
+logSuccess(
   `Release preflight passed for tag ${tag} and package version ${packageJson.version}.`,
 );

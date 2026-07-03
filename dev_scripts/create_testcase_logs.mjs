@@ -3,10 +3,7 @@
 import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { ROOT_DIR, fail, logInfo, logSuccess } from "./lib.mjs";
 
 function toLog(result) {
   return `*** CMD_LINE ${result.cmdLine}\n*** EXIT_CODE ${result.exitCode}\n*** STDOUT\n${result.stdout}*** STDERR\n${result.stderr}`;
@@ -44,11 +41,20 @@ async function execute(cmdLine) {
     });
 
     child.on("close", (code) => {
+      if (code !== 0) {
+        rejectPromise(
+          new Error(
+            `Command '${cmdLine}' failed with exit code ${code ?? "unknown"}.`,
+          ),
+        );
+        return;
+      }
+
       resolvePromise({
         cmdLine,
         stdout,
         stderr,
-        exitCode: code === null ? 1 : code,
+        exitCode: 0,
       });
     });
   });
@@ -62,7 +68,7 @@ async function writeLogFile(baseDir, relativePath, result) {
 }
 
 async function main() {
-  const testDataDir = resolve(__dirname, "../test/data");
+  const testDataDir = resolve(ROOT_DIR, "test/data");
   let written = 0;
 
   for (const entry of testLogFiles) {
@@ -75,13 +81,13 @@ async function main() {
     const result = await execute(entry.execCmdLine);
     const outputPath = await writeLogFile(testDataDir, entry.filepath, result);
     written += 1;
-    console.log(`Wrote ${outputPath}`);
+    logInfo(`Wrote ${outputPath}`);
   }
 
   await execute("apt-get upgrade -y");
   await execute("apt-get autoremove -y");
 
-  console.log(`Wrote ${written} command execution log(s).`);
+  logSuccess(`Wrote ${written} command execution log(s).`);
 }
 
 const testLogFiles = [
@@ -253,6 +259,5 @@ const testLogFiles = [
 ];
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
+  fail(error instanceof Error ? error.message : String(error));
 });

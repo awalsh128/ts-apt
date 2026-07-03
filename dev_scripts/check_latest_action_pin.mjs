@@ -1,15 +1,23 @@
 #!/usr/bin/env node
 
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import {
+  fail,
+  GITHUB_API_BASE_URL,
+  GITHUB_USER_AGENT,
+  logError,
+  logInfo,
+  logSuccess,
+  runCaptureOutput,
+  usage,
+} from "./lib.mjs";
 
-function usage() {
-  console.error(
-    "usage: node dev_scripts/check_latest_action_pin.mjs <owner/repo[/path]@ref | owner/repo[/path] ref | --scan [directory]>",
-  );
-}
+const usageMessage = usage(
+  process.argv[1],
+  "<owner/repo[/path]@ref | owner/repo[/path] ref | --scan [directory]>",
+);
 
 function parseInput(argv) {
   if (argv[0] === "--scan") {
@@ -22,8 +30,7 @@ function parseInput(argv) {
   if (argv.length === 1) {
     const atIndex = argv[0].lastIndexOf("@");
     if (atIndex <= 0 || atIndex === argv[0].length - 1) {
-      usage();
-      process.exit(1);
+      fail(usageMessage);
     }
 
     return {
@@ -41,8 +48,7 @@ function parseInput(argv) {
     };
   }
 
-  usage();
-  process.exit(1);
+  fail(usageMessage);
 }
 
 function parseRepoSlug(actionPath) {
@@ -57,10 +63,10 @@ function parseRepoSlug(actionPath) {
 }
 
 function git(args) {
-  return execFileSync("git", args, {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  }).trim();
+  return runCaptureOutput("git", args, {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
 }
 
 function buildTagMap(repoSlug) {
@@ -114,7 +120,7 @@ function resolveRefSha(repoSlug, ref, tagMap) {
 async function fetchJson(url) {
   const headers = {
     Accept: "application/vnd.github+json",
-    "User-Agent": "cache-apt-pkgs-action-pin-checker",
+    "User-Agent": GITHUB_USER_AGENT,
   };
 
   if (process.env.GITHUB_TOKEN) {
@@ -134,12 +140,12 @@ async function fetchJson(url) {
 }
 
 async function getLatestRelease(repoSlug) {
-  return fetchJson(`https://api.github.com/repos/${repoSlug}/releases/latest`);
+  return fetchJson(`${GITHUB_API_BASE_URL}/repos/${repoSlug}/releases/latest`);
 }
 
 async function getReleases(repoSlug) {
   const releases = await fetchJson(
-    `https://api.github.com/repos/${repoSlug}/releases?per_page=100`,
+    `${GITHUB_API_BASE_URL}/repos/${repoSlug}/releases?per_page=100`,
   );
   return Array.isArray(releases) ? releases : [];
 }
@@ -153,7 +159,7 @@ function findReleaseBySha(releases, tagMap, sha) {
 }
 
 function printField(label, value) {
-  console.log(`${label}: ${value ?? "none"}`);
+  logInfo(`${label}: ${value ?? "none"}`);
 }
 
 function walkFiles(rootDir) {
@@ -261,7 +267,7 @@ async function analyzeAction(actionPath, currentRef) {
 }
 
 function printAnalysis(analysis) {
-  console.log(`Action: ${analysis.actionPath}`);
+  logInfo(`Action: ${analysis.actionPath}`);
   printField("Repository", analysis.repoSlug);
   printField("Current ref", analysis.currentRef);
   printField("Current sha", analysis.currentSha);
@@ -290,14 +296,14 @@ async function main() {
     const rootDir = path.resolve(process.cwd(), input.rootDir);
     const pins = findActionPins(rootDir);
     if (pins.length === 0) {
-      console.log(`No pinned GitHub Actions found under ${input.rootDir}.`);
+      logInfo(`No pinned GitHub Actions found under ${input.rootDir}.`);
       return;
     }
 
     let updateCount = 0;
     for (const pin of pins) {
       const analysis = await analyzeAction(pin.actionPath, pin.currentRef);
-      console.log(`File: ${pin.filePath}:${pin.lineNumber}`);
+      logInfo(`File: ${pin.filePath}:${pin.lineNumber}`);
       printAnalysis(analysis);
       console.log("");
       if (analysis.latestSha && !analysis.isCurrent) {
@@ -305,8 +311,8 @@ async function main() {
       }
     }
 
-    console.log(`Scanned ${pins.length} pinned action reference(s).`);
-    console.log(`Updates available: ${updateCount}`);
+    logSuccess(`Scanned ${pins.length} pinned action reference(s).`);
+    logSuccess(`Updates available: ${updateCount}`);
     if (updateCount > 0) {
       process.exitCode = 2;
     }
@@ -322,6 +328,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
+  logError(error instanceof Error ? error.message : String(error));
   process.exit(1);
 });

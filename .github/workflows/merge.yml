@@ -1,21 +1,6 @@
-name: Merge Branches
+name: Merge Staging to Main
 on:
   workflow_dispatch:
-    inputs:
-      source_branch:
-        description: "The branch to merge from (default: dev)"
-        required: true
-        type: choice
-        options:
-          - dev
-          - staging
-      target_branch:
-        description: "The branch to merge into main (default: staging)"
-        required: true
-        type: choice
-        options:
-          - staging
-          - main
 
 jobs:
   merge:
@@ -34,12 +19,11 @@ jobs:
         uses: ./.github/actions/codehealth
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          create_api_docs: "false"
 
       - name: Merge ${{ github.event.inputs.source_branch }} to ${{ github.event.inputs.target_branch }}
         uses: devmasx/merge-branch@854d3ac71ed1e9deb668e0074781b81fdd6e771f # v1.4.0
         with:
           type: now
-          from_branch: ${{ github.event.inputs.source_branch }}
-          target_branch: ${{ github.event.inputs.target_branch }}
+          from_branch: staging
+          target_branch: main
           github_token: ${{ secrets.GITHUB_TOKEN }}
