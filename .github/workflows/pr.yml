@@ -20,7 +20,7 @@ jobs:
 
       - name: Verify Configurations
         shell: bash
-        run: npm run check:config
+        run: npm run check:configs
 
       - name: Audit NPM dependencies
         shell: bash
