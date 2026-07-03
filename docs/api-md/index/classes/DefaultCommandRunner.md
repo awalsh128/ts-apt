@@ -6,7 +6,7 @@
 
 # Class: DefaultCommandRunner
 
-Defined in: [src/commandRunner.ts:13](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/commandRunner.ts#L13)
+Defined in: [src/commandRunner.ts:13](https://github.com/awalsh128/ts-apt/blob/main/src/commandRunner.ts#L13)
 
 Production command runner backed by child_process spawn.
 
@@ -20,7 +20,7 @@ Production command runner backed by child_process spawn.
 
 > **new DefaultCommandRunner**(`appLogger`, `execLogger`): `DefaultCommandRunner`
 
-Defined in: [src/commandRunner.ts:17](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/commandRunner.ts#L17)
+Defined in: [src/commandRunner.ts:17](https://github.com/awalsh128/ts-apt/blob/main/src/commandRunner.ts#L17)
 
 #### Parameters
 
@@ -42,7 +42,7 @@ Defined in: [src/commandRunner.ts:17](https://github.com/awalsh128/ts-apt/blob/c
 
 > **run**(`command`, `args?`, `options?`): `Promise`\<[`CommandResult`](../../types/interfaces/CommandResult.md)\>
 
-Defined in: [src/commandRunner.ts:31](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/commandRunner.ts#L31)
+Defined in: [src/commandRunner.ts:31](https://github.com/awalsh128/ts-apt/blob/main/src/commandRunner.ts#L31)
 
 Executes a command with optional environment, timeout, and interactive mode.
 

@@ -6,7 +6,7 @@
 
 # Interface: CommandResult
 
-Defined in: [src/types.ts:48](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/types.ts#L48)
+Defined in: [src/types.ts:48](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L48)
 
 Captured command output returned by command runners.
 
@@ -16,7 +16,7 @@ Captured command output returned by command runners.
 
 > **cmdLine**: `string`
 
-Defined in: [src/types.ts:50](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/types.ts#L50)
+Defined in: [src/types.ts:50](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L50)
 
 Full command line executed.
 
@@ -26,7 +26,7 @@ Full command line executed.
 
 > **stdout**: `string`
 
-Defined in: [src/types.ts:52](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/types.ts#L52)
+Defined in: [src/types.ts:52](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L52)
 
 Standard output text captured from the process.
 
@@ -36,7 +36,7 @@ Standard output text captured from the process.
 
 > **stderr**: `string`
 
-Defined in: [src/types.ts:54](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/types.ts#L54)
+Defined in: [src/types.ts:54](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L54)
 
 Standard error text captured from the process.
 
@@ -46,6 +46,6 @@ Standard error text captured from the process.
 
 > **exitCode**: `number`
 
-Defined in: [src/types.ts:56](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/types.ts#L56)
+Defined in: [src/types.ts:56](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L56)
 
 Process exit code.

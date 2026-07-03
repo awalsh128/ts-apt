@@ -6,7 +6,7 @@
 
 # Class: AvailabilityError
 
-Defined in: [src/errors.ts:34](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L34)
+Defined in: [src/errors.ts:34](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L34)
 
 Error raised when no suitable package manager is available.
 
@@ -20,7 +20,7 @@ Error raised when no suitable package manager is available.
 
 > **new AvailabilityError**(`message`): `AvailabilityError`
 
-Defined in: [src/errors.ts:40](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L40)
+Defined in: [src/errors.ts:40](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L40)
 
 Creates an availability failure.
 

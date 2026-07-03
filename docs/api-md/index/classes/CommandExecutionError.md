@@ -6,7 +6,7 @@
 
 # Class: CommandExecutionError
 
-Defined in: [src/errors.ts:49](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L49)
+Defined in: [src/errors.ts:49](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L49)
 
 Error raised when command execution exits unsuccessfully.
 
@@ -20,7 +20,7 @@ Error raised when command execution exits unsuccessfully.
 
 > **new CommandExecutionError**(`params`): `CommandExecutionError`
 
-Defined in: [src/errors.ts:66](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L66)
+Defined in: [src/errors.ts:66](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L66)
 
 Creates a command execution error.
 
@@ -86,7 +86,7 @@ not capture any frames.
 
 > `readonly` **command**: `string`
 
-Defined in: [src/errors.ts:51](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L51)
+Defined in: [src/errors.ts:51](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L51)
 
 Executable name used for the failed command.
 
@@ -96,7 +96,7 @@ Executable name used for the failed command.
 
 > `readonly` **args**: `string`[]
 
-Defined in: [src/errors.ts:53](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L53)
+Defined in: [src/errors.ts:53](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L53)
 
 Argument list used for the failed command.
 
@@ -106,7 +106,7 @@ Argument list used for the failed command.
 
 > `readonly` **exitCode**: `number`
 
-Defined in: [src/errors.ts:55](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L55)
+Defined in: [src/errors.ts:55](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L55)
 
 Exit code returned by the failed process.
 
@@ -116,7 +116,7 @@ Exit code returned by the failed process.
 
 > `readonly` **stderr**: `string`
 
-Defined in: [src/errors.ts:57](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L57)
+Defined in: [src/errors.ts:57](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L57)
 
 Captured standard error output.
 
@@ -126,7 +126,7 @@ Captured standard error output.
 
 > `readonly` **stdout**: `string`
 
-Defined in: [src/errors.ts:59](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L59)
+Defined in: [src/errors.ts:59](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L59)
 
 Captured standard output output.
 

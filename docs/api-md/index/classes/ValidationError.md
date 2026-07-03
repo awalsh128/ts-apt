@@ -6,7 +6,7 @@
 
 # Class: ValidationError
 
-Defined in: [src/errors.ts:19](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L19)
+Defined in: [src/errors.ts:19](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L19)
 
 Error raised when unsafe or invalid input is provided.
 
@@ -20,7 +20,7 @@ Error raised when unsafe or invalid input is provided.
 
 > **new ValidationError**(`message`): `ValidationError`
 
-Defined in: [src/errors.ts:25](https://github.com/awalsh128/ts-apt/blob/copilot/fix-failing-github-actions-job-again/src/errors.ts#L25)
+Defined in: [src/errors.ts:25](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L25)
 
 Creates a validation failure.
 
