@@ -23,10 +23,11 @@ runs:
         echo "build-artifacts-name=${{ env.build_artifacts_name }}" >> $GITHUB_ENV
 
     - name: Try Fetch Build Artifacts
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: dawidd6/action-download-artifact@b6e2e70617bc3265edd6dab6c906732b2f1ae151 # v21
       continue-on-error: true
       with:
         name: ${{ env.build-artifacts-name }}
+        if_no_artifact_found: ignore
 
     - name: Check Fetch Build Artifacts
       id: check-artifact
