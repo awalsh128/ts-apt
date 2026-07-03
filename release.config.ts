@@ -48,7 +48,13 @@ export default {
     ],
 
     // Creates a GitHub Release with the generated notes and uploads assets.
-    // Automatic comments on resolved issues/PRs are enabled by default.
-    "@semantic-release/github",
+    // 'successComment' posts a comment on resolved issues/PRs. Must be a Lodash template string or false.
+    [
+      "@semantic-release/github",
+      {
+        successComment:
+          ":tada: This <%= issue.pull_request ? 'PR is included' : 'issue has been resolved' %> in version <%= nextRelease.version %> :tada:\n\nYour **[semantic-release](https://github.com/semantic-release/semantic-release)** bot :package::rocket:",
+      },
+    ],
   ],
 };
