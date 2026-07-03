@@ -9,7 +9,7 @@ export type {
 } from "./types.js";
 
 /** APT manager implementations and factory export. */
-export { AptPackageManager, createPackageManager } from "./manager.js";
+export { createPackageManager } from "./manager.js";
 
 /** Default process runner export. */
 export { DefaultCommandRunner } from "./commandRunner.js";

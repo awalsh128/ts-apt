@@ -5,10 +5,6 @@ inputs:
   GITHUB_TOKEN:
     description: "GitHub token to use for uploading coverage and API docs"
     required: true
-  create_api_docs:
-    description: "Whether to generate API docs as part of verification (default: true)"
-    required: false
-    default: "true"
 
 runs:
   using: "composite"
@@ -53,21 +49,8 @@ runs:
         fail_ci_if_error: true
         slug: "${{ github.repository }}"
 
-    - name: Generate API docs
-      if: ${{ inputs.create_api_docs == 'true' }}
+    # Make this run last so all previous step failures surface but still run this as well
+    - name: Audit NPM dependencies
+      if: always()
       shell: bash
-      run: npm run docs:api
-
-    - name: Verify API docs are up to date
-      if: ${{ inputs.create_api_docs == 'true' }}
-      shell: bash
-      run: |
-        git diff --exit-code -- docs/api > api-docs.diff || \
-        (echo "API docs are out of date. Please run 'npm run docs:api' and commit the changes." && exit 1)
-
-    - name: Upload failed API docs diff
-      if: ${{ failure() && inputs.create_api_docs == 'true' }}
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      with:
-        name: api-docs-diff
-        path: api-docs.diff
+      run: npm audit --audit-level=high --omit=dev

@@ -8,14 +8,12 @@ on:
     - cron: "30 5 * * *"
   workflow_dispatch:
 
-permissions:
-  contents: write
-  security-events: write
-  id-token: write # REQUIRED: Grant ID token write permission for OIDC
-
 jobs:
   verification:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # REQUIRED: Grant ID token write permission for OIDC
     strategy:
       matrix:
         node-version: [24]

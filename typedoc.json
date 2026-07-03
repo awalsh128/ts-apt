@@ -1,18 +1,30 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
-    "src/index.ts"
+    "src/index.ts",
+    "src/types.ts"
   ],
-  "out": "docs/api",
+  "plugin": [
+    "typedoc-plugin-markdown"
+  ],
+  "outputs": [
+    {
+      "name": "html",
+      "path": "./docs/api"
+    },
+    {
+      "name": "markdown",
+      "path": "./docs/api-md"
+    }
+  ],
   "tsconfig": "tsconfig.json",
-  "plugin": [],
-  "excludePrivate": false,
-  "excludeProtected": false,
-  "excludeInternal": false,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
   "includeVersion": true,
   "sort": [
     "source-order"
   ],
   "readme": "none",
-  "gitRevision": "main"
+  "gitRevision": "{branch}"
 }

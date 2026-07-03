@@ -1,16 +1,33 @@
-# TODO - Once we have a dev branch, we can re-enable this workflow to prevent merges to main from any other branch. For now, we will disable it to allow merges from dev to main.
-# name: Pull Request Validation
+# PR guardrail: block pull requests that target main directly.
+name: Pull Request Validation
 
-# on:
-#   pull_request:
+on:
+  pull_request:
 
-# jobs:
-#   validation:
-#     runs-on: ubuntu-latest
-#     if: ${{ github.head_ref == 'main' }}
-#     steps:
-#       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-#       - name: Fail validation
-#         run: |
-#           echo "Error: Merges to main are only allowed from 'dev' or 'staging' branches."
-#           exit 1
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    if: ${{ github.base_ref == 'main' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Verify Configurations
+        shell: bash
+        run: npm run check:configs
+
+      - name: Audit NPM dependencies
+        shell: bash
+        run: npm audit --audit-level=high --omit=dev
+
+      - name: Fail validation
+        run: |
+          echo "Error: PRs to main are not allowed. Please checkout 'staging' branch and rebase."
+          echo "See https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-base-branch-of-a-pull-request for more information."
+          exit 1
