@@ -6,7 +6,7 @@
 
 # Interface: CommandRunner
 
-Defined in: [src/types.ts:62](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L62)
+Defined in: [src/types.ts:62](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L62)
 
 Abstraction over command execution used by package managers.
 
@@ -16,7 +16,7 @@ Abstraction over command execution used by package managers.
 
 > **run**(`command`, `args?`, `options?`): `Promise`\<[`CommandResult`](CommandResult.md)\>
 
-Defined in: [src/types.ts:70](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L70)
+Defined in: [src/types.ts:70](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L70)
 
 Executes a command and resolves with process output.
 

@@ -6,7 +6,7 @@
 
 # Interface: PackageManager
 
-Defined in: [src/types.ts:80](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L80)
+Defined in: [src/types.ts:80](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L80)
 
 Package manager contract implemented by APT and APT-fast managers.
 
@@ -16,7 +16,7 @@ Package manager contract implemented by APT and APT-fast managers.
 
 > **install**(`pkgs`): `Promise`\<[`PackageInfo`](PackageInfo.md)[]\>
 
-Defined in: [src/types.ts:82](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L82)
+Defined in: [src/types.ts:82](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L82)
 
 Installs one or more packages.
 
@@ -36,7 +36,7 @@ Installs one or more packages.
 
 > **remove**(`pkgs`): `Promise`\<[`PackageInfo`](PackageInfo.md)[]\>
 
-Defined in: [src/types.ts:85](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L85)
+Defined in: [src/types.ts:85](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L85)
 
 Removes one or more packages.
 
@@ -56,7 +56,7 @@ Removes one or more packages.
 
 > **search**(`keywords`): `Promise`\<[`PackageInfo`](PackageInfo.md)[]\>
 
-Defined in: [src/types.ts:88](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L88)
+Defined in: [src/types.ts:88](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L88)
 
 Searches package repositories by one or more keywords and returns name-description pairs.
 
@@ -76,7 +76,7 @@ Searches package repositories by one or more keywords and returns name-descripti
 
 > **listInstalledFiles**(`pkg`): `Promise`\<`string`[]\>
 
-Defined in: [src/types.ts:91](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L91)
+Defined in: [src/types.ts:91](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L91)
 
 Lists files installed by a package.
 
@@ -96,7 +96,7 @@ Lists files installed by a package.
 
 > **listInstalled**(): `Promise`\<[`PackageInfo`](PackageInfo.md)[]\>
 
-Defined in: [src/types.ts:94](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L94)
+Defined in: [src/types.ts:94](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L94)
 
 Lists currently installed packages.
 
@@ -110,7 +110,7 @@ Lists currently installed packages.
 
 > **listUpgradable**(): `Promise`\<[`PackageInfo`](PackageInfo.md)[]\>
 
-Defined in: [src/types.ts:97](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L97)
+Defined in: [src/types.ts:97](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L97)
 
 Lists upgradable packages.
 
@@ -124,7 +124,7 @@ Lists upgradable packages.
 
 > **upgrade**(`pkgs`): `Promise`\<[`PackageInfo`](PackageInfo.md)[]\>
 
-Defined in: [src/types.ts:100](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L100)
+Defined in: [src/types.ts:100](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L100)
 
 Upgrades all packages or a selected package set.
 
@@ -144,7 +144,7 @@ Upgrades all packages or a selected package set.
 
 > **upgradeAll**(): `Promise`\<[`PackageInfo`](PackageInfo.md)[]\>
 
-Defined in: [src/types.ts:103](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L103)
+Defined in: [src/types.ts:103](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L103)
 
 Upgrades all packages managed by this package manager.
 
@@ -158,7 +158,7 @@ Upgrades all packages managed by this package manager.
 
 > **update**(): `Promise`\<`number`\>
 
-Defined in: [src/types.ts:106](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L106)
+Defined in: [src/types.ts:106](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L106)
 
 Refreshes repository indexes and returns number of packages that can be upgraded.
 
@@ -172,7 +172,7 @@ Refreshes repository indexes and returns number of packages that can be upgraded
 
 > **getPackageInfo**(`pkgs`): `Promise`\<[`PackageInfo`](PackageInfo.md)[]\>
 
-Defined in: [src/types.ts:109](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L109)
+Defined in: [src/types.ts:109](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L109)
 
 Returns metadata for one or more packages.
 
@@ -192,7 +192,7 @@ Returns metadata for one or more packages.
 
 > **autoClean**(): `Promise`\<`void`\>
 
-Defined in: [src/types.ts:112](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L112)
+Defined in: [src/types.ts:112](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L112)
 
 Cleans local package cache data.
 
@@ -206,7 +206,7 @@ Cleans local package cache data.
 
 > **autoRemove**(): `Promise`\<[`PackageInfo`](PackageInfo.md)[]\>
 
-Defined in: [src/types.ts:115](https://github.com/awalsh128/ts-apt/blob/main/src/types.ts#L115)
+Defined in: [src/types.ts:115](https://github.com/awalsh128/ts-apt/blob/staging/src/types.ts#L115)
 
 Removes unused dependency packages.
 

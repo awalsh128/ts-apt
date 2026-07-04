@@ -6,7 +6,7 @@
 
 # Class: TsAptError
 
-Defined in: [src/errors.ts:4](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L4)
+Defined in: [src/errors.ts:4](https://github.com/awalsh128/ts-apt/blob/staging/src/errors.ts#L4)
 
 Base error type for library-specific failures.
 
@@ -26,7 +26,7 @@ Base error type for library-specific failures.
 
 > **new TsAptError**(`message`): `TsAptError`
 
-Defined in: [src/errors.ts:10](https://github.com/awalsh128/ts-apt/blob/main/src/errors.ts#L10)
+Defined in: [src/errors.ts:10](https://github.com/awalsh128/ts-apt/blob/staging/src/errors.ts#L10)
 
 Creates a library error with a descriptive message.
 
