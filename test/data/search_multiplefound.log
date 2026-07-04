@@ -1,0 +1,534 @@
+*** CMD_LINE apt search vim
+*** EXIT_CODE 0
+*** STDOUT
+Sorting...
+Full Text Search...
+acr/focal 1.7.2-1 all
+  autoconf like tool
+
+alot/focal 0.9-1 all
+  Text mode MUA using notmuch mail
+
+alot-doc/focal 0.9-1 all
+  Text mode MUA using notmuch mail - documentation
+
+apvlv/focal 0.1.5+dfsg-3ubuntu1 amd64
+  PDF viewer with Vim-like behaviour
+
+biosyntax-vim/focal 1.0.0b-1 all
+  Syntax Highlighting for Computational Biology (vim)
+
+bleachbit/focal 3.9.0-1 all
+  delete unnecessary files from the system
+
+cernlib-base/focal 20061220+dfsg3-4.4build1 all
+  CERNLIB data analysis suite - common files
+
+clang-format-10/focal,now 1:10.0.0-4ubuntu1 amd64 [installed,automatic]
+  Tool to format C/C++/Obj-C code
+
+clang-format-11/focal-updates 1:11.0.0-2~ubuntu20.04.1 amd64
+  Tool to format C/C++/Obj-C code
+
+clang-format-12/focal-updates,focal-security 1:12.0.0-3ubuntu1~20.04.5 amd64
+  Tool to format C/C++/Obj-C code
+
+clang-format-18/focal-updates,focal-security 1:18.1.8-11~20.04.2 amd64
+  Tool to format C/C++/Obj-C code
+
+clang-format-6.0/focal 1:6.0.1-14 amd64
+  Tool to format C/C++/Obj-C code
+
+clang-format-7/focal 1:7.0.1-12 amd64
+  Tool to format C/C++/Obj-C code
+
+clang-format-8/focal 1:8.0.1-9 amd64
+  Tool to format C/C++/Obj-C code
+
+clang-format-9/focal 1:9.0.1-12 amd64
+  Tool to format C/C++/Obj-C code
+
+colordiff/focal 1.0.18-1 all
+  tool to colorize 'diff' output
+
+context-modules/focal 20190710-1 all
+  additional ConTeXt modules
+
+copyq/focal 3.10.0-1 amd64
+  Advanced clipboard manager with editing and scripting features
+
+copyq-plugins/focal 3.10.0-1 amd64
+  Plugins for CopyQ
+
+cpl-plugin-vimos/focal 3.3.0+dfsg-1build1 amd64
+  ESO data reduction pipeline for the VIMOS instrument
+
+cpl-plugin-vimos-calib/focal 3.3.0+dfsg-1build1 all
+  ESO data reduction pipeline calibration data downloader for VIMOS
+
+cpl-plugin-vimos-doc/focal 3.3.0+dfsg-1build1 all
+  ESO data reduction pipeline documentation for VIMOS
+
+cream/focal 0.43-3 all
+  VIM macros that make the VIM easier to use for beginners
+
+dh-vim-addon/focal 0.2 all
+  debhelper addon to help package Vim/Neovim addons
+
+ejabberd-mod-shcommands/focal 0.2020.02.03~dfsg0-1 amd64
+  execute shell commands via XMPP (dangerous!)
+
+elpa-anzu/focal 0.62-4 all
+  show number of matches in mode-line while searching
+
+elpa-bind-map/focal 1.1.1-5 all
+  bind personal keymaps in multiple locations
+
+elpa-color-theme-modern/focal 0.0.3-1 all
+  deftheme reimplementation of classic Emacs color-themes
+
+elpa-evil/focal 1.12.17-1 all
+  extensible vi layer for Emacs
+
+elpa-neotree/focal 0.5.2-2 all
+  directory tree sidebar for Emacs that is like NERDTree for Vim
+
+elpa-powerline/focal 2.4-3 all
+  Emacs version of the Vim powerline
+
+elpa-smeargle/focal 0.03-4 all
+  highlight region by last updated time
+
+elpa-solarized-theme/focal 1.3.1-1 all
+  port of Solarized theme to Emacs
+
+elpa-vimish-fold/focal 0.2.3-4 all
+  fold text in GNU Emacs like in Vim
+
+elpa-zenburn-theme/focal 2.6-2 all
+  low contrast color theme for Emacs
+
+elvis-tiny/focal 1.4-24build1 amd64
+  Tiny vi compatible editor for the base system
+
+env2/focal 1.1.0-4 all
+  convert environment variables between scripting languages
+
+exuberant-ctags/focal-updates,focal-security 1:5.9~svn20110310-12ubuntu0.1 amd64
+  build tag file indexes of source code definitions
+
+fim/focal 0.5.3-2build1 amd64
+  scriptable frame buffer, X.org and ascii art image viewer
+
+findent/focal 3.1.1-1build1 amd64
+  indents/converts Fortran sources
+
+fonts-powerline/focal 2.7-3 all
+  prompt and statusline utility (symbols font)
+
+formiko/focal 1.3.0-1 all
+  reStructuredText and MarkDown editor and live previewer
+
+geany-plugin-vimode/focal 1.36+dfsg-1 amd64
+  Vim-mode plugin for Geany
+
+get-flash-videos/focal 1.25.99.03-1 all
+  video downloader for various Flash-based video hosting sites
+
+global/focal 6.6.4-1 amd64
+  Source code search and browse tools
+
+glogg/focal 1.1.4-1.1build1 amd64
+  Smart interactive log explorer using Qt
+
+golang-github-vimeo-go-magic-dev/focal 1.0.0-1 all
+  Go bindings for libmagic
+
+gramadoir/focal 0.7-4 all
+  Irish language grammar checker (integration scripts)
+
+grilo-plugins-0.3-extra/focal 0.3.11-1ubuntu1 amd64
+  Framework for discovering and browsing media - Extra Plugins
+
+hothasktags/focal 0.3.8-3build3 amd64
+  Haskell ctags generator
+
+imediff/focal 2.2-1 all
+  interactive full screen 2/3-way merge tool
+
+kakoune/focal 2019.07.01-1build1 amd64
+  Vim-inspired, selection-oriented code editor
+
+kdesdk-scripts/focal 4:19.12.3-0ubuntu1 all
+  scripts and data files for development
+
+libghc-pandoc-dev/focal 2.5-3build2 amd64
+  general markup converter - libraries
+
+libghc-pandoc-doc/focal 2.5-3build2 all
+  general markup converter - library documentation
+
+libghc-pandoc-prof/focal 2.5-3build2 amd64
+  general markup converter - profiling libraries
+
+libghc-yi-keymap-vim-dev/focal 0.18.0-2 amd64
+  Vim keymap for Yi editor
+
+libghc-yi-keymap-vim-doc/focal 0.18.0-2 all
+  Vim keymap for Yi editor; documentation
+
+libghc-yi-keymap-vim-prof/focal 0.18.0-2 amd64
+  Vim keymap for Yi editor; profiling libraries
+
+libjs-xterm/focal 3.8.1-3 all
+  terminal front-end component for the browser - browser library
+
+liblatex-table-perl/focal 1.0.6-3 all
+  Perl extension for the automatic generation of LaTeX tables
+
+libocp-indent-ocaml/focal 1.7.0-2build1 amd64
+  OCaml indentation tool for emacs and vim - libraries
+
+libocp-indent-ocaml-dev/focal 1.7.0-2build1 amd64
+  OCaml indentation tool for emacs and vim - development libraries
+
+libtext-findindent-perl/focal 0.11-1 all
+  module to heuristically determine indentation style
+
+libvi-quickfix-perl/focal 1.135-1 all
+  Perl support for vim's QuickFix mode
+
+linuxdoc-tools/focal 0.9.73-3 amd64
+  convert LinuxDoc SGML source into other formats
+
+lua-nvim/focal 0.2.1-1-1 amd64
+  Lua client for Neovim
+
+lua-nvim-dev/focal 0.2.1-1-1 amd64
+  Lua client for Neovim
+
+movim/focal 0.14.1-6 all
+  decentralised social network fully based on XMPP
+
+neovim/focal 0.4.3-3 amd64
+  heavily refactored vim fork
+
+neovim-qt/focal 0.2.15-1build1 amd64
+  neovim client library and GUI
+
+neovim-runtime/focal 0.4.3-3 all
+  heavily refactored vim fork (runtime files)
+
+nescc/focal 1.3.5-1.1build1 amd64
+  Programming Language for Deeply Networked Systems
+
+netrik/focal 1.16.1-2build3 amd64
+  text mode WWW browser with vi like keybindings
+
+node-xterm/focal 3.8.1-3 all
+  terminal front-end component for the browser - NodeJS modules
+
+notmuch-vim/focal 0.29.3-1ubuntu2 all
+  thread-based email index, search and tagging (vim interface)
+
+nvi/focal 1.81.6-15build1 amd64
+  4.4BSD re-implementation of vi
+
+nvi-doc/focal 1.81.6-15build1 all
+  4.4BSD re-implementation of vi - documentation files
+
+ocaml-tools/focal 20120103-6build1 all
+  tools for OCaml developers
+
+ocp-indent/focal 1.7.0-2build1 amd64
+  OCaml indentation tool for emacs and vim - runtime
+
+openshot-qt/focal 2.4.3+dfsg1-1 all
+  create and edit videos and movies
+
+otags/focal 4.05.1-1 amd64
+  tags file generator for OCaml
+
+pacvim/focal 1.1.1-1build1 amd64
+  pacman game concept with vim command
+
+pandoc/focal,now 2.5-3build2 amd64 [installed]
+  general markup converter
+
+pandoc-data/focal,now 2.5-3build2 all [installed,automatic]
+  general markup converter - data files
+
+php-embed/focal 3.3.9-1 all
+  Get info from any web service or page
+
+pms/focal 0.42-1build4 amd64
+  Practical Music Search, an MPD client
+
+powerline/focal 2.7-3 amd64
+  prompt and statusline utility
+
+powerline-doc/focal 2.7-3 all
+  prompt and statusline utility (documentation)
+
+powerline-gitstatus/focal 1.3.1-1 all
+  Powerline Git segment
+
+pqiv/focal 2.11-1 amd64
+  Powerful image viewer with minimal UI
+
+python-django-allauth-doc/focal 0.41.0+ds-1 all
+  Django app for local and social authentication (Documentation)
+
+python3-django-allauth/focal 0.41.0+ds-1 all
+  Django app for local and social authentication (Python 3 version)
+
+python3-editor/focal 1.0.3-2 all
+  programmatically open an editor, capture the result - Python 3.x
+
+python3-neovim/focal 0.4.1-1 all
+  transitional dummy package
+
+python3-powerline/focal 2.7-3 all
+  prompt and statusline utility (Python 3.x module)
+
+python3-powerline-gitstatus/focal 1.3.1-1 all
+  Powerline Git segment for Python (3.x)
+
+python3-pynvim/focal 0.4.1-1 all
+  Python3 library for scripting Neovim processes through its msgpack-rpc API
+
+python3-searx/focal 0.16.0+dfsg1-2 all
+  Privacy-respecting metasearch engine - library package
+
+qutebrowser/focal 1.10.1-1 all
+  Keyboard-driven, vim-like browser based on PyQt5
+
+qutebrowser-qtwebengine/focal 1.10.1-1 all
+  QtWebEngine backend dependency package for qutebrowser
+
+qutebrowser-qtwebkit/focal 1.10.1-1 all
+  QtWebKit backend dependency package for qutebrowser
+
+ruby-ace-rails-ap/focal 4.1.1-1 all
+  ajax.org Cloud9 Editor (Ace) for the Rails asset pipeline
+
+ruby-fuubar/focal 2.5.0-1 all
+  instafailing RSpec progress bar formatter
+
+ruby-neovim/focal 0.8.1-1 all
+  Ruby client for Neovim
+
+searx/focal 0.16.0+dfsg1-2 all
+  Privacy-respecting metasearch engine
+
+sen/focal 0.6.1-0.1 all
+  Terminal user interface for docker engine
+
+sisu/focal 7.2.0-1 all
+  documents - structuring, publishing in multiple formats and search
+
+supercollider-vim/focal 1:3.10.0+repack-1ubuntu2 all
+  SuperCollider mode for Vim
+
+tmux/focal-updates,focal-security,now 3.0a-2ubuntu0.4 amd64 [installed]
+  terminal multiplexer
+
+tpp/focal 1.3.1-7 all
+  text presentation program
+
+txt2regex/focal 0.8-5 all
+  A Regular Expression "wizard", all written with bash2 builtins
+
+u-boot-tools/focal-updates 2021.01+dfsg-3ubuntu0~20.04.6 amd64
+  companion tools for Das U-Boot bootloader
+
+vcsh/focal 1.20151229-1 all
+  Version Control System for $HOME - multiple Git repositories in $HOME
+
+vifm/focal 0.10.1-3 amd64
+  flexible vi-like file manager using ncurses
+
+vim/focal-updates,focal-security,now 2:8.1.2269-1ubuntu5.32 amd64 [residual-config]
+  Vi IMproved - enhanced vi editor
+
+vim-addon-manager/focal 0.5.10 all
+  manager of addons for the Vim editor
+
+vim-addon-mw-utils/focal 0.2-4 all
+  Vim funcref library
+
+vim-airline/focal 0.11-1 all
+  Lean & mean status/tabline for vim that's light as air
+
+vim-airline-themes/focal 0+git.20180730-6e798f9-1 all
+  official theme collection for vim-airline
+
+vim-asciidoc/focal 9.0.0~rc1-1 all
+  Vim syntax highlighting files for asciidoc
+
+vim-athena/focal-updates,focal-security 2:8.1.2269-1ubuntu5.32 amd64
+  Vi IMproved - enhanced vi editor - with Athena GUI
+
+vim-autopep8/focal 1.2.0-2 all
+  vim plugin to apply autopep8
+
+vim-bitbake/focal 0~git20190420-1 all
+  Vim plugin to interact with Yocto bitbake-based recipes
+
+vim-command-t/focal 5.0.2-5-g7147ba9-1build1 amd64
+  open files with a minimum number of keystrokes
+
+vim-common/focal-updates,focal-security,now 2:8.1.2269-1ubuntu5.32 all [residual-config]
+  Vi IMproved - Common files
+
+vim-ctrlp/focal 1.80-1 all
+  fuzzy file, buffer, mru, tag, etc. finder for Vim
+
+vim-doc/focal-updates,focal-security 2:8.1.2269-1ubuntu5.32 all
+  Vi IMproved - HTML documentation
+
+vim-editorconfig/focal 0.3.3+dfsg-2 all
+  EditorConfig Plugin for Vim
+
+vim-fugitive/focal 3.2-1 all
+  Vim plugin to work with Git
+
+vim-gocomplete/focal 20170907-3 all
+  gocode integration for Vim
+
+vim-gtk/focal-updates,focal-security 2:8.1.2269-1ubuntu5.32 all
+  Vi IMproved - enhanced vi editor (dummy package)
+
+vim-gtk3/focal-updates,focal-security 2:8.1.2269-1ubuntu5.32 amd64
+  Vi IMproved - enhanced vi editor - with GTK3 GUI
+
+vim-gui-common/focal-updates,focal-security 2:8.1.2269-1ubuntu5.32 all
+  Vi IMproved - Common GUI files
+
+vim-haproxy/focal-updates 2.0.33-0ubuntu0.1 all
+  syntax highlighting for HAProxy configuration files
+
+vim-icinga2/focal 2.11.2-1ubuntu3 all
+  syntax highlighting for Icinga 2 config files in VIM
+
+vim-julia/focal 0.0~git20200213.8c0b9e8-1 all
+  Vim support for Julia language
+
+vim-khuno/focal 1.0.3-1 all
+  Python flakes Vim plugin
+
+vim-lastplace/focal 3.1.1-2 all
+  Vim script to reopen files at your last edit position
+
+vim-latexsuite/focal 1:1.9.0-1 all
+  view, edit and compile LaTeX documents from within Vim
+
+vim-ledger/focal 1.2.0-1 all
+  Vim plugin for Ledger
+
+vim-migemo/focal 1:1.2+gh0.20150404-7 all
+  VIM plugin for C/Migemo
+
+vim-nox/focal-updates,focal-security 2:8.1.2269-1ubuntu5.32 amd64
+  Vi IMproved - enhanced vi editor - with scripting languages support
+
+vim-pathogen/focal 2.4-1 all
+  Manage your runtimepath with ease
+
+vim-puppet/focal 4~20181115+git4793b074-1 all
+  syntax highlighting for puppet manifests in vim
+
+vim-python-jedi/focal 0.15.2-1 all
+  autocompletion tool for Python - VIM addon files
+
+vim-rails/focal 4.5~20110829-1 all
+  vim development tools for Rails development
+
+vim-runtime/focal-updates,focal-security,now 2:8.1.2269-1ubuntu5.32 all [residual-config]
+  Vi IMproved - Runtime files
+
+vim-scripts/focal 20180807ubuntu1 all
+  plugins for vim, adding bells and whistles
+
+vim-snipmate/focal 0.87-3 all
+  Vim script that implements some of TextMate's snippets features.
+
+vim-snippets/focal 1.0.0-4 all
+  Snippets files for various programming languages.
+
+vim-syntastic/focal 3.10.0-2 all
+  Syntax checking hacks for vim
+
+vim-syntax-docker/focal-updates,focal-security 20.10.21-0ubuntu1~20.04.6 all
+  Docker container engine - Vim highlighting syntax files
+
+vim-syntax-gtk/focal 20110314-1 all
+  Syntax files to highlight GTK+ keywords in vim
+
+vim-tabular/focal 1.0-3 all
+  Vim script for text filtering and alignment
+
+vim-textobj-user/focal 0.7.6-1 all
+  Vim plugin for user-defined text objects
+
+vim-tiny/focal-updates,focal-security,now 2:8.1.2269-1ubuntu5.32 amd64 [residual-config]
+  Vi IMproved - enhanced vi editor - compact version
+
+vim-tjp/focal 3.6.0-6 all
+  vim addon for TaskJuggler .tjp files
+
+vim-tlib/focal 1.27-2 all
+  Some vim utility functions
+
+vim-ultisnips/focal 3.1-3build1 all
+  snippet solution for Vim
+
+vim-vimerl/focal 1.4.1+git20120509.89111c7-2 all
+  Erlang plugin for Vim
+
+vim-vimerl-syntax/focal 1.4.1+git20120509.89111c7-2 all
+  Erlang syntax for Vim
+
+vim-voom/focal 5.3-3 all
+  Vim two-pane outliner
+
+vim-youcompleteme/focal 0+20191218+git9e2ab00+ds-1 all
+  fast, as-you-type, fuzzy-search code completion engine for Vim
+
+vis/focal 0.5+ts-3 amd64
+  Modern, legacy free, simple yet efficient vim-like editor
+
+vit/focal 2.0.0-1 all
+  full-screen terminal interface for Taskwarrior
+
+youtube-dl/focal 2020.03.24-1 all
+  downloader of videos from YouTube and other sites
+
+yt-dlp/focal-backports 2022.03.08.1-1~bpo20.04.1 all
+  downloader of videos from YouTube and other sites
+
+zathura/focal 0.4.5-2 amd64
+  document viewer with a minimalistic interface
+
+zathura-cb/focal 0.1.8-2build1 amd64
+  comic book archive support for zathura
+
+zathura-djvu/focal 0.2.9-1 amd64
+  DjVu support for zathura
+
+zathura-pdf-poppler/focal 0.3.0-1 amd64
+  PDF support for zathura
+
+zathura-ps/focal 0.2.6-1build1 amd64
+  PostScript support for zathura
+
+zeal/focal 1:0.6.1-1build1 amd64
+  Simple offline API documentation browser
+
+zsh-antigen/focal 2.2.3-2 all
+  manage your zsh plugins
+
+*** STDERR
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+

@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "src/**/*.ts",
+    "src/scripts/**/*"
+  ],
+  "declarationMap": true,
+  "scripts": {
+    "build": "src/scripts/apt-fast.sh"
+  },
+  "exclude": [
+    "node_modules",
+    "test",
+    "dist"
+  ],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "types": [
+      "node"
+    ]
+  }
+}

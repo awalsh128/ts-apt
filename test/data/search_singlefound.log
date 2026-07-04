@@ -1,0 +1,12 @@
+*** CMD_LINE apt search vim-vimerl-syntax
+*** EXIT_CODE 0
+*** STDOUT
+Sorting...
+Full Text Search...
+vim-vimerl-syntax/focal 1.4.1+git20120509.89111c7-2 all
+  Erlang syntax for Vim
+
+*** STDERR
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
