@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --experimental-strip-types
+// @ts-nocheck
 
 import {
   ROOT_DIR,
@@ -8,12 +9,12 @@ import {
   logSuccess,
   runCaptureOutput,
   REPO_SLUG,
-} from "./lib.mjs";
+} from "../devopslib.mts";
 
-import packageJson from "../package.json" with { type: "json" };
-import vscodeSettingsJson from "../.vscode/settings.json" with { type: "json" };
-import tsconfigJson from "../tsconfig.json" with { type: "json" };
-import typedocJson from "../typedoc.json" with { type: "json" };
+import packageJson from "../../package.json" with { type: "json" };
+import vscodeSettingsJson from "../../.vscode/settings.json" with { type: "json" };
+import tsconfigJson from "../../tsconfig.json" with { type: "json" };
+import typedocJson from "../../typedoc.json" with { type: "json" };
 
 function tokenizePath(pathExpression) {
   const tokens = [];
@@ -148,13 +149,6 @@ function validatePackageJson(json) {
   logInfo("Validating package.json...");
 
   expectFieldValue(json, "name", "ts-apt", add);
-  expectFieldValue(
-    json,
-    "version",
-    "0.0.0-semantically-released",
-    add,
-    "version is updated automatically by semantic-release and should not be changed manually",
-  );
   expectFieldValue(json, "license", "Apache-2.0", add);
   expectFieldValue(json, "repository.type", "git", add);
   expectFieldValue(

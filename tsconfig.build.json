@@ -6,7 +6,7 @@
   ],
   "declarationMap": true,
   "scripts": {
-    "build": "src/scripts/apt-fast.sh"
+    "build": "scripts/dist/apt-fast.sh"
   },
   "exclude": [
     "node_modules",

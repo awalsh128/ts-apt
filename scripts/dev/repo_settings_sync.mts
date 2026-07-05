@@ -1,4 +1,5 @@
 #!/usr/bin/env -S node --experimental-strip-types
+// @ts-nocheck
 
 /**
  * Sync GitHub repository settings using GitHub CLI.
@@ -8,11 +9,11 @@
  * - `upload` reads the JSON file and PATCHes those settings back to the repository.
  *
  * Usage:
- *   node --experimental-strip-types ./dev_scripts/repo_settings_sync.mts <download|upload> [options]
+ *   node --experimental-strip-types ./scripts/dev/repo_settings_sync.mts <download|upload> [options]
  *
  * Options:
- *   --owner <owner>  GitHub repository owner (default: value from lib.mjs)
- *   --repo <repo>    GitHub repository name (default: value from lib.mjs)
+ *   --owner <owner>  GitHub repository owner (default: value from devopslib.mts)
+ *   --repo <repo>    GitHub repository name (default: value from devopslib.mts)
  *   --file <path>    Settings JSON path (default: .github/repo-settings.json)
  *   --dry-run        For upload only; prints payload without applying changes
  *
@@ -41,7 +42,7 @@ import {
   logInfo,
   logSuccess,
   usage,
-} from "./lib.mjs";
+} from "../devopslib.mts";
 
 type RepoSettings = {
   name?: string;

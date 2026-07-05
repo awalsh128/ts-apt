@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --experimental-strip-types
+// @ts-nocheck
 
 import process from "node:process";
 import {
@@ -12,7 +13,7 @@ import {
   runCaptureOutput,
   tryRun,
   usage,
-} from "./lib.mjs";
+} from "../devopslib.mts";
 
 const issueId = process.argv[2] ?? "";
 const base = process.argv[3] ?? "";

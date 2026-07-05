@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --experimental-strip-types
+// @ts-nocheck
 
 import { existsSync } from "node:fs";
 import {
@@ -17,7 +18,7 @@ import {
   VSCODE_SETTINGS_DEFAULTS,
   VSCODE_SETTINGS_RELPATH,
   writeJsonFile,
-} from "./lib.mjs";
+} from "../devopslib.mts";
 
 function ensureVscodeSettingsFile() {
   const vscodeDir = `${ROOT_DIR}/.vscode`;

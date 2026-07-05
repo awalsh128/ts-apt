@@ -43,7 +43,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const aptFastPath = getWorkspaceFilepath("scripts/apt-fast.sh");
+const aptFastPath = getWorkspaceFilepath("scripts/dist/apt-fast.sh");
 const aptCachePath = Binary.AptCache.path;
 const aptGetPath = Binary.AptGet.path;
 

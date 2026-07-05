@@ -1,5 +1,7 @@
 node_modules/
 dist/
+!scripts/dist/
+!scripts/dist/**
 coverage/
 .vscode/
 .DS_Store

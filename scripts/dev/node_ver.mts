@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --experimental-strip-types
+// @ts-nocheck
 
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -17,7 +18,7 @@ import {
   runCaptureOutput,
   tryRun,
   usage,
-} from "./lib.mjs";
+} from "../devopslib.mts";
 
 const rootDir = ROOT_DIR;
 const usageMessage = usage(process.argv[1], "--verify | --update");
@@ -40,7 +41,7 @@ function buildReferenceSpecs(nodeMajor) {
       ],
     },
     {
-      path: `${rootDir}/dev_scripts/lib.mjs`,
+      path: `${rootDir}/scripts/devopslib.mts`,
       replacements: [
         [
           /export const CURRENT_NODE_VERSION = "\d+";/g,
@@ -49,8 +50,10 @@ function buildReferenceSpecs(nodeMajor) {
       ],
     },
     {
-      path: `${rootDir}/.github/actions/setup-env/action.yml`,
-      replacements: [[/node-version:\s*\d+(?:\.x)?/g, `node-version: ${nodeMajor}`]],
+      path: `${rootDir}/.github/actions/setup/action.yml`,
+      replacements: [
+        [/node-version:\s*\d+(?:\.x)?/g, `node-version: ${nodeMajor}`],
+      ],
     },
     {
       path: `${rootDir}/.github/workflows/ci.yml`,
@@ -60,7 +63,9 @@ function buildReferenceSpecs(nodeMajor) {
     },
     {
       path: `${rootDir}/.github/workflows/pr.yml`,
-      replacements: [[/node-version:\s*\d+(?:\.x)?/g, `node-version: ${nodeMajor}`]],
+      replacements: [
+        [/node-version:\s*\d+(?:\.x)?/g, `node-version: ${nodeMajor}`],
+      ],
     },
     {
       path: `${rootDir}/.github/workflows/release.yml`,
@@ -289,7 +294,7 @@ async function main() {
     `You are about to install/update Node.js for major ${nodeMajor}.x. This may break your development environment and NPM users.`,
   );
   await confirmPrompt(
-    `Type "i confirm change to ${nodeMajor} to proceed:",
+    `Type "i confirm change to ${nodeMajor}" to proceed:`,
     new RegExp(`^i confirm change to ${nodeMajor}$`),
     /^n$/,
   );

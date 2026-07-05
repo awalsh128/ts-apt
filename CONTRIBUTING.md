@@ -123,7 +123,7 @@ Integration coverage is split across:
 - Use `npm run test:integration:docker` to force execution through the repository devcontainer for isolation and CI consistency.
 - The integration devcontainer uses the `debian:stable-slim` base image plus the Node feature version selected by `.node_ver`.
 - The mutating suite is intentionally devcontainer-gated so package install/remove/autoremove coverage does not mutate the host environment.
-- Shared setup uses the repository `scripts/apt-fast.sh` wrapper plus a flock-protected helper to serialize package lifecycle operations.
+- Shared setup uses the repository `scripts/dist/apt-fast.sh` wrapper plus a flock-protected helper to serialize package lifecycle operations.
 - Mutating package operations should use locking for safety when applicable.
 
 ## Docs and Publishing

@@ -77,6 +77,18 @@ jobs:
         shell: bash
         run: npm run typecheck
 
+      - name: Check Workflow Action Pins
+        shell: bash
+        run: npm run check:latest-action-pins
+
+      - name: Check Repository Configs
+        shell: bash
+        run: npm run check:configs
+
+      - name: Check Release Tag Preflight
+        shell: bash
+        run: node --experimental-strip-types ./scripts/ops/check_release_tag.mts
+
   testing-units:
     runs-on: ubuntu-latest
     needs: setup-and-cache

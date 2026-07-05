@@ -48,7 +48,7 @@ For every code update:
 
 - Run tests, fix failures, and iterate.
 - Avoid infinite loops and explain the reason when stopping.
-- Use `dev_scripts/` only for development tooling and CI/CD commands.
+- Use `scripts/dev/` only for development tooling and CI/CD commands.
 - Use `scripts/` for release/packaging.
 - Warn about breaking changes that affect backward compatibility and confirm before proceeding.
 
@@ -196,7 +196,7 @@ The `Role & Behavior` section explicitly instructs the agent to **push back**and
 
 ### 2. Directory Separation
 
-The configuration enforces a strict separation between `dev_scripts/` (local tooling) and `scripts/` (release/packaging). This aligns with your requirement to isolate development commands from production release logic.
+The configuration enforces a strict separation between `scripts/dev/` (local tooling) and `scripts/` (release/packaging). This aligns with your requirement to isolate development commands from production release logic.
 
 ### 3. Testing Rigor
 

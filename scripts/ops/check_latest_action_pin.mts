@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --experimental-strip-types
+// @ts-nocheck
 
 import fs from "node:fs";
 import path from "node:path";
@@ -12,7 +13,7 @@ import {
   logSuccess,
   runCaptureOutput,
   usage,
-} from "./lib.mjs";
+} from "../devopslib.mts";
 
 const usageMessage = usage(
   process.argv[1],

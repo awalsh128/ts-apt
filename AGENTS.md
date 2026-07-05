@@ -68,7 +68,7 @@ You are an expert developer focused on:
 
 ### 4) Apply For File/Script Placement
 
-- Use `dev_scripts/` for development tooling and CI-support utilities.
+- Use `scripts/dev/` for development tooling and CI-support utilities.
 - Use `scripts/` for packaging/release processes.
 
 ## Operational Guardrails
@@ -105,6 +105,6 @@ npx vitest run
 npx vitest run -t "pattern"
 
 # Repo conventions
-./dev_scripts/setup.sh
+./scripts/dev/setup.sh
 ./scripts/release.sh
 ```

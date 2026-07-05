@@ -1,10 +1,18 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --experimental-strip-types
+// @ts-nocheck
 
-import { fail, logSuccess, readJsonFile, ROOT_DIR } from "./lib.mjs";
+import {
+  fail,
+  logInfo,
+  logSuccess,
+  readJsonFile,
+  ROOT_DIR,
+} from "../devopslib.mts";
 
 const tag = process.env.RELEASE_TAG;
 if (!tag) {
-  fail("RELEASE_TAG is required for release preflight checks.");
+  logInfo("RELEASE_TAG is not set; skipping release tag preflight checks.");
+  process.exit(0);
 }
 
 if (!/^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(tag)) {

@@ -18,7 +18,7 @@ export const secondaryPackageName = "python3";
 export const missingPackageName = "nonexistentpackage";
 export const virtualPackageName = "libvips";
 export const multiSearchKeyword = "vim";
-export const aptFastPath = getWorkspaceFilepath("scripts/apt-fast.sh");
+export const aptFastPath = getWorkspaceFilepath("scripts/dist/apt-fast.sh");
 export const integrationAptTimeoutMs = 120_000;
 
 const managerLockPath = "/tmp/tsapt-integration-tests.lock";
