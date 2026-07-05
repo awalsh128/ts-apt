@@ -6,7 +6,7 @@
 
 # Class: ValidationError
 
-Defined in: [src/errors.ts:60](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L60)
+Defined in: [src/errors.ts:60](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L60)
 
 Error raised when unsafe or invalid input is provided.
 
@@ -20,7 +20,7 @@ Error raised when unsafe or invalid input is provided.
 
 > **new ValidationError**(`message`, `cause?`): `ValidationError`
 
-Defined in: [src/errors.ts:67](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L67)
+Defined in: [src/errors.ts:67](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L67)
 
 Creates a validation failure.
 
@@ -222,7 +222,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 > **toJSON**(): `Record`\<`string`, `any`\>
 
-Defined in: [src/errors.ts:23](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L23)
+Defined in: [src/errors.ts:23](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L23)
 
 Automatically captures ALL own properties (enumerable or not),
 including 'cause', 'stack', and child-class properties.

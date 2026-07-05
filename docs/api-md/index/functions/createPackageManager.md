@@ -8,7 +8,7 @@
 
 > **createPackageManager**(`enableAptFast`, `aptLockTimeoutSeconds?`, `appLogger?`, `commandExecLogger?`): `Promise`\<[`PackageManager`](../../types/interfaces/PackageManager.md)\>
 
-Defined in: [src/manager.ts:540](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/manager.ts#L540)
+Defined in: [src/manager.ts:540](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/manager.ts#L540)
 
 Creates a package manager instance.
 

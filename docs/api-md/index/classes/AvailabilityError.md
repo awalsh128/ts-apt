@@ -6,7 +6,7 @@
 
 # Class: AvailabilityError
 
-Defined in: [src/errors.ts:75](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L75)
+Defined in: [src/errors.ts:75](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L75)
 
 Error raised when no suitable package manager is available.
 
@@ -20,7 +20,7 @@ Error raised when no suitable package manager is available.
 
 > **new AvailabilityError**(`message`, `cause?`): `AvailabilityError`
 
-Defined in: [src/errors.ts:82](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L82)
+Defined in: [src/errors.ts:82](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L82)
 
 Creates an availability failure.
 
@@ -222,7 +222,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 > **toJSON**(): `Record`\<`string`, `any`\>
 
-Defined in: [src/errors.ts:23](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L23)
+Defined in: [src/errors.ts:23](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L23)
 
 Automatically captures ALL own properties (enumerable or not),
 including 'cause', 'stack', and child-class properties.

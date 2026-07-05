@@ -6,7 +6,7 @@
 
 # Interface: CommandResult
 
-Defined in: [src/types.ts:56](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L56)
+Defined in: [src/types.ts:56](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L56)
 
 Captured command output returned by command runners.
 
@@ -16,7 +16,7 @@ Captured command output returned by command runners.
 
 > **command**: `string`
 
-Defined in: [src/types.ts:58](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L58)
+Defined in: [src/types.ts:58](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L58)
 
 Command executed.
 
@@ -26,7 +26,7 @@ Command executed.
 
 > **args**: `string`[]
 
-Defined in: [src/types.ts:60](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L60)
+Defined in: [src/types.ts:60](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L60)
 
 Command-line arguments to command.
 
@@ -36,7 +36,7 @@ Command-line arguments to command.
 
 > **stdout**: `string`
 
-Defined in: [src/types.ts:62](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L62)
+Defined in: [src/types.ts:62](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L62)
 
 Standard output text captured from the process.
 
@@ -46,7 +46,7 @@ Standard output text captured from the process.
 
 > **stderr**: `string`
 
-Defined in: [src/types.ts:64](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L64)
+Defined in: [src/types.ts:64](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L64)
 
 Standard error text captured from the process.
 
@@ -56,6 +56,6 @@ Standard error text captured from the process.
 
 > **exitCode**: `number`
 
-Defined in: [src/types.ts:66](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L66)
+Defined in: [src/types.ts:66](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L66)
 
 Process exit code.

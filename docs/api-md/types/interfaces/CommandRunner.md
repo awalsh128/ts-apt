@@ -6,7 +6,7 @@
 
 # Interface: CommandRunner
 
-Defined in: [src/types.ts:72](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L72)
+Defined in: [src/types.ts:72](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L72)
 
 Abstraction over command execution used by package managers.
 
@@ -16,7 +16,7 @@ Abstraction over command execution used by package managers.
 
 > **run**(`command`, `args?`, `options?`): `Promise`\<[`CommandResult`](CommandResult.md)\>
 
-Defined in: [src/types.ts:80](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L80)
+Defined in: [src/types.ts:80](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L80)
 
 Executes a command and resolves with process output.
 

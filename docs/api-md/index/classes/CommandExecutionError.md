@@ -6,7 +6,7 @@
 
 # Class: CommandExecutionError
 
-Defined in: [src/errors.ts:90](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L90)
+Defined in: [src/errors.ts:90](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L90)
 
 Error raised when command execution exits unsuccessfully.
 
@@ -20,7 +20,7 @@ Error raised when command execution exits unsuccessfully.
 
 > **new CommandExecutionError**(`params`, `cause?`): `CommandExecutionError`
 
-Defined in: [src/errors.ts:108](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L108)
+Defined in: [src/errors.ts:108](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L108)
 
 Creates a command execution error.
 
@@ -92,7 +92,7 @@ not capture any frames.
 
 > `readonly` **command**: `string`
 
-Defined in: [src/errors.ts:92](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L92)
+Defined in: [src/errors.ts:92](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L92)
 
 Executable name used for the failed command.
 
@@ -102,7 +102,7 @@ Executable name used for the failed command.
 
 > `readonly` **args**: `string`[]
 
-Defined in: [src/errors.ts:94](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L94)
+Defined in: [src/errors.ts:94](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L94)
 
 Argument list used for the failed command.
 
@@ -112,7 +112,7 @@ Argument list used for the failed command.
 
 > `readonly` **exitCode**: `number`
 
-Defined in: [src/errors.ts:96](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L96)
+Defined in: [src/errors.ts:96](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L96)
 
 Exit code returned by the failed process.
 
@@ -122,7 +122,7 @@ Exit code returned by the failed process.
 
 > `readonly` **stderr**: `string`
 
-Defined in: [src/errors.ts:98](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L98)
+Defined in: [src/errors.ts:98](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L98)
 
 Captured standard error output.
 
@@ -132,7 +132,7 @@ Captured standard error output.
 
 > `readonly` **stdout**: `string`
 
-Defined in: [src/errors.ts:100](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L100)
+Defined in: [src/errors.ts:100](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L100)
 
 Captured standard output output.
 
@@ -290,7 +290,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 > **toJSON**(): `Record`\<`string`, `any`\>
 
-Defined in: [src/errors.ts:23](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L23)
+Defined in: [src/errors.ts:23](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L23)
 
 Automatically captures ALL own properties (enumerable or not),
 including 'cause', 'stack', and child-class properties.

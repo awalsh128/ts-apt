@@ -6,7 +6,7 @@
 
 # Class: TsAptError
 
-Defined in: [src/errors.ts:4](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L4)
+Defined in: [src/errors.ts:4](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L4)
 
 Base error type for library-specific failures.
 
@@ -26,7 +26,7 @@ Base error type for library-specific failures.
 
 > **new TsAptError**(`message`, `cause?`): `TsAptError`
 
-Defined in: [src/errors.ts:11](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L11)
+Defined in: [src/errors.ts:11](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L11)
 
 Creates a library error with a descriptive message.
 
@@ -228,7 +228,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 > **toJSON**(): `Record`\<`string`, `any`\>
 
-Defined in: [src/errors.ts:23](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L23)
+Defined in: [src/errors.ts:23](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/errors.ts#L23)
 
 Automatically captures ALL own properties (enumerable or not),
 including 'cause', 'stack', and child-class properties.

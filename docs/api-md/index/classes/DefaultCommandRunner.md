@@ -6,7 +6,7 @@
 
 # Class: DefaultCommandRunner
 
-Defined in: [src/commandRunner.ts:12](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/commandRunner.ts#L12)
+Defined in: [src/commandRunner.ts:12](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/commandRunner.ts#L12)
 
 Production command runner backed by child_process spawn.
 
@@ -20,7 +20,7 @@ Production command runner backed by child_process spawn.
 
 > **new DefaultCommandRunner**(`appLogger?`, `execLogger?`): `DefaultCommandRunner`
 
-Defined in: [src/commandRunner.ts:16](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/commandRunner.ts#L16)
+Defined in: [src/commandRunner.ts:16](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/commandRunner.ts#L16)
 
 #### Parameters
 
@@ -42,7 +42,7 @@ Defined in: [src/commandRunner.ts:16](https://github.com/awalsh128/ts-apt/blob/c
 
 > **run**(`command`, `args?`, `options?`): `Promise`\<[`CommandResult`](../../types/interfaces/CommandResult.md)\>
 
-Defined in: [src/commandRunner.ts:70](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/commandRunner.ts#L70)
+Defined in: [src/commandRunner.ts:70](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/commandRunner.ts#L70)
 
 Executes a command with optional environment and timeout.
 

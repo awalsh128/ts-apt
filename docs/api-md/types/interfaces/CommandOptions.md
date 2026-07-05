@@ -6,7 +6,7 @@
 
 # Interface: CommandOptions
 
-Defined in: [src/types.ts:46](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L46)
+Defined in: [src/types.ts:46](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L46)
 
 Process execution settings for command runner implementations.
 
@@ -16,7 +16,7 @@ Process execution settings for command runner implementations.
 
 > `optional` **timeoutMs?**: `number`
 
-Defined in: [src/types.ts:48](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L48)
+Defined in: [src/types.ts:48](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L48)
 
 Maximum process runtime in milliseconds before timeout.
 
@@ -26,6 +26,6 @@ Maximum process runtime in milliseconds before timeout.
 
 > `optional` **env?**: `string`[]
 
-Defined in: [src/types.ts:50](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L50)
+Defined in: [src/types.ts:50](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L50)
 
 Additional KEY=VALUE environment variables applied to the process.
