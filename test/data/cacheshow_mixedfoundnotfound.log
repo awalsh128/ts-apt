@@ -1,4 +1,4 @@
-*** CMD_LINE apt-cache show xdot python3 nonexistentpackage
+*** CMD_LINE apt-cache show --quiet=0 xdot python3 nonexistentpackage
 *** EXIT_CODE 0
 *** STDOUT
 Package: xdot
@@ -68,3 +68,4 @@ Description-md5: 6c1cceeeaa25414388fa2227c3a214fe
 Task: minimal, ubuntu-core
 
 *** STDERR
+N: Unable to locate package nonexistentpackage

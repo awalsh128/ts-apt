@@ -1,0 +1,6 @@
+*** CMD_LINE apt-cache show --quiet=0 libvips
+*** EXIT_CODE 0
+*** STDOUT
+*** STDERR
+N: Can't select versions from package 'libvips' as it is purely virtual
+N: No packages found

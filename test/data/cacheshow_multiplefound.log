@@ -1,4 +1,4 @@
-*** CMD_LINE apt-cache show xdot python3
+*** CMD_LINE apt-cache show --quiet=0 xdot python3
 *** EXIT_CODE 0
 *** STDOUT
 Package: xdot

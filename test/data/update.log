@@ -2,14 +2,13 @@
 *** EXIT_CODE 0
 *** STDOUT
 Hit:1 https://cli.github.com/packages stable InRelease
-Get:2 http://security.ubuntu.com/ubuntu focal-security InRelease [128 kB]
-Hit:3 https://deb.nodesource.com/node_20.x nodistro InRelease
+Hit:2 https://deb.nodesource.com/node_24.x nodistro InRelease
+Hit:3 http://security.ubuntu.com/ubuntu focal-security InRelease
 Hit:4 http://archive.ubuntu.com/ubuntu focal InRelease
-Get:5 http://archive.ubuntu.com/ubuntu focal-updates InRelease [128 kB]
+Hit:5 http://archive.ubuntu.com/ubuntu focal-updates InRelease
 Hit:6 http://ppa.launchpad.net/apt-fast/stable/ubuntu focal InRelease
-Get:7 http://archive.ubuntu.com/ubuntu focal-backports InRelease [128 kB]
+Hit:7 http://archive.ubuntu.com/ubuntu focal-backports InRelease
 Hit:8 http://ppa.launchpad.net/longsleep/golang-backports/ubuntu focal InRelease
 Hit:9 http://ppa.launchpad.net/thomas-schiex/blender/ubuntu focal InRelease
-Fetched 383 kB in 1s (349 kB/s)
 Reading package lists...
 *** STDERR

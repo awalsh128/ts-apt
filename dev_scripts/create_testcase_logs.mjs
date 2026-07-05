@@ -9,52 +9,95 @@ function toLog(result) {
   return `*** CMD_LINE ${result.cmdLine}\n*** EXIT_CODE ${result.exitCode}\n*** STDOUT\n${result.stdout}*** STDERR\n${result.stderr}`;
 }
 
+/** Determine exit code: use code if available, else map signal to 137 (SIGKILL) or 143 (SIGTERM) */
+function getFinalExitCode(code, signal) {
+  if (code !== null) {
+    return code;
+  } else if (signal === "SIGTERM") {
+    return 143; // Standard for SIGTERM (128 + 14)
+  } else if (signal === "SIGKILL") {
+    return 137; // Standard for SIGKILL (128 + 9)
+  }
+  return 1; // Fallback for unknown signal
+}
+
 async function execute(cmdLine) {
-  return await new Promise((resolvePromise, rejectPromise) => {
+  return await new Promise((resolve, reject) => {
     const parts = cmdLine.trim().split(/\s+/);
     const command = parts[0]; // "apt-get"
     const args = parts.slice(1);
+    const env = { ...process.env };
+    if (!env.LC_ALL) {
+      env.LC_ALL = "C";
+    }
 
-    const child = spawn("sudo", [command, ...args], {
-      stdio: ["inherit", "pipe", "pipe"],
-      env: {
-        ...process.env,
-        PATH: `${process.env.PATH}:/usr/bin`,
-        DEBIAN_FRONTEND: "noninteractive",
-        DEBCONF_NONINTERACTIVE_SEEN: "true",
-      },
+    const commonEnv = {
+      ...env,
+      PATH: `${process.env.PATH}:/usr/bin`,
+      DEBIAN_FRONTEND: "noninteractive",
+      DEBCONF_NONINTERACTIVE_SEEN: "true",
+    };
+
+    const child = spawn(command, args, {
+      env: commonEnv,
+      stdio: "pipe",
     });
 
     let stdout = "";
     let stderr = "";
+    let settled = false;
+    /**
+     * Ensures promise resolution or rejection happens once.
+     *
+     * @param fn Finalizer callback to execute once settled.
+     */
+    const finalize = (fn) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      fn();
+    };
 
-    child.stdout.on("data", (data) => {
-      stdout += data.toString();
-    });
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
+    // 1. Attach 'error' FIRST (Critical for crash safety)
     child.on("error", (error) => {
-      rejectPromise(error);
+      finalize(() => reject(error));
     });
 
-    child.on("close", (code) => {
-      if (code !== 0) {
-        rejectPromise(
-          new Error(
-            `Command '${cmdLine}' failed with exit code ${code ?? "unknown"}.`,
-          ),
+    // 2. Attach 'stdout' and 'stderr' stream listeners (Capture output)
+    child.stdout?.on("data", (chunk) => {
+      const str = chunk.toString("utf8");
+      stdout += str;
+    });
+    child.stderr?.on("data", (chunk) => {
+      const str = chunk.toString("utf8");
+      stderr += str;
+    });
+
+    // 3. Attach 'close' last (Handles exit logic)
+    child.on("close", (code, signal) => {
+      if (stderr.includes("Permission denied")) {
+        reject(
+          new Error(`Permission denied error:
+          - command: ${command}
+          - args: ${args.join(" ")}
+          - stdout: ${stdout}
+          - stderr: ${stderr}
+          - code: ${code}
+          - signal: ${signal}
+          `),
         );
         return;
       }
+      finalize(() => {
+        const finalExitCode = getFinalExitCode(code, signal);
 
-      resolvePromise({
-        cmdLine,
-        stdout,
-        stderr,
-        exitCode: 0,
+        resolve({
+          cmdLine,
+          exitCode: finalExitCode,
+          stdout,
+          stderr,
+        });
       });
     });
   });
@@ -66,6 +109,8 @@ async function writeLogFile(baseDir, relativePath, result) {
   await writeFile(outputPath, toLog(result), "utf8");
   return outputPath;
 }
+
+const PERMISSION_DENIED_EXIT_CODE = 100;
 
 async function main() {
   const testDataDir = resolve(ROOT_DIR, "test/data");
@@ -80,6 +125,12 @@ async function main() {
 
     const result = await execute(entry.execCmdLine);
     const outputPath = await writeLogFile(testDataDir, entry.filepath, result);
+    if (entry.postExecCmdLine) {
+      for (const cmd of entry.postExecCmdLine) {
+        await execute(cmd);
+      }
+    }
+
     written += 1;
     logInfo(`Wrote ${outputPath}`);
   }
@@ -107,19 +158,31 @@ const testLogFiles = [
   },
   {
     filepath: "cacheshow_mixedfoundnotfound",
-    execCmdLine: "apt-cache show xdot python3 nonexistentpackage",
+    execCmdLine: "apt-cache show --quiet=0 xdot python3 nonexistentpackage",
   },
   {
     filepath: "cacheshow_multiplefound",
-    execCmdLine: "apt-cache show xdot python3",
+    execCmdLine: "apt-cache show --quiet=0 xdot python3",
   },
   {
     filepath: "cacheshow_singlefound",
-    execCmdLine: "apt-cache show python3",
+    execCmdLine: "apt-cache show --quiet=0 python3",
   },
   {
     filepath: "cacheshow_singlenotfound",
-    execCmdLine: "apt-cache show nonexistentpackage",
+    execCmdLine: "apt-cache show --quiet=0 nonexistentpackage",
+  },
+  {
+    filepath: "cacheshow_virtualpackage",
+    execCmdLine: "apt-cache show --quiet=0 libvips",
+  },
+  {
+    filepath: "cacheshow_virtualandnotpackages",
+    execCmdLine: "apt-cache show --quiet=0 libvips xdot",
+  },
+  {
+    filepath: "cacheshowpkg_virtualpackage",
+    execCmdLine: "apt-cache showpkg --quiet=0 libvips",
   },
   {
     filepath: "install_mixedfoundnotfound",
@@ -258,6 +321,11 @@ const testLogFiles = [
   },
 ];
 
-main().catch((error) => {
-  fail(error instanceof Error ? error.message : String(error));
+await main().catch((error) => {
+  fail(
+    "Error occurred during log creation:\n" +
+      String(error) +
+      "\n" +
+      (error.stack || ""),
+  );
 });

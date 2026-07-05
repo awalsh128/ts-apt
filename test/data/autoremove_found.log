@@ -9,7 +9,7 @@ The following packages will be REMOVED:
   libpangoxft-1.0-0 python3-cairo python3-gi-cairo
 0 upgraded, 0 newly installed, 7 to remove and 0 not upgraded.
 After this operation, 1752 kB disk space will be freed.
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 198081 files and directories currently installed.)
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 198479 files and directories currently installed.)
 Removing gir1.2-gtk-3.0:amd64 (3.24.20-0ubuntu1.2) ...
 Removing gir1.2-pango-1.0:amd64 (1.44.7-2ubuntu4) ...
 Removing gir1.2-freedesktop:amd64 (1.64.1-1~ubuntu20.04.1) ...
