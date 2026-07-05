@@ -1,11 +1,16 @@
 name: CI
 
 on:
+  # Run push CI for feature branches; protected branches should be PR-gated.
   push:
+    branches-ignore:
+      - main
+      - staging
+  # Enforce checks for changes proposed into protected branches.
+  pull_request:
     branches:
       - main
       - staging
-  pull_request:
   schedule:
     - cron: "30 5 * * *"
   workflow_dispatch:
