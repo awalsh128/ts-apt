@@ -90,13 +90,12 @@ refactor(core): simplify validation logic
 
 Main CI workflow is [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
-Current CI is split into setup, CodeQL, linting, unit testing, and integration testing jobs.
+PR-gated CI is split into setup, CodeQL, linting, unit testing, and integration testing jobs.
 
 Trigger policy:
 
-- Push-triggered CI is intended for feature branches.
-- Protected branches such as `main` and `staging` should be validated primarily through pull request checks.
-- This keeps direct branch pushes from being the normal integration path while preserving fast feedback for in-progress feature work.
+- [.github/workflows/ci.yml](.github/workflows/ci.yml) is the required pull request gate for protected branches such as `main` and `staging`.
+- Keep branch protection required checks tied to the PR-gated workflow.
 
 - The unit-test job runs `npm run test:unit`, type coverage, coverage upload, and dependency audit.
 - The integration job runs `npm run test:integration:docker` so integration coverage uses the forced devcontainer path when available.

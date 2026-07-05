@@ -1,11 +1,6 @@
 name: CI
 
 on:
-  # Run push CI for feature branches; protected branches should be PR-gated.
-  push:
-    branches-ignore:
-      - main
-      - staging
   # Enforce checks for changes proposed into protected branches.
   pull_request:
     branches:
@@ -18,9 +13,9 @@ on:
     types: [published]
 
 concurrency:
-  # De-duplicate push and pull_request runs for the same source branch.
-  group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.event_name == 'push' && github.ref_name || github.run_id }}
-  cancel-in-progress: true
+  # Keep a stable grouping but do not auto-cancel required PR checks.
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   setup-and-cache:
