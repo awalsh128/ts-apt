@@ -17,6 +17,11 @@ on:
   release:
     types: [published]
 
+concurrency:
+  # De-duplicate push and pull_request runs for the same source branch.
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.event_name == 'push' && github.ref_name || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   setup-and-cache:
     runs-on: ubuntu-latest
