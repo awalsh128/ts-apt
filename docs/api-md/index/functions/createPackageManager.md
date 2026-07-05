@@ -6,9 +6,9 @@
 
 # Function: createPackageManager()
 
-> **createPackageManager**(`enableAptFast`, `appLogger?`, `commandExecLogger?`): `Promise`\<[`PackageManager`](../../types/interfaces/PackageManager.md)\>
+> **createPackageManager**(`enableAptFast`, `aptLockTimeoutSeconds?`, `appLogger?`, `commandExecLogger?`): `Promise`\<[`PackageManager`](../../types/interfaces/PackageManager.md)\>
 
-Defined in: [src/manager.ts:553](https://github.com/awalsh128/ts-apt/blob/dev/src/manager.ts#L553)
+Defined in: [src/manager.ts:540](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/manager.ts#L540)
 
 Creates a package manager instance.
 
@@ -29,17 +29,23 @@ ii  aria2  1.36.0-1 amd64 High speed download utility
 
 Whether to enable APT-fast which is a wrapper for apt to speed up package downloads.
 
+### aptLockTimeoutSeconds?
+
+`number` = `-1`
+
+Timeout for APT lock wait in seconds. The lock is set by APT itself.
+
 ### appLogger?
 
 `Logger`
 
-Logger instance for application logs.
+Logger instance for application logs or passthrough if null.
 
 ### commandExecLogger?
 
 `Logger`
 
-Logger instance for capturing APT commands execution.
+Logger instance for capturing APT commands execution or passthrough if null.
 
 ## Returns
 
