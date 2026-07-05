@@ -9,10 +9,6 @@
 ## Classes
 
 - [DefaultCommandRunner](classes/DefaultCommandRunner.md)
-- [TsAptError](classes/TsAptError.md)
-- [ValidationError](classes/ValidationError.md)
-- [AvailabilityError](classes/AvailabilityError.md)
-- [CommandExecutionError](classes/CommandExecutionError.md)
 
 ## Functions
 
@@ -53,3 +49,27 @@ Re-exports [CommandOptions](../types/interfaces/CommandOptions.md)
 ### CommandResult
 
 Re-exports [CommandResult](../types/interfaces/CommandResult.md)
+
+***
+
+### TsAptError
+
+Re-exports [TsAptError](../errors/classes/TsAptError.md)
+
+***
+
+### ValidationError
+
+Re-exports [ValidationError](../errors/classes/ValidationError.md)
+
+***
+
+### AvailabilityError
+
+Re-exports [AvailabilityError](../errors/classes/AvailabilityError.md)
+
+***
+
+### CommandExecutionError
+
+Re-exports [CommandExecutionError](../errors/classes/CommandExecutionError.md)

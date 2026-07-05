@@ -2,7 +2,7 @@
 
 ***
 
-[ts-apt](../../README.md) / [index](../README.md) / CommandExecutionError
+[ts-apt](../../README.md) / [errors](../README.md) / CommandExecutionError
 
 # Class: CommandExecutionError
 

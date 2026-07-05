@@ -30,7 +30,7 @@ function main(argv: string[]): void {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     logInfo(`Docs sync attempt ${attempt}/3`);
 
-    run("npm", ["run", "docs"]);
+    run("npm", ["run", "docs:api"]);
     run("git", ["add", "docs/"]);
 
     const hasStagedChanges = !tryRun("git", ["diff", "--staged", "--quiet"]).ok;

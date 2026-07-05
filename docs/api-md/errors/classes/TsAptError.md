@@ -2,27 +2,33 @@
 
 ***
 
-[ts-apt](../../README.md) / [index](../README.md) / ValidationError
+[ts-apt](../../README.md) / [errors](../README.md) / TsAptError
 
-# Class: ValidationError
+# Class: TsAptError
 
-Defined in: [src/errors.ts:60](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L60)
+Defined in: [src/errors.ts:4](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L4)
 
-Error raised when unsafe or invalid input is provided.
+Base error type for library-specific failures.
 
 ## Extends
 
-- [`TsAptError`](TsAptError.md)
+- `Error`
+
+## Extended by
+
+- [`ValidationError`](ValidationError.md)
+- [`AvailabilityError`](AvailabilityError.md)
+- [`CommandExecutionError`](CommandExecutionError.md)
 
 ## Constructors
 
 ### Constructor
 
-> **new ValidationError**(`message`, `cause?`): `ValidationError`
+> **new TsAptError**(`message`, `cause?`): `TsAptError`
 
-Defined in: [src/errors.ts:67](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L67)
+Defined in: [src/errors.ts:11](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L11)
 
-Creates a validation failure.
+Creates a library error with a descriptive message.
 
 #### Parameters
 
@@ -30,7 +36,7 @@ Creates a validation failure.
 
 `string`
 
-Validation failure details.
+Human-readable error message.
 
 ##### cause?
 
@@ -40,11 +46,11 @@ Original error that caused this error.
 
 #### Returns
 
-`ValidationError`
+`TsAptError`
 
 #### Overrides
 
-[`TsAptError`](TsAptError.md).[`constructor`](TsAptError.md#constructor)
+`Error.constructor`
 
 ## Properties
 
@@ -66,7 +72,7 @@ not capture any frames.
 
 #### Inherited from
 
-[`TsAptError`](TsAptError.md).[`stackTraceLimit`](TsAptError.md#stacktracelimit)
+`Error.stackTraceLimit`
 
 ***
 
@@ -78,7 +84,7 @@ Defined in: node\_modules/typescript/lib/lib.es2022.error.d.ts:24
 
 #### Inherited from
 
-[`TsAptError`](TsAptError.md).[`cause`](TsAptError.md#cause)
+`Error.cause`
 
 ***
 
@@ -90,7 +96,7 @@ Defined in: node\_modules/typescript/lib/lib.es5.d.ts:1074
 
 #### Inherited from
 
-[`TsAptError`](TsAptError.md).[`name`](TsAptError.md#name)
+`Error.name`
 
 ***
 
@@ -102,7 +108,7 @@ Defined in: node\_modules/typescript/lib/lib.es5.d.ts:1075
 
 #### Inherited from
 
-[`TsAptError`](TsAptError.md).[`message`](TsAptError.md#message)
+`Error.message`
 
 ***
 
@@ -114,7 +120,7 @@ Defined in: node\_modules/typescript/lib/lib.es5.d.ts:1076
 
 #### Inherited from
 
-[`TsAptError`](TsAptError.md).[`stack`](TsAptError.md#stack)
+`Error.stack`
 
 ## Methods
 
@@ -184,7 +190,7 @@ a();
 
 #### Inherited from
 
-[`TsAptError`](TsAptError.md).[`captureStackTrace`](TsAptError.md#capturestacktrace)
+`Error.captureStackTrace`
 
 ***
 
@@ -214,7 +220,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 #### Inherited from
 
-[`TsAptError`](TsAptError.md).[`prepareStackTrace`](TsAptError.md#preparestacktrace)
+`Error.prepareStackTrace`
 
 ***
 
@@ -230,7 +236,3 @@ including 'cause', 'stack', and child-class properties.
 #### Returns
 
 `Record`\<`string`, `any`\>
-
-#### Inherited from
-
-[`TsAptError`](TsAptError.md).[`toJSON`](TsAptError.md#tojson)

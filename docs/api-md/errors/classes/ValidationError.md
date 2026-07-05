@@ -2,13 +2,13 @@
 
 ***
 
-[ts-apt](../../README.md) / [index](../README.md) / AvailabilityError
+[ts-apt](../../README.md) / [errors](../README.md) / ValidationError
 
-# Class: AvailabilityError
+# Class: ValidationError
 
-Defined in: [src/errors.ts:75](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L75)
+Defined in: [src/errors.ts:60](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L60)
 
-Error raised when no suitable package manager is available.
+Error raised when unsafe or invalid input is provided.
 
 ## Extends
 
@@ -18,11 +18,11 @@ Error raised when no suitable package manager is available.
 
 ### Constructor
 
-> **new AvailabilityError**(`message`, `cause?`): `AvailabilityError`
+> **new ValidationError**(`message`, `cause?`): `ValidationError`
 
-Defined in: [src/errors.ts:82](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L82)
+Defined in: [src/errors.ts:67](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/errors.ts#L67)
 
-Creates an availability failure.
+Creates a validation failure.
 
 #### Parameters
 
@@ -30,7 +30,7 @@ Creates an availability failure.
 
 `string`
 
-Availability failure details.
+Validation failure details.
 
 ##### cause?
 
@@ -40,7 +40,7 @@ Original error that caused this error.
 
 #### Returns
 
-`AvailabilityError`
+`ValidationError`
 
 #### Overrides
 
