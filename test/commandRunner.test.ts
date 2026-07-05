@@ -41,6 +41,13 @@ describe("default command runner", () => {
     expect(result.stdout).toBe("C.UTF-8");
   });
 
+  test("defaults LC_ALL to C when not provided", async () => {
+    const runner = await createDefaultCommandRunner();
+    const result = await runner.run("bash", ["-lc", 'printf %s "$LC_ALL"']);
+
+    expect(result.stdout).toBe("C");
+  });
+
   test("throws CommandExecutionError on non-zero exit", async () => {
     const runner = await createDefaultCommandRunner();
 
@@ -60,7 +67,19 @@ describe("default command runner", () => {
       runner.run("bash", ["-lc", "sleep 2"], { timeoutMs: 50 }),
     ).rejects.toMatchObject({
       name: "CommandExecutionError",
-      exitCode: 124,
+      exitCode: 143,
+    } as Partial<CommandExecutionError>);
+  });
+
+  test("maps SIGKILL signal termination to exit code 137", async () => {
+    const runner = await createDefaultCommandRunner();
+
+    await expect(
+      runner.run("bash", ["-lc", "kill -KILL $$"]),
+    ).rejects.toMatchObject({
+      name: "CommandExecutionError",
+      exitCode: 137,
+      command: "bash",
     } as Partial<CommandExecutionError>);
   });
 
