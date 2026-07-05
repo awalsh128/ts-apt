@@ -6,7 +6,7 @@
 
 # Class: DefaultCommandRunner
 
-Defined in: [src/commandRunner.ts:13](https://github.com/awalsh128/ts-apt/blob/dev/src/commandRunner.ts#L13)
+Defined in: [src/commandRunner.ts:12](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/commandRunner.ts#L12)
 
 Production command runner backed by child_process spawn.
 
@@ -18,17 +18,17 @@ Production command runner backed by child_process spawn.
 
 ### Constructor
 
-> **new DefaultCommandRunner**(`appLogger`, `execLogger`): `DefaultCommandRunner`
+> **new DefaultCommandRunner**(`appLogger?`, `execLogger?`): `DefaultCommandRunner`
 
-Defined in: [src/commandRunner.ts:17](https://github.com/awalsh128/ts-apt/blob/dev/src/commandRunner.ts#L17)
+Defined in: [src/commandRunner.ts:16](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/commandRunner.ts#L16)
 
 #### Parameters
 
-##### appLogger
+##### appLogger?
 
 `Logger`
 
-##### execLogger
+##### execLogger?
 
 `Logger`
 
@@ -42,9 +42,14 @@ Defined in: [src/commandRunner.ts:17](https://github.com/awalsh128/ts-apt/blob/d
 
 > **run**(`command`, `args?`, `options?`): `Promise`\<[`CommandResult`](../../types/interfaces/CommandResult.md)\>
 
-Defined in: [src/commandRunner.ts:31](https://github.com/awalsh128/ts-apt/blob/dev/src/commandRunner.ts#L31)
+Defined in: [src/commandRunner.ts:70](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/commandRunner.ts#L70)
 
-Executes a command with optional environment, timeout, and interactive mode.
+Executes a command with optional environment and timeout.
+
+NOTE: Signalled terminations (e.g., SIGTERM, SIGKILL) are mapped to exit codes 143 and 137 respectively.
+
+WARNING: Some commands will buffer output when not attached to a terminal.
+For those cases, stdbuf will need to be passed in.
 
 #### Parameters
 

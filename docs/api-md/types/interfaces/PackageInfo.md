@@ -6,7 +6,7 @@
 
 # Interface: PackageInfo
 
-Defined in: [src/types.ts:22](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L22)
+Defined in: [src/types.ts:26](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L26)
 
 Structured package metadata returned by manager operations.
 
@@ -16,7 +16,7 @@ Structured package metadata returned by manager operations.
 
 > **name**: `string`
 
-Defined in: [src/types.ts:24](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L24)
+Defined in: [src/types.ts:28](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L28)
 
 Package name as reported by the package manager.
 
@@ -26,9 +26,11 @@ Package name as reported by the package manager.
 
 > **version**: `string`
 
-Defined in: [src/types.ts:26](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L26)
+Defined in: [src/types.ts:34](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L34)
 
 Installed version when present.
+
+NOTE: If package is broken, this field will be empty and the status will be "broken".
 
 ***
 
@@ -36,7 +38,7 @@ Installed version when present.
 
 > `optional` **status?**: [`PackageStatus`](../type-aliases/PackageStatus.md)
 
-Defined in: [src/types.ts:28](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L28)
+Defined in: [src/types.ts:36](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L36)
 
 Current normalized package status.
 
@@ -46,7 +48,7 @@ Current normalized package status.
 
 > `optional` **arch?**: `string`
 
-Defined in: [src/types.ts:30](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L30)
+Defined in: [src/types.ts:38](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L38)
 
 Package architecture, for example amd64 or arm64 if specified.
 
@@ -56,6 +58,6 @@ Package architecture, for example amd64 or arm64 if specified.
 
 > `optional` **metadata?**: `Map`\<`string`, `string`\>
 
-Defined in: [src/types.ts:32](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L32)
+Defined in: [src/types.ts:40](https://github.com/awalsh128/ts-apt/blob/chore/ci-push-trigger/src/types.ts#L40)
 
 Operation specific metadata if available.
