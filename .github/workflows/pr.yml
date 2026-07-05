@@ -22,7 +22,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Generate Docs
-        run: npm run docs
+        run: npm run docs:api
 
       - name: Add and Commit Docs Changes
         run: |
