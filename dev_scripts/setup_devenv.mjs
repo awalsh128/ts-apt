@@ -103,6 +103,19 @@ function ensureNodeDependencies(nodeVersionMajor) {
   run("npm", ["ci", "--include=dev"]);
 }
 
+function warnIfDockerMissing() {
+  if (commandExists("docker")) {
+    logSuccess(
+      "Docker CLI detected for devcontainer-backed integration tests.",
+    );
+    return;
+  }
+
+  logWarn(
+    "Docker is not installed. Devcontainer-backed integration tests will be unavailable until Docker is installed.",
+  );
+}
+
 function parseAuditJson(outputText) {
   if (!outputText || outputText.trim().length === 0) {
     fail("npm audit produced empty output.");
@@ -200,11 +213,13 @@ async function main() {
   ensureAgentsFilesUsed();
   logInfo("Ensuring required APT dependencies are installed...");
   ensureAptDependencies();
+  logInfo("Checking optional Docker support...");
   logInfo(
     `Setting up development environment for Node.js v${nodeVersionMajor}.x...`,
   );
   ensureNodeDependencies(nodeVersionMajor);
   ensureAuditRemediation();
+  warnIfDockerMissing();
   logSuccess("Development environment setup complete.");
 }
 

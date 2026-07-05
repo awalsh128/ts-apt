@@ -1,15 +1,16 @@
 {
   "name": "Vitest Dev Container",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
+  "image": "debian:stable-slim",
   "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
+    },
     "ghcr.io/devcontainers/features/git:1": {}
   },
   "customizations": {
     "vscode": {
-      "extensions": [
-        "vitest-dev.vitest-vscode"
-      ]
+      "extensions": ["vitest-dev.vitest-vscode"]
     }
   },
-  "postCreateCommand": "npm install"
-}   
+  "postCreateCommand": "npm ci"
+}
