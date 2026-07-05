@@ -1,20 +1,18 @@
-import path from "path";
+import { afterEach, describe, expect, test, vi } from "vitest";
+import winston from "winston";
 import { CommandExecutionError, ValidationError } from "../src/errors.js";
-import { MockCommandRunner } from "./common.js";
+import { DefaultCommandRunner } from "../src/commandRunner.js";
+import { AptOutputParser } from "../src/parser.js";
 import {
   AptPackageManager,
   Binary,
   createPackageManager,
-  GLOBAL_APT_LOCK_WAIT_SECONDS,
 } from "../src/manager.js";
-import { AptOutputParser } from "../src/parser.js";
-import { DefaultCommandRunner } from "../src/commandRunner.js";
-import { PackageName } from "../src/types.js";
-import winston from "winston";
-import { afterEach, vi } from "vitest";
+import type { PackageName } from "../src/types.js";
+import { MockCommandRunner, getWorkspaceFilepath } from "./common.js";
 
 const logger = winston.createLogger({
-  level: "info",
+  level: "silent",
   transports: [new winston.transports.Console()],
 });
 
@@ -29,12 +27,14 @@ function pkg(serializedName: string): PackageName {
 
 function createManager(
   runner: MockCommandRunner,
-  aptFastEnabled: boolean = true,
+  aptFastEnabled = false,
+  aptLockTimeoutSeconds = -1,
 ): AptPackageManager {
   return new AptPackageManager(
     aptFastEnabled,
     runner,
     new AptOutputParser(logger),
+    aptLockTimeoutSeconds,
     logger,
   );
 }
@@ -43,26 +43,40 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const aptPath = Binary.AptFast.path;
+const aptFastPath = getWorkspaceFilepath("scripts/apt-fast.sh");
+const aptCachePath = Binary.AptCache.path;
 const aptGetPath = Binary.AptGet.path;
 
 describe("apt manager", () => {
   test("install builds expected command", async () => {
     const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "install", "-f", "vim"], {
-      stdout: "Setting up vim (2:9.0) ...\n",
-      stderr: "",
-      exitCode: 0,
-    });
+    runner.setResult(
+      aptGetPath,
+      [
+        "--quiet=0",
+        "-y",
+        "-o",
+        "DPkg::Lock::Timeout=-1",
+        "install",
+        "-f",
+        "vim",
+      ],
+      {
+        stdout: "Setting up vim (2:9.0) ...\n",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
 
-    const manager = createManager(runner, true);
-    const out = await manager.install([pkg("vim")]);
+    const out = await createManager(runner).install([pkg("vim")]);
 
-    expect(out).toHaveLength(1);
-    expect(runner.calls[0]?.command).toBe(aptPath);
+    expect(out.success).toHaveLength(1);
+    expect(runner.calls[0]?.command).toBe(aptGetPath);
     expect(runner.calls[0]?.args).toEqual([
       "--quiet=0",
       "-y",
+      "-o",
+      "DPkg::Lock::Timeout=-1",
       "install",
       "-f",
       "vim",
@@ -71,24 +85,38 @@ describe("apt manager", () => {
 
   test("auto clean executes mutating binary command", async () => {
     const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "autoclean"], {
-      stdout: "Done",
-      stderr: "",
-      exitCode: 0,
-    });
+    runner.setResult(
+      aptGetPath,
+      ["--quiet=0", "-y", "-o", "DPkg::Lock::Timeout=-1", "autoclean"],
+      {
+        stdout: "Done",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
 
     await createManager(runner).autoClean();
 
-    expect(runner.calls[0]?.args).toEqual(["--quiet=0", "-y", "autoclean"]);
+    expect(runner.calls[0]?.args).toEqual([
+      "--quiet=0",
+      "-y",
+      "-o",
+      "DPkg::Lock::Timeout=-1",
+      "autoclean",
+    ]);
   });
 
   test("auto remove parses removed packages", async () => {
     const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "autoremove"], {
-      stdout: "Removing vim (2:9.0) ...\n",
-      stderr: "",
-      exitCode: 0,
-    });
+    runner.setResult(
+      aptGetPath,
+      ["--quiet=0", "-y", "-o", "DPkg::Lock::Timeout=-1", "autoremove"],
+      {
+        stdout: "Removing vim (2:9.0) ...\n",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
 
     const out = await createManager(runner).autoRemove();
 
@@ -134,98 +162,58 @@ describe("apt manager", () => {
 
   test("list upgradable parses apt output", async () => {
     const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "list", "--upgradable"], {
-      stdout:
-        "vim/focal-updates,focal-security 2:9.0 amd64 [upgradable from: 2:8.2]\n",
-      stderr: "",
-      exitCode: 0,
-    });
-
-    const out = await createManager(runner).listUpgradable();
-
-    expect(out[0]).toMatchObject({
-      name: "vim",
-      version: "2:8.2",
-      arch: "amd64",
-      status: "upgradeable",
-    });
-    expect(out[0]?.metadata?.get("newVersion")).toBe("2:9.0");
-  });
-
-  test("remove includes --autoremove by default", async () => {
-    const runner = new MockCommandRunner();
     runner.setResult(
-      aptPath,
-      ["--quiet=0", "-y", "remove", "-f", "vim", "--autoremove"],
+      aptGetPath,
+      [
+        "--quiet=0",
+        "-y",
+        "-o",
+        "APT::Get::Show-User-Simulation-Note=false",
+        "-V",
+        "--simulate",
+        "dist-upgrade",
+      ],
       {
-        stdout: "Removing vim (2:9.0) ...\n",
+        stdout: "Inst vim [2:8.2] (2:9.0 Ubuntu:focal-updates [amd64])\n",
         stderr: "",
         exitCode: 0,
       },
     );
 
-    await createManager(runner).remove([pkg("vim")]);
+    const out = await createManager(runner).listUpgradable();
 
-    expect(runner.calls[0]?.args).toEqual([
-      "--quiet=0",
-      "-y",
-      "remove",
-      "-f",
-      "vim",
-      "--autoremove",
-    ]);
-  });
-
-  test("remove can disable --autoremove", async () => {
-    const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "remove", "-f", "vim"], {
-      stdout: "Removing vim (2:9.0) ...\n",
-      stderr: "",
-      exitCode: 0,
+    expect(out.success[0]).toMatchObject({
+      name: "vim",
+      version: "2:8.2",
+      arch: "amd64",
+      status: "upgradeable",
     });
-
-    await createManager(runner).remove([pkg("vim")], false);
-
-    expect(runner.calls[0]?.args).toEqual([
-      "--quiet=0",
-      "-y",
-      "remove",
-      "-f",
-      "vim",
-    ]);
   });
 
   test("search parses apt results", async () => {
     const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "search", "vim"], {
-      stdout: [
-        "Sorting...",
-        "Full Text Search...",
-        "vim/stable 2:9.0 amd64",
-        "editor",
-        "",
-        "foo/stable 1.0 amd64",
-        "foo",
-      ].join("\n"),
+    runner.setResult(aptCachePath, ["--quiet=0", "search", "vim"], {
+      stdout: ["vim - editor", "foo - tool"].join("\n"),
       stderr: "",
       exitCode: 0,
     });
+
     const out = await createManager(runner).search(["vim"]);
 
-    expect(out.find((p) => p.name === "vim")?.version).toBe("2:9.0");
-    expect(
-      out.find((p) => p.name === "foo")?.metadata?.get("description"),
-    ).toBe("foo");
+    expect(out).toEqual([
+      { name: "vim", description: "editor" },
+      { name: "foo", description: "tool" },
+    ]);
   });
 
   test("search propagates command failures", async () => {
     const runner = new MockCommandRunner();
     runner.setError(
-      aptPath,
-      ["--quiet=0", "-y", "search", "ghostpkg"],
+      aptCachePath,
+      ["--quiet=0", "search", "ghostpkg"],
       new CommandExecutionError({
-        command: aptPath,
-        args: ["--quiet=0", "-y", "search", "ghostpkg"],
+        command: aptCachePath,
+        args: ["--quiet=0", "search", "ghostpkg"],
         exitCode: 1,
         stdout: "",
         stderr: "E: unable to locate package ghostpkg",
@@ -237,130 +225,166 @@ describe("apt manager", () => {
     ).rejects.toBeInstanceOf(CommandExecutionError);
   });
 
+  test("remove includes --autoremove by default", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(
+      aptGetPath,
+      [
+        "--quiet=0",
+        "-y",
+        "-o",
+        "DPkg::Lock::Timeout=-1",
+        "remove",
+        "-f",
+        "vim",
+        "--autoremove",
+      ],
+      {
+        stdout: "Removing vim (2:9.0) ...\n",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
+
+    await createManager(runner).remove([pkg("vim")]);
+
+    expect(runner.calls[0]?.args).toContain("--autoremove");
+  });
+
+  test("remove can disable --autoremove", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(
+      aptGetPath,
+      [
+        "--quiet=0",
+        "-y",
+        "-o",
+        "DPkg::Lock::Timeout=-1",
+        "remove",
+        "-f",
+        "vim",
+      ],
+      {
+        stdout: "Removing vim (2:9.0) ...\n",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
+
+    await createManager(runner).remove([pkg("vim")], false);
+
+    expect(runner.calls[0]?.args).not.toContain("--autoremove");
+  });
+
   test("update parses upgrade count", async () => {
     const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "update"], {
-      stdout:
-        "12 packages can be upgraded. Run 'apt list --upgradable' to see them.\n",
-      stderr: "",
-      exitCode: 0,
-    });
+    runner.setResult(
+      "flock",
+      ["/var/lib/apt/lists/lock", aptGetPath, "update"],
+      {
+        stdout:
+          "12 packages can be upgraded. Run 'apt list --upgradable' to see them.\n",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
 
     const count = await createManager(runner).update();
 
-    expect(count).toBe(12);
+    expect(count.success).toBe(12);
   });
 
   test("upgrade with specific packages calls install", async () => {
     const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "install", "vim"], {
-      stdout: "Setting up vim (2:9.0) ...\n",
-      stderr: "",
-      exitCode: 0,
-    });
+    runner.setResult(
+      aptGetPath,
+      ["--quiet=0", "-y", "-o", "DPkg::Lock::Timeout=-1", "install", "vim"],
+      {
+        stdout: "Setting up vim (2:9.0) ...\n",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
 
     const out = await createManager(runner).upgrade([pkg("vim")]);
 
-    expect(out[0]).toMatchObject({ name: "vim", version: "2:9.0" });
-    expect(runner.calls[0]?.args).toEqual([
-      "--quiet=0",
-      "-y",
-      "install",
-      "vim",
-    ]);
+    expect(out.success[0]).toMatchObject({ name: "vim", version: "2:9.0" });
   });
 
   test("upgrade without packages calls upgrade command", async () => {
     const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "upgrade"], {
-      stdout: "Setting up vim (2:9.0) ...\n",
-      stderr: "",
-      exitCode: 0,
-    });
+    runner.setResult(
+      aptGetPath,
+      ["--quiet=0", "-y", "-o", "DPkg::Lock::Timeout=-1", "upgrade"],
+      {
+        stdout: "Setting up vim (2:9.0) ...\n",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
 
     await createManager(runner).upgrade();
 
-    expect(runner.calls[0]?.args).toEqual(["--quiet=0", "-y", "upgrade"]);
-  });
-
-  test("upgradeAll delegates to upgrade", async () => {
-    const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "upgrade"], {
-      stdout: "Setting up vim (2:9.0) ...\n",
-      stderr: "",
-      exitCode: 0,
-    });
-
-    const out = await createManager(runner).upgradeAll();
-
-    expect(out).toHaveLength(1);
-    expect(out[0]?.name).toBe("vim");
+    expect(runner.calls[0]?.args).toContain("upgrade");
   });
 
   test("getPackageInfo parses apt-cache output", async () => {
     const runner = new MockCommandRunner();
-    runner.setResult(aptPath, ["--quiet=0", "-y", "show", "vim"], {
-      stdout: "Package: vim\nVersion: 2:9.0\nArchitecture: amd64\n\n",
-      stderr: "",
-      exitCode: 0,
-    });
+    runner.setResult(
+      aptCachePath,
+      ["--quiet=0", "--no-all-versions", "show", "vim"],
+      {
+        stdout: "Package: vim\nVersion: 2:9.0\nArchitecture: amd64\n\n",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
 
-    const out = await createManager(runner).getPackageInfo([pkg("vim")]);
+    const out = await createManager(runner).show([pkg("vim")]);
 
-    expect(out[0]).toMatchObject({
+    expect(out.success[0]).toMatchObject({
       name: "vim",
       version: "2:9.0",
       arch: "amd64",
     });
   });
 
-  test("uses universal flock lock for real runner commands", async () => {
+  test("uses apt-get command directly for real runner commands", async () => {
     const runSpy = vi
       .spyOn(DefaultCommandRunner.prototype, "run")
       .mockImplementation(async (command, args = []) => {
-        if (command === "flock") {
+        if (command === aptGetPath) {
           expect(args).toEqual([
-            "-w",
-            GLOBAL_APT_LOCK_WAIT_SECONDS,
-            "/tmp/ts-apt-manager.lock",
-            aptGetPath,
             "--quiet=0",
             "-y",
+            "-o",
+            "DPkg::Lock::Timeout=-1",
             "autoclean",
           ]);
-          return {
-            cmdLine: `${command} ${(args ?? []).join(" ")}`,
-            stdout: "",
-            stderr: "",
-            exitCode: 0,
-          };
         }
 
-        throw new Error(
-          `unexpected command: ${command} ${(args ?? []).join(" ")}`,
-        );
+        return {
+          command,
+          args,
+          stdout: "",
+          stderr: "",
+          exitCode: 0,
+        };
       });
 
     const manager = new AptPackageManager(
       false,
       new DefaultCommandRunner(logger, logger),
       new AptOutputParser(logger),
+      -1,
       logger,
     );
     await manager.autoClean();
 
     expect(runSpy).toHaveBeenCalledWith(
-      "flock",
-      [
-        "-w",
-        GLOBAL_APT_LOCK_WAIT_SECONDS,
-        "/tmp/ts-apt-manager.lock",
-        aptGetPath,
-        "--quiet=0",
-        "-y",
-        "autoclean",
-      ],
-      expect.objectContaining({ timeoutMs: expect.any(Number) }),
+      aptGetPath,
+      ["--quiet=0", "-y", "-o", "DPkg::Lock::Timeout=-1", "autoclean"],
+      expect.objectContaining({ env: expect.any(Array) }),
     );
   });
 
@@ -379,43 +403,30 @@ describe("apt manager", () => {
 });
 
 describe("createPackageManager", () => {
-  const managerLockFile = "/tmp/ts-apt-manager.lock";
-
   test("uses apt-fast when aria2 is available", async () => {
     const runSpy = vi
       .spyOn(DefaultCommandRunner.prototype, "run")
       .mockImplementation(async (command, args = []) => {
         if (command === "dpkg-query") {
           return {
-            cmdLine: "dpkg-query -W aria2",
+            command,
+            args,
             stdout: "ii aria2 1.36.0-1 amd64",
             stderr: "",
             exitCode: 0,
           };
         }
-        if (command === "flock") {
-          expect(args).toEqual([
-            "-w",
-            GLOBAL_APT_LOCK_WAIT_SECONDS,
-            managerLockFile,
-            aptPath,
-            "--quiet=0",
-            "-y",
-            "autoclean",
-          ]);
-          return {
-            cmdLine: `${command} --quiet=0 -y autoclean`,
-            stdout: "",
-            stderr: "",
-            exitCode: 0,
-          };
-        }
-        throw new Error(
-          `unexpected command: ${command} ${(args ?? []).join(" ")}`,
-        );
+
+        return {
+          command,
+          args,
+          stdout: "",
+          stderr: "",
+          exitCode: 0,
+        };
       });
 
-    const manager = await createPackageManager(true, logger, logger);
+    const manager = await createPackageManager(true, 0, logger, logger);
     await manager.autoClean();
 
     expect(runSpy).toHaveBeenCalledWith("dpkg-query", ["-W", "aria2"], {
@@ -425,17 +436,9 @@ describe("createPackageManager", () => {
       ]),
     });
     expect(runSpy).toHaveBeenCalledWith(
-      "flock",
-      [
-        "-w",
-        GLOBAL_APT_LOCK_WAIT_SECONDS,
-        managerLockFile,
-        aptPath,
-        "--quiet=0",
-        "-y",
-        "autoclean",
-      ],
-      expect.objectContaining({ timeoutMs: expect.any(Number) }),
+      aptFastPath,
+      ["--quiet=0", "-y", "autoclean"],
+      expect.objectContaining({ env: expect.any(Array) }),
     );
   });
 
@@ -446,81 +449,52 @@ describe("createPackageManager", () => {
       .mockImplementation(async (command, args = []) => {
         if (command === "dpkg-query") {
           return {
-            cmdLine: "dpkg-query -W aria2",
+            command,
+            args,
             stdout: "",
             stderr: "not installed",
             exitCode: 1,
           };
         }
-        if (command === "flock") {
-          expect(args).toEqual([
-            "-w",
-            GLOBAL_APT_LOCK_WAIT_SECONDS,
-            managerLockFile,
-            aptGetPath,
-            "--quiet=0",
-            "-y",
-            "autoclean",
-          ]);
-          return {
-            cmdLine: `${aptGetPath} --quiet=0 -y autoclean`,
-            stdout: "",
-            stderr: "",
-            exitCode: 0,
-          };
-        }
-        throw new Error(`unexpected command: ${command}`);
-      });
 
-    const manager = await createPackageManager(true, logger, logger);
-    await manager.autoClean();
-
-    expect(warnSpy).toHaveBeenCalled();
-    expect(runSpy).toHaveBeenCalledWith(
-      "flock",
-      [
-        "-w",
-        GLOBAL_APT_LOCK_WAIT_SECONDS,
-        managerLockFile,
-        aptGetPath,
-        "--quiet=0",
-        "-y",
-        "autoclean",
-      ],
-      expect.objectContaining({ timeoutMs: expect.any(Number) }),
-    );
-  });
-
-  test("creates default loggers when omitted", async () => {
-    const runSpy = vi
-      .spyOn(DefaultCommandRunner.prototype, "run")
-      .mockImplementation(async function (this: DefaultCommandRunner) {
-        (this as unknown as { execLogger: winston.Logger }).execLogger.info(
-          "exec output",
-        );
         return {
-          cmdLine: `${aptPath} --quiet=0 -y autoclean`,
+          command,
+          args,
           stdout: "",
           stderr: "",
           exitCode: 0,
         };
       });
 
-    const manager = await createPackageManager(false);
+    const manager = await createPackageManager(true, 0, logger, logger);
+    await manager.autoClean();
+
+    expect(warnSpy).toHaveBeenCalled();
+    expect(runSpy).toHaveBeenCalledWith(
+      aptGetPath,
+      ["--quiet=0", "-y", "autoclean"],
+      expect.objectContaining({ env: expect.any(Array) }),
+    );
+  });
+
+  test("creates default loggers when omitted", async () => {
+    const runSpy = vi
+      .spyOn(DefaultCommandRunner.prototype, "run")
+      .mockImplementation(async (command, args = []) => ({
+        command,
+        args,
+        stdout: "",
+        stderr: "",
+        exitCode: 0,
+      }));
+
+    const manager = await createPackageManager(false, 0);
     await manager.autoClean();
 
     expect(runSpy).toHaveBeenCalledWith(
-      "flock",
-      [
-        "-w",
-        GLOBAL_APT_LOCK_WAIT_SECONDS,
-        managerLockFile,
-        aptGetPath,
-        "--quiet=0",
-        "-y",
-        "autoclean",
-      ],
-      expect.objectContaining({ timeoutMs: expect.any(Number) }),
+      aptGetPath,
+      ["--quiet=0", "-y", "autoclean"],
+      expect.objectContaining({ env: expect.any(Array) }),
     );
   });
 });

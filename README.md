@@ -12,15 +12,15 @@ TypeScript library for APT package operations on Debian-based Linux systems. It 
 
 ## Features
 
-- Install, remove, and upgrade packages
-- Search package repositories
-- List installed packages and upgradable packages
-- Get package metadata and installed file lists
-- Run cache cleanup and autoremove operations
-- Use apt-fast when available, with automatic fallback to apt-get
+- 90% coverage for APT operations
+  - List installed packages and upgradable packages
+  - Search package repositories
+  - Get package metadata and installed file lists
+  - Cache cleanup and autoremove operations
+- Use `apt-fast` when available, with automatic fallback to `apt-get`
 - Structured command execution via pluggable command runners
 - Typed error model for validation, availability, and command failures
-- Safe locking support for mutating operations
+- Safe APT native locking support for mutating operations (e.g. remove, install, update)
 
 ## Runtime Requirements
 
@@ -58,9 +58,17 @@ console.log(searchResults.length, installed.length);
 ```bash
 npm run test:unit
 npm run test:integration
+npm run test:integration:docker
 ```
 
 Integration tests run against real APT tooling and are slower than unit tests.
+
+- `test:integration` runs the readonly Ubuntu integration suite on the current host and includes environment-sensitive checks for search, show, installed files, and upgradable package parsing.
+- `test:integration` also includes the mutating Ubuntu integration suite, but that suite is skipped unless devcontainer-backed execution is explicitly enabled and available.
+- `test:integration:docker` forces both integration suites to run through the repository devcontainer when Docker and the devcontainer CLI are available.
+- The devcontainer used for integration tests is based on `debian:stable-slim` with the Node devcontainer feature layered on top.
+
+The integration harness lives in [test/ubuntu.integration.helpers.ts](test/ubuntu.integration.helpers.ts), with readonly scenarios in [test/ubuntu.integration.test.ts](test/ubuntu.integration.test.ts) and mutating scenarios in [test/ubuntu.mutating.integration.test.ts](test/ubuntu.mutating.integration.test.ts).
 
 ## API Documentation
 

@@ -1,15 +1,10 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type {
-  CommandResult,
-  PackageInfo,
-  PackageStatus,
-} from "../src/types.js";
+import type { CommandResult, PackageInfo } from "../src/types.js";
 import { AptOutputParser } from "../src/parser.js";
 import { deserializeCommandResult, nullLogger } from "./common.js";
 
 import listInstalledExpected from "./data/parser/listinstalled_expected.json" with { type: "json" };
-import searchMultipleFoundExpected from "./data/parser/search_multiplefound_expected.json" with { type: "json" };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -199,38 +194,54 @@ describe("apt output parser", () => {
     ["listupgradable_notfound.log", []],
   ])("parseListUpgradableOutput uses %s", (file, expected) => {
     const result = deserialize(file);
-    const parsed = parser.parseListUpgradableOutput(result);
+    const parsed = parser.parseSimulateDistUpgrade(result);
 
     expectPackagesOrError(result, parsed, expected);
   });
 
   it.each([
-    [
-      "search_multiplefound.log",
-      jsonToPackageInfos(searchMultipleFoundExpected) as PackageInfo[],
-    ],
-    ["search_nonefound.log", []],
+    ["search_multiplefound.log", "acr/focal 1.7.2-1 all", "autoconf like tool"],
+    ["search_nonefound.log", "", ""],
     [
       "search_singlefound.log",
-      [
-        {
-          name: "vim-vimerl-syntax",
-          version: "1.4.1+git20120509.89111c7-2",
-          arch: "all",
-          metadata: new Map([
-            ["description", "Erlang syntax for Vim"],
-            ["repos", "focal"],
-          ]),
-        },
-      ],
+      "vim-vimerl-syntax/focal 1.4.1+git20120509.89111c7-2 all",
+      "Erlang syntax for Vim",
     ],
-  ])("parseSearchOutput uses %s", (file, expected) => {
+  ])("parseSearchOutput uses %s", (file, expectedName, expectedDescription) => {
     const result = deserialize(file);
     const parsed = parser.parseSearchOutput(result);
 
-    // expect(dumpPackages(parsed)).toEqual("");
+    if (!expectedName) {
+      expect(parsed).toEqual([
+        { name: "Sorting...", description: "" },
+        { name: "Full Text Search...", description: "" },
+      ]);
+      return;
+    }
 
-    expectPackagesOrError(result, parsed, expected);
+    expect(parsed[0]).toEqual({ name: "Sorting...", description: "" });
+    expect(parsed[1]).toEqual({ name: "Full Text Search...", description: "" });
+    expect(parsed).toEqual(
+      expect.arrayContaining([
+        { name: expectedName, description: "" },
+        { name: expectedDescription, description: "" },
+      ]),
+    );
+  });
+
+  test("parseSearchOutput ignores empty lines and keeps malformed entries", () => {
+    const parsed = parser.parseSearchOutput({
+      command: "apt-get",
+      args: ["search", "vim"],
+      exitCode: 0,
+      stdout: "\nvim - editor\nnot-a-valid-line\n\n",
+      stderr: "",
+    });
+
+    expect(parsed).toEqual([
+      { name: "vim", description: "editor" },
+      { name: "not-a-valid-line", description: "" },
+    ]);
   });
 
   it.each([["update.log", 0]])(
@@ -239,13 +250,14 @@ describe("apt output parser", () => {
       const result = deserialize(file);
       const parsed = parser.parseUpdateOutput(result);
 
-      expect(parsed).toBe(expectedValue);
+      expect(parsed.success).toBe(expectedValue);
     },
   );
 
   test("parseCachePolicyOutput parses installed and available entries", () => {
     const parsed = parser.parseCachePolicyOutput({
-      cmdLine: "apt-cache policy curl vim",
+      command: "apt-cache",
+      args: ["policy", "curl", "vim"],
       exitCode: 0,
       stdout: [
         "curl:",
@@ -278,7 +290,8 @@ describe("apt output parser", () => {
 
   test("parseQueryOutput parses dpkg-query formatted lines", () => {
     const parsed = parser.parseQueryOutput({
-      cmdLine: "dpkg-query -W -f=${binary:Package}:${Architecture}=${Version}",
+      command: "dpkg-query",
+      args: ["-W", "-f=${binary:Package}:${Architecture}=${Version}"],
       exitCode: 0,
       stdout: "openssl:amd64=3.0.13-0ubuntu3.5\ninvalid-line\n",
       stderr: "",
@@ -296,7 +309,8 @@ describe("apt output parser", () => {
 
   test("parseListInstalledOutput skips empty lines", () => {
     const parsed = parser.parseListInstalledOutput({
-      cmdLine: "dpkg-query -W",
+      command: "dpkg-query",
+      args: ["-W"],
       exitCode: 0,
       stdout: "\n\nopenssl:amd64=3.0.13-0ubuntu3.5\n",
       stderr: "",
@@ -313,7 +327,8 @@ describe("apt output parser", () => {
 
   test("parseInstallOutput captures architecture when present", () => {
     const parsed = parser.parseInstallOutput({
-      cmdLine: "apt-get install -f libc6",
+      command: "apt-get",
+      args: ["install", "-f", "libc6"],
       exitCode: 0,
       stdout: "Setting up libc6:amd64 (2.39-0ubuntu8.4) ...\n",
       stderr: "",
@@ -331,14 +346,27 @@ describe("apt output parser", () => {
 
   test("parseUpdateOutput extracts upgradable package count", () => {
     const count = parser.parseUpdateOutput({
-      cmdLine: "apt update",
+      command: "apt",
+      args: ["update"],
       exitCode: 0,
       stdout:
         "Hit:1 http://archive.ubuntu.com/ubuntu jammy InRelease\n3 packages can be upgraded. Run 'apt list --upgradable' to see them.\n",
       stderr: "",
     });
 
-    expect(count).toBe(3);
+    expect(count.success).toBe(3);
+  });
+
+  test("parseUpdateOutput returns zero when summary line is missing", () => {
+    const count = parser.parseUpdateOutput({
+      command: "apt-get",
+      args: ["update"],
+      exitCode: 0,
+      stdout: "Hit:1 http://archive.ubuntu.com/ubuntu jammy InRelease\n",
+      stderr: "",
+    });
+
+    expect(count.success).toBe(0);
   });
 
   it.each([

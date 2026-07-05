@@ -1,4 +1,9 @@
-import type { CommandResult, PackageInfo, PackageStatus } from "./types.js";
+import type {
+  CommandResult,
+  MixedSuccessResult,
+  PackageInfo,
+  PackageStatus,
+} from "./types.js";
 import { ValidationError } from "./errors.js";
 import winston from "winston";
 import { parseMessage } from "./internetMessage.js";
@@ -6,9 +11,6 @@ import { parseMessage } from "./internetMessage.js";
 // NOTE: Package names and versions use [^\s]+ to be as permissive as possible, since some packages have
 // unusual names or versions. It is always assumed a space will follow which is why negation is used.
 
-/** Matches the cache search line emitted by apt search in '<name>/<repos> <version> <arch>\n<description>' format. */
-const SEARCH_REGEX =
-  /^([^ \n\/]+)\/([^\s]+)\s+([^\s]+)\s+(\w+)\n\s*(.+?)(?=\n\n|\n[^ \n]|$)/gm;
 /** Matches the prefix of a stanza in apt-cache show output in order to separate stanzas for parsing. */
 const CACHE_SHOW_STANZA_REGEX = /.+?((?:\r\n|\r|\n)\s*(?:\r\n|\r|\n))|.+$/gs;
 
@@ -24,11 +26,11 @@ const INSTALL_OR_UPDATE_REGEX =
 const DPKG_QUERY_LIST_INSTALLED_REGEX = /(.+):(.*)\=(.*)/;
 
 /**
- * Matches package lines emitted by apt list --upgradable in format
- * '<name>/<category> <newVersion> <arch> [upgradable from: <oldVersion>]'
+ * Matches package lines emitted by apt-get -o "APT::Get::Show-User-Simulation-Note=false" -V --simulate dist-upgrade
+ * 'Inst <pkg> [<current version>|<empty if broken>] (<new version> <repository>, ..., [<arch>])' format.
  */
-const LIST_UPGRADEABLE_REGEX =
-  /^([^\/\s]+)\/[\w\-]+,\S+\s+([^\s]+)\s+(\w+)\s+\[upgradable from:\s+([^\s]+)\]/;
+const SIMULATE_UPGRADEABLE_REGEX =
+  /^Inst\s+(\S+)\s+\[([^\]]*)\]\s+\((\S+).*\[([^\]]+)\]\)$/gm;
 
 function normText(text: string): string {
   return text.replace(/\r\n/g, "\n").trimEnd();
@@ -38,9 +40,9 @@ function normText(text: string): string {
  * Concrete implementation of AptOutputParser for system package output parsing.
  */
 export class AptOutputParser {
-  private readonly logger: winston.Logger;
+  private readonly logger?: winston.Logger;
 
-  constructor(logger: winston.Logger) {
+  constructor(logger?: winston.Logger) {
     this.logger = logger;
   }
 
@@ -52,8 +54,9 @@ export class AptOutputParser {
     if (value) {
       return;
     }
-    this.logger.error(`Failed to parse ${name} in line: '${line}'`);
-    throw new ValidationError(`Failed to parse ${name} in line: '${line}'`);
+    const message = `Failed to parse ${name} in line: '${line}'`;
+    this.logger?.error(message);
+    throw new ValidationError(message);
   }
 
   /**
@@ -106,7 +109,7 @@ export class AptOutputParser {
   ): PackageInfo[] {
     const stanzas =
       normText(result.stdout).match(CACHE_SHOW_STANZA_REGEX) ?? [];
-    this.logger.debug(`Found ${stanzas.length} stanzas in cache show output`);
+    this.logger?.debug(`Found ${stanzas.length} stanzas in cache show output`);
     return stanzas
       .map((stanza) => parseMessage(stanza.trimEnd() + "\n\n"))
       .map((message): PackageInfo => {
@@ -231,37 +234,31 @@ export class AptOutputParser {
   }
 
   /**
-   * Parse output of `apt list --upgradable` to extract package names and versions.
+   * Parse output of `apt-get -o "APT::Get::Show-User-Simulation-Note=false" -V --simulate <upgrade|dist-upgrade>`
+   * to extract upgradable package names and versions.
    *
-   * Example output parsed:
+   * Fixture examples:
+   * - `test/data/listupgradable_found.log`
+   * - `test/data/listupgradable_notfound.log`
+   *
+   * Example line parsed:
    * ```text
-   * curl/jammy-updates,jammy-security 8.5.0-2ubuntu10.6 amd64 [upgradable from: 8.5.0-2ubuntu10.5]
+   * Inst firefox-locale-en [75.0+build3-0ubuntu1] (136.0+build3-0ubuntu0.20.04.1 Ubuntu:20.04/focal-updates, Ubuntu:20.04/focal-security [amd64])
    * ```
    */
-  parseListUpgradableOutput(result: CommandResult): PackageInfo[] {
-    const packages: PackageInfo[] = [];
-    const lines = normText(result.stdout)
-      .replace(/\r\n/g, "\n")
-      .trimEnd()
-      .split("\n");
-
-    for (const line of lines) {
-      const matched = LIST_UPGRADEABLE_REGEX.exec(line.trim());
-      if (!matched) {
-        continue;
-      }
-      const [, name, newVersion, arch, oldVersion] = matched;
-
-      packages.push({
+  parseSimulateDistUpgrade(result: CommandResult): PackageInfo[] {
+    return Array.from(
+      normText(result.stdout).matchAll(SIMULATE_UPGRADEABLE_REGEX),
+    ).map((match) => {
+      const [, name, version, newVersion, arch] = match;
+      return {
         name: name!,
         arch,
-        version: oldVersion!,
-        status: "upgradeable",
+        version: version || "",
+        status: version ? "upgradeable" : "broken",
         metadata: new Map([["newVersion", newVersion!]]),
-      });
-    }
-
-    return packages;
+      };
+    });
   }
 
   /**
@@ -276,10 +273,7 @@ export class AptOutputParser {
    */
   parseQueryOutput(result: CommandResult): PackageInfo[] {
     const packages: PackageInfo[] = [];
-    const lines = normText(result.stdout)
-      .replace(/\r\n/g, "\n")
-      .trim()
-      .split("\n");
+    const lines = normText(result.stdout).split("\n");
 
     for (const line of lines) {
       const trimmedLine = line.trim();
@@ -301,30 +295,31 @@ export class AptOutputParser {
   }
 
   /**
-   * Parse output of `apt search <query>` to extract package information.
+   * Parse output of search commands to extract normalized name-description entries.
    *
-   * Example output parsed:
+   * This parser consumes one line at a time using the `name - description` split pattern,
+   * returning `{ name, description }` records.
+   *
+   * Fixture examples:
+   * - `test/data/search_multiplefound.log`
+   * - `test/data/search_singlefound.log`
+   * - `test/data/search_nonefound.log`
+   *
+   * Example line parsed:
    * ```text
-   * curl/jammy-updates,jammy-security 8.5.0-2ubuntu10.6 amd64
-   *   command line tool for transferring data with URL syntax
+   * firefox - Safe and easy web browser from Mozilla
    * ```
    */
-  parseSearchOutput(result: CommandResult): PackageInfo[] {
-    const packages: PackageInfo[] = [];
-    for (const match of normText(result.stdout).matchAll(SEARCH_REGEX)) {
-      const [, name, repos, version, arch, description] = match;
-      packages.push({
-        name: name!,
-        version: version!,
-        arch: arch!,
-        metadata: new Map([
-          ["description", description!],
-          ["repos", repos!],
-        ]),
-      });
-    }
-
-    return packages;
+  parseSearchOutput(
+    result: CommandResult,
+  ): { name: string; description: string }[] {
+    return normText(result.stdout)
+      .split("\n")
+      .map((line) => {
+        const [name, description] = line.trim().split(" - ", 2);
+        return { name: name ?? "", description: description ?? "" };
+      })
+      .filter((pkg) => pkg.name.length > 0);
   }
 
   /**
@@ -335,14 +330,14 @@ export class AptOutputParser {
    * 12 packages can be upgraded. Run 'apt list --upgradable' to see them.
    * ```
    */
-  parseUpdateOutput(result: CommandResult): number {
-    const lines = normText(result.stdout)
-      .replace(/\r\n/g, "\n")
-      .trimEnd()
-      .split("\n");
+  parseUpdateOutput(result: CommandResult): MixedSuccessResult<number> {
+    const lines = normText(result.stdout).split("\n");
     const lastLine = lines[lines.length - 1] ?? "";
     const match = lastLine.match(/(\d+) packages can be upgraded/);
-    return match ? parseInt(match[1]!, 10) : 0;
+    return {
+      success: match ? parseInt(match[1]!, 10) : 0,
+      stderr: result.stderr,
+    };
   }
 
   /**
@@ -356,10 +351,7 @@ export class AptOutputParser {
    */
   parseUpgradeOutput(result: CommandResult): PackageInfo[] {
     const packages: PackageInfo[] = [];
-    const lines = normText(result.stdout)
-      .replace(/\r\n/g, "\n")
-      .trimEnd()
-      .split("\n");
+    const lines = normText(result.stdout).split("\n");
 
     for (const line of lines) {
       const match = INSTALL_OR_UPDATE_REGEX.exec(line);

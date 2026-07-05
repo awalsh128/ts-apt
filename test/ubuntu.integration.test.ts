@@ -1,232 +1,162 @@
-import { defineConfig } from "vitest/config";
-import { beforeEach, describe, expect, test } from "vitest";
-import {
-  AptPackageManager,
-  Binary,
-  GLOBAL_APT_LOCK_WAIT_SECONDS,
-  TIMEOUTS,
-} from "../src/manager.js";
-import { AptOutputParser } from "../src/parser.js";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { CommandExecutionError } from "../src/errors.js";
 import { createPackageName } from "../src/package.js";
 import {
-  createRealCommandRunner,
-  getWorkspaceFilepath,
-  nullLogger,
-} from "./common.js";
-import { CommandRunner } from "../src/index.js";
-import { Mutex } from "async-mutex";
-import { DefaultCommandRunner } from "../src/commandRunner.js";
-import type { CommandOptions, CommandResult } from "../src/types.js";
+  canRunIntegration,
+  createIntegrationContext,
+  expectNamedEntries,
+  installTestPackage,
+  integrationAptTimeoutMs,
+  missingPackageName,
+  multiSearchKeyword,
+  packageName,
+  removeTestPackage,
+  runWithTimeout,
+  secondaryPackageName,
+  virtualPackageName,
+} from "./ubuntu.integration.helpers.js";
 
-// TODO: Add a way to force devcontainer usage for testing with auto Docker setup. Added benefit are tests without APT side effects for mutating calls.
-const forceDevcontainer = false; // Set to true to force devcontainer usage for testing
+(canRunIntegration ? describe : describe.skip)(
+  "ubuntu integration for readonly operations",
+  () => {
+    let manager: Awaited<
+      ReturnType<typeof createIntegrationContext>
+    >["manager"];
+    let runner: Awaited<ReturnType<typeof createIntegrationContext>>["runner"];
 
-const packageName = "xdot"; // A small package that is likely to be present in most Ubuntu installations
-const aptFastPath = getWorkspaceFilepath("scripts/apt-fast.sh"); // Path to the apt-fast script relative to the test file
-const managerLockPath = "/tmp/ts-apt-manager.lock";
-const integrationAptTimeoutMs = TIMEOUTS.install;
+    beforeAll(async () => {
+      ({ manager, runner } = await createIntegrationContext());
+      await installTestPackage(runner);
+    }, 600_000);
 
-function sleep(delayMs: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, delayMs));
-}
-
-async function runWithTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  label: string,
-): Promise<T> {
-  let timer: NodeJS.Timeout | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(() => {
-          reject(new Error(`${label} timed out after ${timeoutMs}ms`));
-        }, timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) {
-      clearTimeout(timer);
-    }
-  }
-}
-
-class TrackingNoopDefaultRunner extends DefaultCommandRunner {
-  public inFlight = 0;
-  public maxInFlight = 0;
-  public readCalls = 0;
-  public writeCalls = 0;
-
-  constructor(private readonly artificialDelayMs: number) {
-    super(nullLogger, nullLogger);
-  }
-
-  override async run(
-    command: string,
-    args: string[] = [],
-    _options: CommandOptions = {},
-  ): Promise<CommandResult> {
-    const isWrite =
-      command === "flock" &&
-      args[2] === managerLockPath &&
-      [Binary.AptGet.path, Binary.AptFast.path].includes(args[3] ?? "");
-    if (isWrite) {
-      this.writeCalls += 1;
-    } else {
-      this.readCalls += 1;
-    }
-
-    this.inFlight += 1;
-    this.maxInFlight = Math.max(this.maxInFlight, this.inFlight);
-    try {
-      await sleep(this.artificialDelayMs);
-      const cmdLine = `${command} ${args.join(" ")}`.trim();
-
-      if (command === Binary.DpkgQuery.path && args[0] === "-W") {
-        return {
-          cmdLine,
-          stdout: "bash:amd64=5.2.21-2ubuntu4\n",
-          stderr: "",
-          exitCode: 0,
-        };
+    afterAll(async () => {
+      if (!runner) {
+        return;
       }
+      await removeTestPackage(runner);
+    }, 600_000);
 
-      return {
-        cmdLine,
-        stdout: "",
-        stderr: "",
-        exitCode: 0,
-      };
-    } finally {
-      this.inFlight -= 1;
-    }
-  }
-}
+    test("lists installed packages", async () => {
+      const installed = await manager.listInstalled();
 
-describe("ubuntu integration for readonly operations", () => {
-  let manager: AptPackageManager;
-  let runner: CommandRunner;
+      expect(installed.length).toBeGreaterThan(0);
+      expect(installed.some((pkg) => pkg.name.length > 0)).toBe(true);
+    });
 
-  const runLock = new Mutex(); // Mutex to serialize test execution due to shared APT lock files
+    test(`searches for ${packageName}`, async () => {
+      const found = await manager.search([packageName]);
 
-  async function run(filepath: string, args: string[] = []): Promise<void> {
-    await runLock.runExclusive(async () => {
-      await runner.run(
-        "flock",
-        [
-          "-w",
-          GLOBAL_APT_LOCK_WAIT_SECONDS,
-          managerLockPath,
-          "sudo",
-          "bash",
-          filepath,
-          ...args,
-        ],
-        { timeoutMs: integrationAptTimeoutMs },
+      expect(found.length).toBeGreaterThan(0);
+      expect(found.some((pkg) => pkg.name.includes(packageName))).toBe(true);
+    });
+
+    test("search multiple matches returns more than one result", async () => {
+      const found = await manager.search([multiSearchKeyword]);
+
+      expect(found.length).toBeGreaterThan(1);
+      expect(found.some((pkg) => pkg.name.includes(multiSearchKeyword))).toBe(
+        true,
       );
     });
-  }
 
-  beforeAll(async () => {
-    runner = await createRealCommandRunner(
-      nullLogger,
-      nullLogger,
-      forceDevcontainer,
-    );
-    await run(aptFastPath, ["install", "-y", packageName]); // Ensure package cache is up to date
-    manager = new AptPackageManager(
-      false,
-      runner,
-      new AptOutputParser(nullLogger),
-      nullLogger,
-    );
-  }, 600_000);
+    test("search none found returns empty results", async () => {
+      const found = await manager.search([missingPackageName]);
 
-  afterAll(async () => {
-    await run(aptFastPath, ["remove", "-y", packageName]);
-    await run(aptFastPath, ["autoremove", "-y"]); // Clean up any packages installed during tests
-  }, 600_000);
+      expect(found).toEqual([]);
+    });
 
-  test("lists installed packages", async () => {
-    const installed = await manager.listInstalled();
+    test(`gets ${packageName} package info`, async () => {
+      const info = await manager.show([createPackageName(packageName)]);
 
-    expect(installed.length).toBeGreaterThan(0);
-    expect(installed.some((pkg) => pkg.name.length > 0)).toBe(true);
-  });
+      expect(info.success.length).toBeGreaterThan(0);
+      expect(info.success[0]?.name).toBe(packageName);
+      expect(info.success[0]?.version).toMatch(/\S/);
+    });
 
-  test(`searches for ${packageName}`, async () => {
-    let found = await manager.search([packageName], true);
+    test("show multiple packages returns all requested packages", async () => {
+      const info = await manager.show([
+        createPackageName(packageName),
+        createPackageName(secondaryPackageName),
+      ]);
 
-    expect(found.length).toBeGreaterThan(0);
-    expect(found.some((pkg) => pkg.name.includes(packageName))).toBe(true);
-  });
+      expectNamedEntries(info.success, [packageName, secondaryPackageName]);
+    });
 
-  test(`gets ${packageName} package info`, async () => {
-    const info = await manager.getPackageInfo([createPackageName(packageName)]);
+    test("show mixed found and missing packages returns successes and stderr notice", async () => {
+      const info = await manager.show([
+        createPackageName(packageName),
+        createPackageName(secondaryPackageName),
+        createPackageName(missingPackageName),
+      ]);
 
-    expect(info.length).toBeGreaterThan(0);
-    expect(info[0]?.name).toBe(packageName);
-    expect(info[0]?.version).toMatch(/\S/);
-  });
+      expectNamedEntries(info.success, [packageName, secondaryPackageName]);
+      expect(info.stderr).toContain(missingPackageName);
+    });
 
-  test(`lists files installed by ${packageName}`, async () => {
-    const files = await manager.listInstalledFiles(
-      createPackageName(packageName),
-    );
+    test("show virtual package returns empty success and diagnostic stderr", async () => {
+      const info = await manager.show([createPackageName(virtualPackageName)]);
 
-    expect(files.length).toBeGreaterThan(0);
-    expect(files.some((file) => file.includes(packageName))).toBe(true);
-  });
-});
+      expect(info.success).toEqual([]);
+      expect(info.stderr).toMatch(/purely virtual|No packages found/);
+    });
 
-describe("ubuntu integration for parallel execution semantics", () => {
-  let manager: AptPackageManager;
-  let runner: TrackingNoopDefaultRunner;
+    test(`lists files installed by ${packageName}`, async () => {
+      const files = await manager.listInstalledFiles(
+        createPackageName(packageName),
+      );
 
-  beforeEach(() => {
-    runner = new TrackingNoopDefaultRunner(125);
-    manager = new AptPackageManager(false, runner, new AptOutputParser(nullLogger), nullLogger);
-  });
+      expect(files.length).toBeGreaterThan(0);
+      expect(files.some((file) => file.includes(packageName))).toBe(true);
+    });
 
-  test("only reads run in parallel and do not hang", async () => {
-    const results = await runWithTimeout(
-      Promise.all([
-        manager.listInstalled(),
-        manager.listInstalled(),
-        manager.listInstalled(),
-      ]),
-      5_000,
-      "parallel read operations",
-    );
+    test("listInstalledFiles missing package throws command execution error", async () => {
+      await expect(
+        manager.listInstalledFiles(createPackageName(missingPackageName)),
+      ).rejects.toBeInstanceOf(CommandExecutionError);
+    });
 
-    expect(results.every((pkgs) => pkgs.length > 0)).toBe(true);
-    expect(runner.writeCalls).toBe(0);
-    expect(runner.maxInFlight).toBeGreaterThan(1);
-  });
+    test("listUpgradable current system returns parseable package entries", async () => {
+      const upgradable = await manager.listUpgradable();
 
-  test("only writes are serialized by the global lock and mutex", async () => {
-    await runWithTimeout(
-      Promise.all([manager.autoClean(), manager.autoClean(), manager.autoClean()]),
-      5_000,
-      "parallel write operations",
-    );
+      expect(Array.isArray(upgradable.success)).toBe(true);
+      expect(typeof upgradable.stderr).toBe("string");
+      for (const pkg of upgradable.success) {
+        expect(pkg.name).toMatch(/\S/);
+        expect(["upgradeable", "broken"]).toContain(pkg.status);
+        expect(pkg.metadata?.get("newVersion")).toMatch(/\S/);
+      }
+    });
 
-    expect(runner.readCalls).toBe(0);
-    expect(runner.writeCalls).toBe(3);
-    expect(runner.maxInFlight).toBe(1);
-  });
+    test("concurrent readonly operations complete with the real runner", async () => {
+      const results = await runWithTimeout(
+        Promise.all([
+          manager.listInstalled(),
+          manager.search([packageName]),
+          manager.show([createPackageName(packageName)]),
+        ]),
+        30_000,
+        "parallel read operations",
+      );
 
-  test("mixed reads and writes do not hang and preserve lock semantics", async () => {
-    const [, installed] = await runWithTimeout(
-      Promise.all([manager.autoClean(), manager.listInstalled()]),
-      5_000,
-      "mixed read/write operations",
-    );
+      expect(results[0].length).toBeGreaterThan(0);
+      expect(results[1].length).toBeGreaterThan(0);
+      expect(results[2].success.length).toBeGreaterThan(0);
+    });
 
-    expect(installed.length).toBeGreaterThan(0);
-    expect(runner.readCalls).toBe(1);
-    expect(runner.writeCalls).toBe(1);
-    expect(runner.maxInFlight).toBeGreaterThan(1);
-  });
-});
+    test("readonly package metadata operations compose correctly in parallel", async () => {
+      const [found, info, upgradable] = await runWithTimeout(
+        Promise.all([
+          manager.search([multiSearchKeyword]),
+          manager.show([createPackageName(packageName)]),
+          manager.listUpgradable(),
+        ]),
+        30_000,
+        "parallel readonly metadata operations",
+      );
+
+      expect(found.length).toBeGreaterThan(0);
+      expect(info.success.length).toBeGreaterThan(0);
+      expect(Array.isArray(upgradable.success)).toBe(true);
+    });
+  },
+);

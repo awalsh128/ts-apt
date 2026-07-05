@@ -1,9 +1,13 @@
-*** CMD_LINE apt list --upgradeable
+*** CMD_LINE apt-get -o "APT::Get::Show-User-Simulation-Note=false" -V --simulate upgrade
 *** EXIT_CODE 0
 *** STDOUT
-Listing...
-firefox-locale-en/focal-updates,focal-security 136.0+build3-0ubuntu0.20.04.1 amd64 [upgradable from: 75.0+build3-0ubuntu1]
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+The following packages will be upgraded:
+   firefox-locale-en (75.0+build3-0ubuntu1 => 136.0+build3-0ubuntu0.20.04.1)
+1 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+Inst firefox-locale-en [75.0+build3-0ubuntu1] (136.0+build3-0ubuntu0.20.04.1 Ubuntu:20.04/focal-updates, Ubuntu:20.04/focal-security [amd64])
+Conf firefox-locale-en (136.0+build3-0ubuntu0.20.04.1 Ubuntu:20.04/focal-updates, Ubuntu:20.04/focal-security [amd64])
 *** STDERR
-
-WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
-

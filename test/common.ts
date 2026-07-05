@@ -89,10 +89,10 @@ export class MockCommandRunner implements CommandRunner {
   setResult(
     command: string,
     args: string[],
-    result: Omit<CommandResult, "cmdLine">,
+    result: Omit<CommandResult, "command" | "args">,
   ): void {
     const cmdLine = `${command} ${args.join(" ")}`.trim();
-    this.cmdLineToResult.set(cmdLine, { ...result, cmdLine });
+    this.cmdLineToResult.set(cmdLine, { ...result, command, args });
   }
 
   setError(command: string, args: string[], error: Error): void {
@@ -166,8 +166,11 @@ export function deserializeCommandResult(filepath: string): CommandResult {
     throw new Error(`${filepath}: STDERR section not found in log file`);
   }
 
+  const [command = "", ...args] = cmdLine.split(/\s+/);
+
   return {
-    cmdLine: cmdLine,
+    command,
+    args,
     exitCode: exitCode,
     stdout: stdout,
     stderr: stderr,
@@ -189,7 +192,7 @@ export async function createRealCommandRunner(
   execLogger: winston.Logger,
   forceDevcontainer: boolean = false,
 ): Promise<CommandRunner> {
-  if (process.env.GITHUB_ACTIONS === "true") {
+  if (process.env.GITHUB_ACTIONS === "true" && !forceDevcontainer) {
     appLogger.info(
       "Running in GitHub Actions, using DefaultCommandRunner instead of DevcontainerCommandRunner",
     );

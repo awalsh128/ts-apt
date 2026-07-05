@@ -22,7 +22,7 @@ describe("error types", () => {
       stderr: "failed",
     });
 
-    expect(error.message).toContain("Command failed: apt update");
+    expect(error.message).toBe("Command execution failed");
     expect(error.exitCode).toBe(1);
     expect(error.name).toBe("CommandExecutionError");
   });

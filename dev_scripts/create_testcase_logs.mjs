@@ -144,41 +144,48 @@ async function main() {
 const testLogFiles = [
   {
     filepath: "autoclean",
-    execCmdLine: "apt-get autoclean",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 autoclean",
   },
   {
     filepath: "autoremove_found",
     preExecCmdLine: ["apt-get install -y xdot", "apt-get remove -y xdot"],
-    execCmdLine: "apt-get autoremove -y",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 autoremove",
   },
   {
     filepath: "autoremove_notfound",
     preExecCmdLine: ["apt-get autoremove -y"],
-    execCmdLine: "apt-get autoremove -y",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 autoremove",
   },
   {
     filepath: "cacheshow_mixedfoundnotfound",
-    execCmdLine: "apt-cache show --quiet=0 xdot python3 nonexistentpackage",
+    execCmdLine:
+      "/usr/bin/apt-cache --quiet=0 --no-all-versions show xdot python3 nonexistentpackage",
   },
   {
     filepath: "cacheshow_multiplefound",
-    execCmdLine: "apt-cache show --quiet=0 xdot python3",
+    execCmdLine:
+      "/usr/bin/apt-cache --quiet=0 --no-all-versions show xdot python3",
   },
   {
     filepath: "cacheshow_singlefound",
-    execCmdLine: "apt-cache show --quiet=0 python3",
+    execCmdLine: "/usr/bin/apt-cache --quiet=0 --no-all-versions show python3",
   },
   {
     filepath: "cacheshow_singlenotfound",
-    execCmdLine: "apt-cache show --quiet=0 nonexistentpackage",
+    execCmdLine:
+      "/usr/bin/apt-cache --quiet=0 --no-all-versions show nonexistentpackage",
   },
   {
     filepath: "cacheshow_virtualpackage",
-    execCmdLine: "apt-cache show --quiet=0 libvips",
+    execCmdLine: "/usr/bin/apt-cache --quiet=0 --no-all-versions show libvips",
   },
   {
     filepath: "cacheshow_virtualandnotpackages",
-    execCmdLine: "apt-cache show --quiet=0 libvips xdot",
+    execCmdLine:
+      "/usr/bin/apt-cache --quiet=0 --no-all-versions show libvips xdot",
   },
   {
     filepath: "cacheshowpkg_virtualpackage",
@@ -187,7 +194,8 @@ const testLogFiles = [
   {
     filepath: "install_mixedfoundnotfound",
     preExecCmdLine: ["apt-get remove -y xdot"],
-    execCmdLine: "apt-get install -y xdot nonexistentpackage",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f xdot nonexistentpackage",
   },
   {
     filepath: "install_mixedinstallstatus",
@@ -196,33 +204,37 @@ const testLogFiles = [
       "apt-get remove -y rolldice",
       "apt-get autoremove -y",
     ],
-    execCmdLine: "apt-get install -y rolldice xdot",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f rolldice xdot",
   },
   {
     filepath: "install_singleinstalled",
     preExecCmdLine: ["apt-get install -y xdot"],
-    execCmdLine: "apt-get install -y xdot",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f xdot",
   },
   {
     filepath: "install_singlenotfound",
-    execCmdLine: "apt-get install -y nonexistentpackage",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f nonexistentpackage",
   },
   {
     filepath: "install_singlenotinstalled",
     preExecCmdLine: ["apt-get remove -y xdot", "apt-get autoremove -y"],
-    execCmdLine: "apt-get install -y xdot",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f xdot",
   },
   {
     filepath: "listinstalled",
-    execCmdLine: "dpkg-query -W -f ${binary:Package}=${Version}\\n",
+    execCmdLine: "/usr/bin/dpkg-query -W -f ${binary:Package}=${Version}\\n",
   },
   {
     filepath: "listinstalledfiles_found",
-    execCmdLine: "dpkg-query -L xdot",
+    execCmdLine: "/usr/bin/dpkg-query -L xdot",
   },
   {
     filepath: "listinstalledfiles_notfound",
-    execCmdLine: "dpkg-query -L nonexistentpackage",
+    execCmdLine: "/usr/bin/dpkg-query -L nonexistentpackage",
   },
   {
     filepath: "listupgradable_found",
@@ -232,61 +244,65 @@ const testLogFiles = [
       "apt-get remove -y uuid-dev",
       "apt-get install -y uuid-dev=2.34-0.1ubuntu9",
     ],
-    execCmdLine: "apt list --upgradeable",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o APT::Get::Show-User-Simulation-Note=false -V --simulate dist-upgrade",
   },
   {
     filepath: "listupgradable_notfound",
     preExecCmdLine: ["apt-get upgrade -y"],
-    execCmdLine: "apt list --upgradeable",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o APT::Get::Show-User-Simulation-Note=false -V --simulate dist-upgrade",
   },
   {
     filepath: "remove_mixedfoundnotfound",
     preExecCmdLine: ["apt-get install -y xdot"],
-    execCmdLine: "apt-get remove -y xdot nonexistentpackage",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 remove -f xdot nonexistentpackage --autoremove",
   },
   {
     filepath: "remove_mixedinstallstatus",
     preExecCmdLine: ["apt-get install -y xdot", "apt-get remove -y rolldice"],
-    execCmdLine: "apt-get remove -y rolldice xdot",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 remove -f rolldice xdot --autoremove",
   },
   {
     filepath: "remove_singlenotinstalled",
     preExecCmdLine: ["apt-get remove -y xdot"],
-    execCmdLine: "apt-get remove -y xdot",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 remove -f xdot --autoremove",
   },
   {
     filepath: "remove_singlenotfound",
-    execCmdLine: "apt-get remove -y nonexistentpackage",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 remove -f nonexistentpackage --autoremove",
   },
   {
     filepath: "remove_singleinstalled",
     preExecCmdLine: ["apt-get install -y xdot"],
-    execCmdLine: "apt-get remove -y xdot",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 remove -f xdot --autoremove",
   },
   {
     filepath: "search_multiplefound",
-    execCmdLine: "apt search vim",
+    execCmdLine: "/usr/bin/apt-cache --quiet=0 search vim",
   },
   {
     filepath: "search_nonefound",
-    execCmdLine: "apt search nonexistentpackage",
+    execCmdLine: "/usr/bin/apt-cache --quiet=0 search nonexistentpackage",
   },
   {
     filepath: "search_singlefound",
-    execCmdLine: "apt search vim-vimerl-syntax",
-  },
-  {
-    filepath: "search_namesonlysinglefound",
-    execCmdLine: "apt search --names-only bash",
+    execCmdLine: "/usr/bin/apt-cache --quiet=0 search vim-vimerl-syntax",
   },
   {
     filepath: "update",
-    execCmdLine: "apt-get update -y",
+    execCmdLine: "flock /var/lib/apt/lists/lock /usr/bin/apt-get update",
   },
   {
     filepath: "upgrade_mixedfoundnotfound",
     preExecCmdLine: ["apt-get remove -y xdot"],
-    execCmdLine: "apt-get upgrade -y xdot nonexistentpackage",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install xdot nonexistentpackage",
   },
   {
     filepath: "upgrade_mixedupgradestatus",
@@ -295,16 +311,19 @@ const testLogFiles = [
       "apt-get remove -y xxd",
       "apt-get install -y xxd=2:8.1.2269-1ubuntu5.30",
     ],
-    execCmdLine: "apt-get upgrade -y xxd xdot",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install xxd xdot",
   },
   {
     filepath: "upgrade_singleupgraded",
     preExecCmdLine: ["apt-get upgrade -y xdot"],
-    execCmdLine: "apt-get upgrade -y xdot",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 upgrade",
   },
   {
     filepath: "upgrade_singlenotfound",
-    execCmdLine: "apt-get upgrade -y nonexistentpackage",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install nonexistentpackage",
   },
   {
     filepath: "upgrade_singlenotupgraded",
@@ -312,12 +331,14 @@ const testLogFiles = [
       "apt-get remove -y xxd",
       "apt-get install -y xxd=2:8.1.2269-1ubuntu5.30",
     ],
-    execCmdLine: "apt-get upgrade -y xxd",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install xxd",
   },
   {
-    filepath: "upgrade_singleupgraded",
+    filepath: "upgrade_singleinstalled",
     preExecCmdLine: ["apt-get install xdot"],
-    execCmdLine: "apt-get upgrade xdot",
+    execCmdLine:
+      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install xdot",
   },
 ];
 

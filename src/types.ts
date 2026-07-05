@@ -1,7 +1,11 @@
 /**
  * Normalized package state used across APT and APT-fast operations.
  */
-export type PackageStatus = "installed" | "upgradeable" | "available";
+export type PackageStatus =
+  | "broken"
+  | "installed"
+  | "upgradeable"
+  | "available";
 
 /** Package name that differentiates versioned and unversioned. */
 export interface PackageName {
@@ -22,7 +26,11 @@ export interface PackageName {
 export interface PackageInfo {
   /** Package name as reported by the package manager. */
   name: string;
-  /** Installed version when present. */
+  /**
+   * Installed version when present.
+   *
+   * NOTE: If package is broken, this field will be empty and the status will be "broken".
+   */
   version: string;
   /** Current normalized package status. */
   status?: PackageStatus;
@@ -46,8 +54,10 @@ export interface CommandOptions {
  * Captured command output returned by command runners.
  */
 export interface CommandResult {
-  /** Full command line executed. */
-  cmdLine: string;
+  /** Command executed. */
+  command: string;
+  /** Command-line arguments to command. */
+  args: string[];
   /** Standard output text captured from the process. */
   stdout: string;
   /** Standard error text captured from the process. */
@@ -74,18 +84,26 @@ export interface CommandRunner {
   ): Promise<CommandResult>;
 }
 
+/** Zero exit code but contains APT notice, warning and error lines. */
+export type MixedSuccessResult<T> = {
+  /** Items that were successfully processed. */
+  success: T;
+  /** Items that failed to process and output to stderr. */
+  stderr: string;
+};
+
 /**
  * Package manager contract implemented by APT and APT-fast managers.
  */
 export interface PackageManager {
   /** Installs one or more packages. */
-  install(pkgs: PackageName[]): Promise<PackageInfo[]>;
+  install(pkgs: PackageName[]): Promise<MixedSuccessResult<PackageInfo[]>>;
 
   /** Removes one or more packages. */
   remove(pkgs: PackageName[]): Promise<PackageInfo[]>;
 
   /** Searches package repositories by one or more keywords and returns name-description pairs. */
-  search(keywords: string[]): Promise<PackageInfo[]>;
+  search(keywords: string[]): Promise<{ name: string; description: string }[]>;
 
   /** Lists files installed by a package. */
   listInstalledFiles(pkg: PackageName): Promise<string[]>;
@@ -94,19 +112,19 @@ export interface PackageManager {
   listInstalled(): Promise<PackageInfo[]>;
 
   /** Lists upgradable packages. */
-  listUpgradable(): Promise<PackageInfo[]>;
-
-  /** Upgrades all packages or a selected package set. */
-  upgrade(pkgs: PackageName[]): Promise<PackageInfo[]>;
-
-  /** Upgrades all packages managed by this package manager. */
-  upgradeAll(): Promise<PackageInfo[]>;
-
-  /** Refreshes repository indexes and returns number of packages that can be upgraded. */
-  update(): Promise<number>;
+  listUpgradable(): Promise<MixedSuccessResult<PackageInfo[]>>;
 
   /** Returns metadata for one or more packages. */
-  getPackageInfo(pkgs: PackageName[]): Promise<PackageInfo[]>;
+  show(pkgs: PackageName[]): Promise<MixedSuccessResult<PackageInfo[]>>;
+
+  /** Upgrades all packages or a selected package set. */
+  upgrade(pkgs: PackageName[]): Promise<MixedSuccessResult<PackageInfo[]>>;
+
+  /** Upgrades all packages managed by this package manager. */
+  upgradeAll(): Promise<MixedSuccessResult<PackageInfo[]>>;
+
+  /** Refreshes repository indexes and returns number of packages that can be upgraded. */
+  update(): Promise<MixedSuccessResult<number>>;
 
   /** Cleans local package cache data. */
   autoClean(): Promise<void>;
