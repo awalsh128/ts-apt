@@ -88,3 +88,5 @@ Generated docs are written to [docs/api](docs/api).
 ## Developer Notes
 
 Maintainer-focused workflows, release details, and operational concerns are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Repository governance note: PR-only branch update policy should be enforced in GitHub through branch protection or repository rulesets, not only through repository code.

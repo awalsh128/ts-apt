@@ -95,6 +95,16 @@ Current CI is split into setup, CodeQL, linting, unit testing, and integration t
 - The unit-test job runs `npm run test:unit`, type coverage, coverage upload, and dependency audit.
 - The integration job runs `npm run test:integration:docker` so integration coverage uses the forced devcontainer path when available.
 
+## Branch Protection
+
+This repository should be operated as PR-only across all long-lived branches.
+
+- Direct pushes should be disallowed on protected branches.
+- Changes should land through reviewed pull requests.
+- Required status checks should pass before merge.
+
+This policy cannot be enforced reliably from repository code alone. It is configured through the GitHub repository.
+
 ## Integration Tests
 
 Integration coverage is split across:
