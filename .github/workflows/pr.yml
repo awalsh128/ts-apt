@@ -22,4 +22,5 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Generate, Commit, and Push Docs
-        run: node --experimental-strip-types ./scripts/ops/pr_docs_sync.mts "${{ github.event.pull_request.head.ref }}"
+        shell: bash
+        run: ./scripts/ops/pr_docs_sync.sh "${{ github.event.pull_request.head.ref }}"
