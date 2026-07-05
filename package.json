@@ -48,6 +48,8 @@
     "check:configs": "node ./dev_scripts/verify_configs.mjs",
     "check": "npm run check:latest-action-pin && npm run check:configs",
     "setup:dev": "node ./dev_scripts/setup_devenv.mjs",
+    "repo:settings:download": "node --experimental-strip-types ./dev_scripts/repo_settings_sync.mts download",
+    "repo:settings:upload": "node --experimental-strip-types ./dev_scripts/repo_settings_sync.mts upload",
     "docs:api": "typedoc",
     "docs:api-md": "typedoc --options typedoc.json",
     "docs": "npm run docs:api && npm run docs:api-md",

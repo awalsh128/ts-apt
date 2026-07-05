@@ -82,8 +82,10 @@ Generated docs are written to [docs/api](docs/api).
 
 ## Credits
 
-- [ilikenwf/apt-fast](https://github.com/ilikenwf/apt-fast)
-- [moll/js-internet-message](https://github.com/moll/js-internet-message)
+Many thanks to to the original developers who have made this library much faster and less brittle.
+
+- [ilikenwf/apt-fast](https://github.com/ilikenwf/apt-fast) - Much faster downloads during installs and upgrades.
+- [moll/js-internet-message](https://github.com/moll/js-internet-message) - RFC compliant internet message parsing (e.g. `apt-cache show`).
 
 ## Developer Notes
 
