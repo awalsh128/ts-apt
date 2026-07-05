@@ -18,3 +18,4 @@
 ## Type Aliases
 
 - [PackageStatus](type-aliases/PackageStatus.md)
+- [MixedSuccessResult](type-aliases/MixedSuccessResult.md)

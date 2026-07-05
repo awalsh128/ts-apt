@@ -6,19 +6,29 @@
 
 # Interface: CommandResult
 
-Defined in: [src/types.ts:48](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L48)
+Defined in: [src/types.ts:56](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L56)
 
 Captured command output returned by command runners.
 
 ## Properties
 
-### cmdLine
+### command
 
-> **cmdLine**: `string`
+> **command**: `string`
 
-Defined in: [src/types.ts:50](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L50)
+Defined in: [src/types.ts:58](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L58)
 
-Full command line executed.
+Command executed.
+
+***
+
+### args
+
+> **args**: `string`[]
+
+Defined in: [src/types.ts:60](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L60)
+
+Command-line arguments to command.
 
 ***
 
@@ -26,7 +36,7 @@ Full command line executed.
 
 > **stdout**: `string`
 
-Defined in: [src/types.ts:52](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L52)
+Defined in: [src/types.ts:62](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L62)
 
 Standard output text captured from the process.
 
@@ -36,7 +46,7 @@ Standard output text captured from the process.
 
 > **stderr**: `string`
 
-Defined in: [src/types.ts:54](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L54)
+Defined in: [src/types.ts:64](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L64)
 
 Standard error text captured from the process.
 
@@ -46,6 +56,6 @@ Standard error text captured from the process.
 
 > **exitCode**: `number`
 
-Defined in: [src/types.ts:56](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L56)
+Defined in: [src/types.ts:66](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L66)
 
 Process exit code.

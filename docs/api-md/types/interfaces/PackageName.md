@@ -6,7 +6,7 @@
 
 # Interface: PackageName
 
-Defined in: [src/types.ts:7](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L7)
+Defined in: [src/types.ts:11](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L11)
 
 Package name that differentiates versioned and unversioned.
 
@@ -16,7 +16,7 @@ Package name that differentiates versioned and unversioned.
 
 > **name**: `string`
 
-Defined in: [src/types.ts:9](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L9)
+Defined in: [src/types.ts:13](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L13)
 
 Required name.
 
@@ -26,7 +26,7 @@ Required name.
 
 > `optional` **version?**: `string`
 
-Defined in: [src/types.ts:11](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L11)
+Defined in: [src/types.ts:15](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L15)
 
 Optional version of package.
 
@@ -36,7 +36,7 @@ Optional version of package.
 
 > `optional` **distro?**: `string`
 
-Defined in: [src/types.ts:13](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L13)
+Defined in: [src/types.ts:17](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L17)
 
 Optional distribution of package.
 
@@ -46,7 +46,7 @@ Optional distribution of package.
 
 > **serialize**(): `string`
 
-Defined in: [src/types.ts:16](https://github.com/awalsh128/ts-apt/blob/dev/src/types.ts#L16)
+Defined in: [src/types.ts:20](https://github.com/awalsh128/ts-apt/blob/chore/ci-pr-only-gating-main/src/types.ts#L20)
 
 Serializes the package name and version into an APT string representation.
 
