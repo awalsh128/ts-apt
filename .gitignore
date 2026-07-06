@@ -1,5 +1,7 @@
 node_modules/
 dist/
+docs/api/
+docs/api-md/
 !scripts/dist/
 !scripts/dist/**
 coverage/
