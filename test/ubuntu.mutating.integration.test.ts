@@ -19,7 +19,7 @@ import {
   packageName,
   removeTestPackage,
   runWithTimeout,
-} from "./ubuntu.integration.helpers.js";
+} from "./ubuntu.integration.common.js";
 
 (canRunMutatingIntegration ? describe : describe.skip)(
   "ubuntu integration for mutating operations",
@@ -51,8 +51,7 @@ import {
     test("install adds a package when missing", async () => {
       const result = await manager.install([createPackageName(packageName)]);
 
-      expectNamedEntries(result.success, [packageName]);
-      expect(typeof result.stderr).toBe("string");
+      expectNamedEntries(result, [packageName]);
     });
 
     test("install missing package rejects with command execution error", async () => {

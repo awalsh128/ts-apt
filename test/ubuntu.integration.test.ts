@@ -1,4 +1,3 @@
-import { defineConfig } from "vitest/config";
 import { beforeEach, describe, expect, test } from "vitest";
 import {
   AptPackageManager,
@@ -186,7 +185,12 @@ describe("ubuntu integration for parallel execution semantics", () => {
 
   beforeEach(() => {
     runner = new TrackingNoopDefaultRunner(125);
-    manager = new AptPackageManager(false, runner, new AptOutputParser(nullLogger), nullLogger);
+    manager = new AptPackageManager(
+      false,
+      runner,
+      new AptOutputParser(nullLogger),
+      nullLogger,
+    );
   });
 
   test("only reads run in parallel and do not hang", async () => {
@@ -207,7 +211,11 @@ describe("ubuntu integration for parallel execution semantics", () => {
 
   test("only writes are serialized by the global lock and mutex", async () => {
     await runWithTimeout(
-      Promise.all([manager.autoClean(), manager.autoClean(), manager.autoClean()]),
+      Promise.all([
+        manager.autoClean(),
+        manager.autoClean(),
+        manager.autoClean(),
+      ]),
       5_000,
       "parallel write operations",
     );
