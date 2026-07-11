@@ -59,7 +59,7 @@
     "docs:api": "typedoc --options typedoc.json",
     "release": "semantic-release",
     "release:dry-run": "semantic-release --dry-run",
-    "lint": "eslint src test --ext .ts",
+    "lint": "eslint src test scripts --ext .ts,.mts",
     "typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck:scripts",
     "test:coverage": "vitest run --coverage",
