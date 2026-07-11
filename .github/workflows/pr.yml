@@ -1,37 +1,23 @@
-name: Pull Request Docs Sync
+name: Pull Requests
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-
-permissions:
-  contents: write
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
-  docs-sync:
-    # Skip forked PRs because GITHUB_TOKEN from base repo cannot safely push there.
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+  check-branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout PR branch
+      - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
 
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Generate Docs
-        run: npm run docs
-
-      - name: Add and Commit Docs Changes
+      - name: Run PR checks
+        shell: bash
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/
-          if ! git diff --staged --quiet; then
-            git commit -m "docs: auto-update generated docs"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
-          else
-            echo "No doc changes to commit."
-          fi
+          npm run check:pr -- --base-ref "${{ github.base_ref }}" --head-ref "${{ github.head_ref }}" \
+           --allow-admin-bypass

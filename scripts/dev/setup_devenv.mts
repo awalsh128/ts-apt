@@ -69,12 +69,13 @@ function ensureAptDependencies(): void {
   }
 
   const aptPackages: Array<[string, string]> = [
-    ["git", "git"],
-    ["gh", "gh"],
-    ["jq", "jq"],
     ["curl", "curl"],
-    ["shellcheck", "shellcheck"],
+    ["gh", "gh"],
+    ["git", "git"],
+    ["jq", "jq"],
     ["flock", "util-linux"],
+    ["node-typescript", "node-typescript"],
+    ["shellcheck", "shellcheck"],
   ];
 
   const missingPackages = [

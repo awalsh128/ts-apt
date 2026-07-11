@@ -1,20 +1,39 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
-
+about: Suggest an improvement for the ts-apt npm package
+title: "[Feature]: "
+labels: enhancement
+assignees: ""
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+## Problem statement
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+What npm/library use-case is currently hard, verbose, or unsupported?
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+## Proposed solution
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+Describe the API change, behavior, or command flow you want.
+
+```ts
+// optional API sketch
+```
+
+## Alternatives considered
+
+List any alternatives, including workarounds you use today.
+
+## Use-case impact
+
+- Who benefits? <!-- app developers, CI maintainers, etc. -->
+- How often does this occur? <!-- always, often, edge case -->
+- Is this a breaking change? <!-- yes/no/unsure -->
+
+## Environment (if relevant)
+
+- Node.js version: <!-- output of node -v -->
+- npm version: <!-- output of npm -v -->
+- OS and version: <!-- e.g. Ubuntu 24.04 -->
+
+## Additional context
+
+Add links, examples, related issues, or prior art.

@@ -11,7 +11,9 @@
 # version 3 of the License, or (at your option) any later version.
 #
 
-# shellcheck disable=all
+# This script is taken from an official source by the author.
+# If it ain't broke, don't fix it.
+# shellcheck disable=SC1090,SC2001,SC2015,SC2016,SC2034,SC2054,SC2154,SC2206,SC2243,SC2244,SC2248,SC2249,SC2250
 
 shopt -s nullglob
 

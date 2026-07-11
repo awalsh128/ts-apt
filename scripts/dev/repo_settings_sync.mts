@@ -7,21 +7,13 @@
  * - `download` fetches non-secret repository settings and writes them to JSON.
  * - `upload` reads the JSON file and PATCHes those settings back to the repository.
  *
- * Usage:
- *   node --experimental-strip-types ./scripts/dev/repo_settings_sync.mts <download|upload> [options]
- *
- * Options:
- *   --owner <owner>  GitHub repository owner (default: value from devopslib.mts)
- *   --repo <repo>    GitHub repository name (default: value from devopslib.mts)
- *   --file <path>    Settings JSON path (default: .github/repo-settings.json)
- *   --dry-run        For upload only; prints payload without applying changes
- *
  * Examples:
  *   npm run repo:settings:download
  *   npm run repo:settings:upload -- --dry-run
  *   npm run repo:settings:upload
  */
 
+import { spawnSync } from "node:child_process";
 import {
   mkdirSync,
   mkdtempSync,
@@ -31,16 +23,18 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
+import { defineCommand, defineOptions } from "@robingenz/zli";
+import { z } from "zod";
 import {
   REPO_NAME,
   REPO_OWNER,
-  assertNonEmpty,
   commandExists,
+  createCliConfig,
   fail,
   logInfo,
   logSuccess,
-  usage,
+  runCli,
+  runMain,
 } from "../devopslib.mts";
 
 type RepoSettings = {
@@ -99,69 +93,6 @@ const SETTINGS_KEYS: Array<keyof RepoSettings> = [
   "merge_commit_message",
   "security_and_analysis",
 ];
-
-function isSyncCommand(
-  value: string | undefined,
-): value is "download" | "upload" {
-  return value === "download" || value === "upload";
-}
-
-type ParsedArgs = {
-  command: "download" | "upload";
-  owner: string;
-  repo: string;
-  file: string;
-  dryRun: boolean;
-};
-
-function parseArgs(argv: string[]): ParsedArgs {
-  const cmd = argv[2]?.trim();
-  if (!isSyncCommand(cmd)) {
-    console.error(
-      usage(
-        process.argv[1] ?? "repo_settings_sync.mts",
-        "<download|upload> [--owner <owner>] [--repo <repo>] [--file <path>] [--dry-run]",
-      ),
-    );
-    fail("Command must be either 'download' or 'upload'.");
-    throw new Error("unreachable");
-  }
-
-  let owner = REPO_OWNER;
-  let repo = REPO_NAME;
-  let file = ".github/repo-settings.json";
-  let dryRun = false;
-
-  for (let i = 3; i < argv.length; i += 1) {
-    const arg = argv[i];
-    if (arg === "--owner") {
-      owner = argv[i + 1] ?? "";
-      i += 1;
-      continue;
-    }
-    if (arg === "--repo") {
-      repo = argv[i + 1] ?? "";
-      i += 1;
-      continue;
-    }
-    if (arg === "--file") {
-      file = argv[i + 1] ?? "";
-      i += 1;
-      continue;
-    }
-    if (arg === "--dry-run") {
-      dryRun = true;
-      continue;
-    }
-    fail(`Unknown argument: ${arg}`);
-  }
-
-  assertNonEmpty(owner, "--owner cannot be empty");
-  assertNonEmpty(repo, "--repo cannot be empty");
-  assertNonEmpty(file, "--file cannot be empty");
-
-  return { command: cmd, owner, repo, file, dryRun };
-}
 
 function runGh(args: string[], input?: string): string {
   const result = spawnSync("gh", args, {
@@ -308,16 +239,50 @@ function ensurePrerequisites(): void {
   }
 }
 
-function main(): void {
+const sharedOptions = defineOptions(
+  z.object({
+    owner: z.string().default(REPO_OWNER).describe("GitHub repository owner"),
+    repo: z.string().default(REPO_NAME).describe("GitHub repository name"),
+    file: z
+      .string()
+      .default(".github/repo-settings.json")
+      .describe("Settings JSON path"),
+    dryRun: z
+      .boolean()
+      .default(false)
+      .describe("Print the upload payload without applying changes"),
+  }),
+  { o: "owner", r: "repo", f: "file", d: "dryRun" },
+);
+
+const downloadCommand = defineCommand({
+  description: "Download repository settings to a JSON file",
+  options: sharedOptions,
+  action: async (options) => {
+    downloadSettings(options.owner, options.repo, options.file);
+  },
+});
+
+const uploadCommand = defineCommand({
+  description: "Upload repository settings from a JSON file",
+  options: sharedOptions,
+  action: async (options) => {
+    uploadSettings(options.owner, options.repo, options.file, options.dryRun);
+  },
+});
+
+const cliConfig = createCliConfig({
+  importMetaUrl: import.meta.url,
+  description: "Sync GitHub repository settings",
+  commands: {
+    download: downloadCommand,
+    upload: uploadCommand,
+  },
+});
+
+async function main(): Promise<void> {
   ensurePrerequisites();
-  const { command, owner, repo, file, dryRun } = parseArgs(process.argv);
-
-  if (command === "download") {
-    downloadSettings(owner, repo, file);
-    return;
-  }
-
-  uploadSettings(owner, repo, file, dryRun);
+  await runCli(cliConfig);
 }
 
-main();
+await runMain(main);

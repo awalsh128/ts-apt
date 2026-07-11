@@ -13,6 +13,13 @@ import {
   type ExecFileSyncOptions,
   type SpawnSyncOptions,
 } from "node:child_process";
+import {
+  defineConfig,
+  processConfig,
+  type CommandDefinition,
+  type DefineConfig,
+  type ProcessResult,
+} from "@robingenz/zli";
 import path from "node:path";
 import process from "node:process";
 import readline from "node:readline/promises";
@@ -290,6 +297,83 @@ export function runCaptureOutput(
   }
 
   return String(result.stdout ?? "").trim();
+}
+
+type CliAction = (
+  options: unknown,
+  args: string[],
+) => unknown | Promise<unknown>;
+
+type CliResult = ProcessResult<CommandDefinition<any, any>>;
+
+type CliCommands = Record<string, CommandDefinition<any, any>>;
+
+type CliConfig = DefineConfig<CliCommands>;
+
+type CliConfigParams = {
+  name?: string;
+  importMetaUrl?: string;
+  description: string;
+  commands: CliCommands;
+  defaultCommand?: CommandDefinition<any, any>;
+};
+
+type CliResultCommand = {
+  command: {
+    action: CliAction;
+  };
+  options: unknown;
+  args: string[];
+};
+
+export function createCliConfig(params: CliConfigParams) {
+  const derivedName = (() => {
+    if (params.name && params.name.trim().length > 0) {
+      return params.name;
+    }
+
+    if (params.importMetaUrl && params.importMetaUrl.trim().length > 0) {
+      const filePath = fileURLToPath(params.importMetaUrl);
+      const parsed = path.parse(filePath);
+      if (parsed.name.trim().length > 0) {
+        return parsed.name;
+      }
+    }
+
+    fail(
+      "createCliConfig requires either a non-empty 'name' or a valid 'importMetaUrl'.",
+    );
+  })();
+
+  return defineConfig({
+    meta: {
+      name: derivedName,
+      version: process.env.npm_package_version ?? "0.0.0",
+      description: params.description,
+    },
+    commands: params.commands,
+    defaultCommand: params.defaultCommand,
+  });
+}
+
+export async function runCli(
+  cliConfig: CliConfig,
+  argv: string[] = process.argv.slice(2),
+): Promise<void> {
+  const result = processConfig(cliConfig, argv) as CliResult;
+  const commandResult = result as unknown as CliResultCommand;
+  await commandResult.command.action(commandResult.options, commandResult.args);
+}
+
+export async function runMain(
+  action: () => void | Promise<void>,
+  exitCode = 1,
+): Promise<void> {
+  try {
+    await action();
+  } catch (error) {
+    fail(error instanceof Error ? error.message : String(error), exitCode);
+  }
 }
 
 export async function confirmPrompt(

@@ -1,55 +1,29 @@
-import { defineConfig } from "vitest/config";
-import { beforeEach, describe, expect, test } from "vitest";
 import {
-  AptPackageManager,
-  Binary,
-  GLOBAL_APT_LOCK_WAIT_SECONDS,
-  TIMEOUTS,
-} from "../src/manager.js";
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from "vitest";
+import { AptPackageManager, Binary } from "../src/manager.js";
 import { AptOutputParser } from "../src/parser.js";
 import { createPackageName } from "../src/package.js";
-import {
-  createRealCommandRunner,
-  getWorkspaceFilepath,
-  nullLogger,
-} from "./common.js";
+import { nullLogger } from "./common.js";
 import { CommandRunner } from "../src/index.js";
-import { Mutex } from "async-mutex";
 import { DefaultCommandRunner } from "../src/commandRunner.js";
 import type { CommandOptions, CommandResult } from "../src/types.js";
-
-// TODO: Add a way to force devcontainer usage for testing with auto Docker setup. Added benefit are tests without APT side effects for mutating calls.
-const forceDevcontainer = false; // Set to true to force devcontainer usage for testing
-
-const packageName = "xdot"; // A small package that is likely to be present in most Ubuntu installations
-const aptFastPath = getWorkspaceFilepath("scripts/apt-fast.sh"); // Path to the apt-fast script relative to the test file
-const managerLockPath = "/tmp/ts-apt-manager.lock";
-const integrationAptTimeoutMs = TIMEOUTS.install;
+import {
+  canRunIntegration,
+  createIntegrationContext,
+  installTestPackage,
+  packageName,
+  removeTestPackage,
+  runWithTimeout,
+} from "./ubuntu.integration.common.js";
 
 function sleep(delayMs: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, delayMs));
-}
-
-async function runWithTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  label: string,
-): Promise<T> {
-  let timer: NodeJS.Timeout | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(() => {
-          reject(new Error(`${label} timed out after ${timeoutMs}ms`));
-        }, timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) {
-      clearTimeout(timer);
-    }
-  }
 }
 
 class TrackingNoopDefaultRunner extends DefaultCommandRunner {
@@ -69,7 +43,6 @@ class TrackingNoopDefaultRunner extends DefaultCommandRunner {
   ): Promise<CommandResult> {
     const isWrite =
       command === "flock" &&
-      args[2] === managerLockPath &&
       [Binary.AptGet.path, Binary.AptFast.path].includes(args[3] ?? "");
     if (isWrite) {
       this.writeCalls += 1;
@@ -104,81 +77,58 @@ class TrackingNoopDefaultRunner extends DefaultCommandRunner {
   }
 }
 
-describe("ubuntu integration for readonly operations", () => {
-  let manager: AptPackageManager;
-  let runner: CommandRunner;
+(canRunIntegration ? describe : describe.skip)(
+  "ubuntu integration for readonly operations",
+  () => {
+    let manager: AptPackageManager;
+    let runner: CommandRunner;
 
-  const runLock = new Mutex(); // Mutex to serialize test execution due to shared APT lock files
+    beforeAll(async () => {
+      ({ manager, runner } = await createIntegrationContext());
+      await installTestPackage(runner);
+    }, 600_000);
 
-  async function run(filepath: string, args: string[] = []): Promise<void> {
-    await runLock.runExclusive(async () => {
-      await runner.run(
-        "flock",
-        [
-          "-w",
-          GLOBAL_APT_LOCK_WAIT_SECONDS,
-          managerLockPath,
-          "sudo",
-          "bash",
-          filepath,
-          ...args,
-        ],
-        { timeoutMs: integrationAptTimeoutMs },
-      );
+    afterAll(async () => {
+      if (!runner) {
+        return;
+      }
+      await removeTestPackage(runner);
+    }, 600_000);
+
+    test("lists installed packages", async () => {
+      const installed = await manager.listInstalled();
+
+      expect(installed.length).toBeGreaterThan(0);
+      expect(installed.some((pkg) => pkg.name.length > 0)).toBe(true);
     });
-  }
 
-  beforeAll(async () => {
-    runner = await createRealCommandRunner(
-      nullLogger,
-      nullLogger,
-      forceDevcontainer,
-    );
-    await run(aptFastPath, ["install", "-y", packageName]); // Ensure package cache is up to date
-    manager = new AptPackageManager(
-      false,
-      runner,
-      new AptOutputParser(nullLogger),
-      nullLogger,
-    );
-  }, 600_000);
+    test(`searches for ${packageName}`, async () => {
+      let found = await manager.search([packageName], true);
 
-  afterAll(async () => {
-    await run(aptFastPath, ["remove", "-y", packageName]);
-    await run(aptFastPath, ["autoremove", "-y"]); // Clean up any packages installed during tests
-  }, 600_000);
+      expect(found.length).toBeGreaterThan(0);
+      expect(found.some((pkg) => pkg.name.includes(packageName))).toBe(true);
+    });
 
-  test("lists installed packages", async () => {
-    const installed = await manager.listInstalled();
+    test(`gets ${packageName} package info`, async () => {
+      const info = await manager.getPackageInfo([
+        createPackageName(packageName),
+      ]);
 
-    expect(installed.length).toBeGreaterThan(0);
-    expect(installed.some((pkg) => pkg.name.length > 0)).toBe(true);
-  });
+      expect(info.length).toBeGreaterThan(0);
+      expect(info[0]?.name).toBe(packageName);
+      expect(info[0]?.version).toMatch(/\S/);
+    });
 
-  test(`searches for ${packageName}`, async () => {
-    let found = await manager.search([packageName], true);
+    test(`lists files installed by ${packageName}`, async () => {
+      const files = await manager.listInstalledFiles(
+        createPackageName(packageName),
+      );
 
-    expect(found.length).toBeGreaterThan(0);
-    expect(found.some((pkg) => pkg.name.includes(packageName))).toBe(true);
-  });
-
-  test(`gets ${packageName} package info`, async () => {
-    const info = await manager.getPackageInfo([createPackageName(packageName)]);
-
-    expect(info.length).toBeGreaterThan(0);
-    expect(info[0]?.name).toBe(packageName);
-    expect(info[0]?.version).toMatch(/\S/);
-  });
-
-  test(`lists files installed by ${packageName}`, async () => {
-    const files = await manager.listInstalledFiles(
-      createPackageName(packageName),
-    );
-
-    expect(files.length).toBeGreaterThan(0);
-    expect(files.some((file) => file.includes(packageName))).toBe(true);
-  });
-});
+      expect(files.length).toBeGreaterThan(0);
+      expect(files.some((file) => file.includes(packageName))).toBe(true);
+    });
+  },
+);
 
 describe("ubuntu integration for parallel execution semantics", () => {
   let manager: AptPackageManager;
@@ -186,7 +136,12 @@ describe("ubuntu integration for parallel execution semantics", () => {
 
   beforeEach(() => {
     runner = new TrackingNoopDefaultRunner(125);
-    manager = new AptPackageManager(false, runner, new AptOutputParser(nullLogger), nullLogger);
+    manager = new AptPackageManager(
+      false,
+      runner,
+      new AptOutputParser(nullLogger),
+      nullLogger,
+    );
   });
 
   test("only reads run in parallel and do not hang", async () => {
@@ -207,7 +162,11 @@ describe("ubuntu integration for parallel execution semantics", () => {
 
   test("only writes are serialized by the global lock and mutex", async () => {
     await runWithTimeout(
-      Promise.all([manager.autoClean(), manager.autoClean(), manager.autoClean()]),
+      Promise.all([
+        manager.autoClean(),
+        manager.autoClean(),
+        manager.autoClean(),
+      ]),
       5_000,
       "parallel write operations",
     );
