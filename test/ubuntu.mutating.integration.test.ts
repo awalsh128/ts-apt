@@ -51,8 +51,7 @@ import {
     test("install adds a package when missing", async () => {
       const result = await manager.install([createPackageName(packageName)]);
 
-      expectNamedEntries(result.success, [packageName]);
-      expect(typeof result.stderr).toBe("string");
+      expectNamedEntries(result, [packageName]);
     });
 
     test("install missing package rejects with command execution error", async () => {

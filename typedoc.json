@@ -4,6 +4,7 @@
     "src/index.ts",
     "src/types.ts"
   ],
+  "out": "./docs/api",
   "plugin": [
     "typedoc-plugin-markdown"
   ],

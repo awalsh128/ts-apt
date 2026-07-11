@@ -67,7 +67,6 @@ export async function createIntegrationContext(): Promise<IntegrationContext> {
     false,
     runner,
     new AptOutputParser(nullLogger),
-    -1,
     nullLogger,
   );
   return { manager, runner };
