@@ -1,5 +1,4 @@
 #!/usr/bin/env -S node --experimental-strip-types
-// @ts-nocheck
 
 /**
  * Sync GitHub repository settings using GitHub CLI.
@@ -107,13 +106,15 @@ function isSyncCommand(
   return value === "download" || value === "upload";
 }
 
-function parseArgs(argv: string[]): {
+type ParsedArgs = {
   command: "download" | "upload";
   owner: string;
   repo: string;
   file: string;
   dryRun: boolean;
-} {
+};
+
+function parseArgs(argv: string[]): ParsedArgs {
   const cmd = argv[2]?.trim();
   if (!isSyncCommand(cmd)) {
     console.error(

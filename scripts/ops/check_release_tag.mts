@@ -1,6 +1,4 @@
 #!/usr/bin/env -S node --experimental-strip-types
-// @ts-nocheck
-
 import {
   fail,
   logInfo,
@@ -9,7 +7,7 @@ import {
   ROOT_DIR,
 } from "../devopslib.mts";
 
-const tag = process.env.RELEASE_TAG;
+const tag: string | undefined = process.env.RELEASE_TAG;
 if (!tag) {
   logInfo("RELEASE_TAG is not set; skipping release tag preflight checks.");
   process.exit(0);
@@ -22,8 +20,7 @@ if (!/^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(tag)) {
 }
 
 const packageJsonPath = `${ROOT_DIR}/package.json`;
-const packageJson = readJsonFile(packageJsonPath);
-
+const packageJson = readJsonFile(packageJsonPath) as { version?: string };
 if (
   typeof packageJson.version !== "string" ||
   packageJson.version.length === 0

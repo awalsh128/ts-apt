@@ -1,5 +1,4 @@
 #!/usr/bin/env -S node --experimental-strip-types
-// @ts-nocheck
 
 import { existsSync } from "node:fs";
 import {
@@ -20,7 +19,14 @@ import {
   writeJsonFile,
 } from "../devopslib.mts";
 
-function ensureVscodeSettingsFile() {
+type VscodeSettings = Record<string, unknown>;
+
+type AuditCounts = {
+  critical: number;
+  high: number;
+};
+
+function ensureVscodeSettingsFile(): string {
   const vscodeDir = `${ROOT_DIR}/.vscode`;
   const vscodeSettingsPath = `${ROOT_DIR}/${VSCODE_SETTINGS_RELPATH}`;
 
@@ -34,7 +40,10 @@ function ensureVscodeSettingsFile() {
   return vscodeSettingsPath;
 }
 
-function loadVscodeSettingsJson() {
+function loadVscodeSettingsJson(): {
+  vscodeSettingsPath: string;
+  vscodeSettingsJson: VscodeSettings;
+} {
   const vscodeSettingsPath = ensureVscodeSettingsFile();
   return {
     vscodeSettingsPath,
@@ -42,7 +51,7 @@ function loadVscodeSettingsJson() {
   };
 }
 
-function ensureAgentsFilesUsed() {
+function ensureAgentsFilesUsed(): void {
   const { vscodeSettingsPath, vscodeSettingsJson } = loadVscodeSettingsJson();
 
   if (!vscodeSettingsJson["chat.useAgentsMdFile"]) {
@@ -54,12 +63,12 @@ function ensureAgentsFilesUsed() {
   }
 }
 
-function ensureAptDependencies() {
+function ensureAptDependencies(): void {
   if (!commandExists("apt-get")) {
     fail("apt-get is required for system dependency installation.");
   }
 
-  const aptPackages = [
+  const aptPackages: Array<[string, string]> = [
     ["git", "git"],
     ["gh", "gh"],
     ["jq", "jq"],
@@ -81,7 +90,7 @@ function ensureAptDependencies() {
     return;
   }
 
-  const aptRunner = commandExists("sudo")
+  const aptRunner: (args: string[]) => void = commandExists("sudo")
     ? (args) => run("sudo", ["apt-get", ...args])
     : (args) => run("apt-get", args);
 
@@ -90,7 +99,7 @@ function ensureAptDependencies() {
   aptRunner(["install", "-y", ...missingPackages]);
 }
 
-function ensureNodeDependencies(nodeVersionMajor) {
+function ensureNodeDependencies(nodeVersionMajor: string): void {
   if (!commandExists("npm")) {
     fail(
       `npm is required but not installed. Install Node.js >=${nodeVersionMajor} first.`,
@@ -104,7 +113,7 @@ function ensureNodeDependencies(nodeVersionMajor) {
   run("npm", ["ci", "--include=dev"]);
 }
 
-function warnIfDockerMissing() {
+function warnIfDockerMissing(): void {
   if (commandExists("docker")) {
     logSuccess(
       "Docker CLI detected for devcontainer-backed integration tests.",
@@ -117,7 +126,9 @@ function warnIfDockerMissing() {
   );
 }
 
-function parseAuditJson(outputText) {
+function parseAuditJson(outputText: string): {
+  metadata?: { vulnerabilities?: Record<string, unknown> };
+} {
   if (!outputText || outputText.trim().length === 0) {
     fail("npm audit produced empty output.");
   }
@@ -131,16 +142,17 @@ function parseAuditJson(outputText) {
       return JSON.parse(outputText.slice(firstBraceIndex, lastBraceIndex + 1));
     }
     fail("Unable to parse npm audit JSON output.");
+    throw new Error("unreachable");
   }
 }
 
-function getAuditCounts() {
+function getAuditCounts(): AuditCounts {
   const audit = tryRun("npm", ["audit", "--json"], {
     cwd: ROOT_DIR,
     stdio: "pipe",
   });
 
-  const report = parseAuditJson(audit.stdout ?? "");
+  const report = parseAuditJson(String(audit.stdout ?? ""));
   const vulnerabilities = report?.metadata?.vulnerabilities ?? {};
 
   return {
@@ -149,7 +161,7 @@ function getAuditCounts() {
   };
 }
 
-function runAuditFix(force = false) {
+function runAuditFix(force = false): void {
   const args = force ? ["audit", "fix", "--force"] : ["audit", "fix"];
   const result = tryRun("npm", args, {
     cwd: ROOT_DIR,
@@ -163,7 +175,7 @@ function runAuditFix(force = false) {
   }
 }
 
-function ensureAuditRemediation() {
+function ensureAuditRemediation(): void {
   let counts = getAuditCounts();
   logInfo(`Audit baseline: high=${counts.high}, critical=${counts.critical}.`);
 
@@ -206,7 +218,7 @@ function ensureAuditRemediation() {
   logSuccess("High/critical npm vulnerabilities remediated.");
 }
 
-async function main() {
+async function main(): Promise<void> {
   const nodeVersionMajor = readNodeMajorVersion();
   logInfo("Ensuring .vscode settings file present...");
   ensureVscodeSettingsFile();

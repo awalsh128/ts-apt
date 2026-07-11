@@ -2,11 +2,10 @@
   "extends": "./tsconfig.base.json",
   "include": [
     "src/**/*.ts",
-    "src/scripts/**/*"
   ],
   "declarationMap": true,
   "scripts": {
-    "build": "scripts/dist/apt-fast.sh"
+    "build": "scripts/dist/apt-fast.*"
   },
   "exclude": [
     "node_modules",

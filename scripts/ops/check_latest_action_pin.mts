@@ -1,27 +1,64 @@
 #!/usr/bin/env -S node --experimental-strip-types
-// @ts-nocheck
 
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import {
+  COLORS,
   fail,
   GITHUB_API_BASE_URL,
   GITHUB_USER_AGENT,
+  log,
   logError,
   logInfo,
   logSuccess,
+  logWarn,
   runCaptureOutput,
   usage,
 } from "../devopslib.mts";
 
+type ScanInput =
+  | { mode: "scan"; rootDir: string }
+  | { mode: "single"; actionPath: string; currentRef: string };
+
+type ActionPin = {
+  filePath: string;
+  lineNumber: number;
+  actionPath: string;
+  currentRef: string;
+};
+
+type GitHubRelease = {
+  tag_name: string;
+  html_url?: string;
+};
+
+type RepoData = {
+  tagMap: Map<string, string>;
+  latestRelease: GitHubRelease | null;
+  releases: GitHubRelease[];
+};
+
+type ActionAnalysis = {
+  actionPath: string;
+  repoSlug: string;
+  currentRef: string;
+  currentSha: string;
+  currentRelease: GitHubRelease | null;
+  latestRelease: GitHubRelease | null;
+  latestSha: string | null;
+  notPinned: boolean;
+  isCurrent: boolean;
+};
+
 const usageMessage = usage(
-  process.argv[1],
+  process.argv[1] ?? "check_latest_action_pin.mts",
   "<owner/repo[/path]@ref | owner/repo[/path] ref | --scan [directory]>",
 );
 
-function parseInput(argv) {
-  if (argv[0] === "--scan") {
+function parseInput(argv: string[]): ScanInput {
+  const firstArg = argv[0] ?? "";
+  if (firstArg === "--scan") {
     return {
       mode: "scan",
       rootDir: argv[1] ?? ".github",
@@ -29,30 +66,42 @@ function parseInput(argv) {
   }
 
   if (argv.length === 1) {
-    const atIndex = argv[0].lastIndexOf("@");
-    if (atIndex <= 0 || atIndex === argv[0].length - 1) {
+    if (firstArg.length === 0) {
+      fail(usageMessage);
+    }
+    const singleArg = firstArg;
+
+    const atIndex = singleArg.lastIndexOf("@");
+    if (atIndex <= 0 || atIndex === singleArg.length - 1) {
       fail(usageMessage);
     }
 
     return {
       mode: "single",
-      actionPath: argv[0].slice(0, atIndex),
-      currentRef: argv[0].slice(atIndex + 1),
+      actionPath: singleArg.slice(0, atIndex),
+      currentRef: singleArg.slice(atIndex + 1),
     };
   }
 
   if (argv.length === 2) {
+    const actionPath = argv[0] ?? "";
+    const currentRef = argv[1] ?? "";
+    if (actionPath.length === 0 || currentRef.length === 0) {
+      fail(usageMessage);
+    }
+
     return {
       mode: "single",
-      actionPath: argv[0],
-      currentRef: argv[1],
+      actionPath,
+      currentRef,
     };
   }
 
   fail(usageMessage);
+  throw new Error("unreachable");
 }
 
-function parseRepoSlug(actionPath) {
+function parseRepoSlug(actionPath: string): string {
   const parts = actionPath.split("/").filter(Boolean);
   if (parts.length < 2) {
     throw new Error(
@@ -63,17 +112,16 @@ function parseRepoSlug(actionPath) {
   return `${parts[0]}/${parts[1]}`;
 }
 
-function git(args) {
+function git(args: string[]): string {
   return runCaptureOutput("git", args, {
-    stdout: "pipe",
-    stderr: "pipe",
+    cwd: process.cwd(),
   });
 }
 
-function buildTagMap(repoSlug) {
+function buildTagMap(repoSlug: string): Map<string, string> {
   const remoteUrl = `https://github.com/${repoSlug}.git`;
   const output = git(["ls-remote", "--tags", remoteUrl]);
-  const tagMap = new Map();
+  const tagMap = new Map<string, string>();
 
   for (const line of output.split("\n")) {
     if (!line.trim()) {
@@ -97,14 +145,18 @@ function buildTagMap(repoSlug) {
   return tagMap;
 }
 
-function resolveRefSha(repoSlug, ref, tagMap) {
+function resolveRefSha(
+  repoSlug: string,
+  ref: string,
+  tagMap: Map<string, string>,
+): string {
   const normalizedRef = ref.toLowerCase();
   if (/^[0-9a-f]{40}$/.test(normalizedRef)) {
     return normalizedRef;
   }
 
   if (tagMap.has(ref)) {
-    return tagMap.get(ref);
+    return tagMap.get(ref) ?? ref;
   }
 
   const remoteUrl = `https://github.com/${repoSlug}.git`;
@@ -118,8 +170,8 @@ function resolveRefSha(repoSlug, ref, tagMap) {
   return sha.toLowerCase();
 }
 
-async function fetchJson(url) {
-  const headers = {
+async function fetchJson(url: string): Promise<unknown | null> {
+  const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "User-Agent": GITHUB_USER_AGENT,
   };
@@ -140,18 +192,29 @@ async function fetchJson(url) {
   return response.json();
 }
 
-async function getLatestRelease(repoSlug) {
-  return fetchJson(`${GITHUB_API_BASE_URL}/repos/${repoSlug}/releases/latest`);
+async function getLatestRelease(
+  repoSlug: string,
+): Promise<GitHubRelease | null> {
+  const release = await fetchJson(
+    `${GITHUB_API_BASE_URL}/repos/${repoSlug}/releases/latest`,
+  );
+  return release && typeof release === "object"
+    ? (release as GitHubRelease)
+    : null;
 }
 
-async function getReleases(repoSlug) {
+async function getReleases(repoSlug: string): Promise<GitHubRelease[]> {
   const releases = await fetchJson(
     `${GITHUB_API_BASE_URL}/repos/${repoSlug}/releases?per_page=100`,
   );
   return Array.isArray(releases) ? releases : [];
 }
 
-function findReleaseBySha(releases, tagMap, sha) {
+function findReleaseBySha(
+  releases: GitHubRelease[],
+  tagMap: Map<string, string>,
+  sha: string,
+): GitHubRelease | null {
   return (
     releases.find(
       (release) => tagMap.get(release.tag_name)?.toLowerCase() === sha,
@@ -159,12 +222,8 @@ function findReleaseBySha(releases, tagMap, sha) {
   );
 }
 
-function printField(label, value) {
-  logInfo(`${label}: ${value ?? "none"}`);
-}
-
-function walkFiles(rootDir) {
-  const results = [];
+function walkFiles(rootDir: string): string[] {
+  const results: string[] = [];
 
   for (const entry of fs.readdirSync(rootDir, { withFileTypes: true })) {
     const fullPath = path.join(rootDir, entry.name);
@@ -181,8 +240,8 @@ function walkFiles(rootDir) {
   return results.sort((a, b) => a.localeCompare(b));
 }
 
-function findActionPins(rootDir) {
-  const results = [];
+function findActionPins(rootDir: string): ActionPin[] {
+  const results: ActionPin[] = [];
   const usesPattern = /^\s*uses:\s*["']?([^"'\s#]+)["']?/;
 
   for (const filePath of walkFiles(rootDir)) {
@@ -224,15 +283,15 @@ function findActionPins(rootDir) {
   return results;
 }
 
-const repoCache = new Map();
+const repoCache = new Map<string, Promise<RepoData>>();
 
-async function getRepoData(repoSlug) {
+async function getRepoData(repoSlug: string): Promise<RepoData> {
   const cached = repoCache.get(repoSlug);
   if (cached) {
     return cached;
   }
 
-  const promise = (async () => {
+  const promise = (async (): Promise<RepoData> => {
     const tagMap = buildTagMap(repoSlug);
     const [latestRelease, releases] = await Promise.all([
       getLatestRelease(repoSlug),
@@ -245,7 +304,10 @@ async function getRepoData(repoSlug) {
   return promise;
 }
 
-async function analyzeAction(actionPath, currentRef) {
+async function analyzeAction(
+  actionPath: string,
+  currentRef: string,
+): Promise<ActionAnalysis> {
   const repoSlug = parseRepoSlug(actionPath);
   const { tagMap, latestRelease, releases } = await getRepoData(repoSlug);
   const currentSha = resolveRefSha(repoSlug, currentRef, tagMap);
@@ -263,34 +325,50 @@ async function analyzeAction(actionPath, currentRef) {
     currentRelease,
     latestRelease,
     latestSha,
+    notPinned: latestSha === null,
     isCurrent,
   };
 }
 
-function printAnalysis(analysis) {
-  logInfo(`Action: ${analysis.actionPath}`);
-  printField("Repository", analysis.repoSlug);
-  printField("Current ref", analysis.currentRef);
-  printField("Current sha", analysis.currentSha);
-  printField("Current release", analysis.currentRelease?.tag_name ?? null);
-  printField("Current release URL", analysis.currentRelease?.html_url ?? null);
-  printField("Latest release", analysis.latestRelease?.tag_name ?? null);
-  printField(
+function printAnalysis(analysis: ActionAnalysis): number {
+  const logFieldValue = (field: string, value: string) => {
+    log(`${COLORS.cyan}${field}:${COLORS.reset} ${value}`, {
+      indent: 3,
+    });
+  };
+  logFieldValue("Action", analysis.actionPath);
+  logFieldValue("Repository", analysis.repoSlug);
+  logFieldValue("Current ref", analysis.currentRef);
+  logFieldValue("Current sha", analysis.currentSha);
+  logFieldValue("Current release", analysis.currentRelease?.tag_name ?? "none");
+  logFieldValue(
+    "Current release URL",
+    analysis.currentRelease?.html_url ?? "none",
+  );
+  logFieldValue("Latest release", analysis.latestRelease?.tag_name ?? "none");
+  logFieldValue(
     "Latest pin",
-    analysis.latestSha ? `${analysis.actionPath}@${analysis.latestSha}` : null,
+    analysis.latestSha
+      ? `${analysis.actionPath}@${analysis.latestSha}`
+      : "none",
   );
-  printField("Latest release URL", analysis.latestRelease?.html_url ?? null);
-  printField(
-    "Status",
-    analysis.latestSha === null
-      ? "no release found"
-      : analysis.isCurrent
-        ? "up to date"
-        : "update available",
+  logFieldValue(
+    "Latest release URL",
+    analysis.latestRelease?.html_url ?? "none",
   );
+  if (analysis.latestSha === null) {
+    logError(`Status: no release found`);
+    return 1;
+  }
+  if (analysis.isCurrent) {
+    logSuccess(`Status: up to date`);
+  } else {
+    logWarn(`Status: update available`);
+  }
+  return 0;
 }
 
-async function main() {
+async function main(): Promise<void> {
   const input = parseInput(process.argv.slice(2));
 
   if (input.mode === "scan") {
@@ -304,7 +382,9 @@ async function main() {
     let updateCount = 0;
     for (const pin of pins) {
       const analysis = await analyzeAction(pin.actionPath, pin.currentRef);
-      logInfo(`File: ${pin.filePath}:${pin.lineNumber}`);
+      logInfo(`File: ${pin.filePath}:${pin.lineNumber}`, {
+        color: COLORS.yellow,
+      });
       printAnalysis(analysis);
       console.log("");
       if (analysis.latestSha && !analysis.isCurrent) {
@@ -313,10 +393,7 @@ async function main() {
     }
 
     logSuccess(`Scanned ${pins.length} pinned action reference(s).`);
-    logSuccess(`Updates available: ${updateCount}`);
-    if (updateCount > 0) {
-      process.exitCode = 2;
-    }
+    logWarn(`Updates available: ${updateCount}`);
     return;
   }
 

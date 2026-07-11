@@ -18,11 +18,14 @@
   "files": [
     "dist/src",
     "!dist/test",
-    "scripts",
+    "scripts/dist",
     "LICENSE",
     "README.md"
   ],
   "type": "module",
+  "bin": {
+    "apt-fast": "./scripts/dist/apt-fast.sh"
+  },
   "main": "dist/src/index.js",
   "types": "dist/src/types.d.ts",
   "exports": {
@@ -47,6 +50,7 @@
     "check:latest-action-pins": "node --experimental-strip-types ./scripts/ops/check_latest_action_pin.mts --scan",
     "check:configs": "node --experimental-strip-types ./scripts/ops/check_configs.mts",
     "check": "npm run check:latest-action-pins && npm run check:configs",
+    "gh:auth": "./scripts/dev/gh_auth.sh",
     "setup:dev": "node --experimental-strip-types ./scripts/dev/setup_devenv.mts",
     "repo:settings:download": "node --experimental-strip-types ./scripts/dev/repo_settings_sync.mts download",
     "repo:settings:upload": "node --experimental-strip-types ./scripts/dev/repo_settings_sync.mts upload",
@@ -54,7 +58,8 @@
     "release": "semantic-release",
     "release:dry-run": "semantic-release --dry-run",
     "lint": "eslint src test --ext .ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck:scripts",
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run --exclude test/ubuntu.integration.test.ts --exclude test/ubuntu.mutating.integration.test.ts --coverage",
     "test:integration": "vitest run --coverage test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
@@ -74,7 +79,7 @@
     "@semantic-release/github": "^11.0.6",
     "@semantic-release/npm": "^13.1.5",
     "@semantic-release/release-notes-generator": "^14.1.1",
-    "@types/node": "^24.1.0",
+    "@types/node": "^24.13.3",
     "@typescript-eslint/eslint-plugin": "^8.62.1",
     "@typescript-eslint/parser": "^8.62.1",
     "@vitest/coverage-v8": "^4.1.9",

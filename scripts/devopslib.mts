@@ -7,7 +7,12 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
-import { execFileSync, spawnSync } from "node:child_process";
+import {
+  execFileSync,
+  spawnSync,
+  type ExecFileSyncOptions,
+  type SpawnSyncOptions,
+} from "node:child_process";
 import path from "node:path";
 import process from "node:process";
 import readline from "node:readline/promises";
@@ -16,7 +21,9 @@ import { fileURLToPath } from "node:url";
 export { fileURLToPath, path, process };
 
 export class Paths {
-  constructor(importMetaUrl) {
+  importMetaUrl: string;
+
+  constructor(importMetaUrl: string) {
     this.importMetaUrl = importMetaUrl;
   }
 
@@ -48,32 +55,60 @@ export const VSCODE_SETTINGS_DEFAULTS = {
 
 export const CURRENT_NODE_VERSION = "24";
 
-export function usage(scriptPath, params) {
+export function usage(scriptPath: string, params: string) {
   return `usage: ${path.basename(scriptPath)} ${params}`;
 }
 
-export function fail(message, exitCode = 1) {
-  logError(message);
+export const COLORS = {
+  reset: "\x1b[0m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  cyan: "\x1b[36m",
+  white: "\x1b[37m",
+} as const;
+
+export type COLOR = (typeof COLORS)[keyof typeof COLORS];
+
+export type LogParams = {
+  color?: COLOR;
+  indent?: number;
+};
+
+export function fail(message: string, exitCode = 1, params: LogParams = {}) {
+  logError(message, params);
   process.exit(exitCode);
 }
 
-export function logInfo(message) {
-  console.log(`ℹ️  ${message}`);
+export function log(message: string, params: LogParams = {}) {
+  console.log(
+    `${" ".repeat(params.indent ?? 0)}${params.color ?? ""}${message}${COLORS.reset}`,
+  );
 }
 
-export function logSuccess(message) {
-  console.log(`✅ ${message}`);
+export function logInfo(message: string, params: LogParams = {}) {
+  log(`ℹ️  ${message}`, params);
 }
 
-export function logWarn(message) {
-  console.log(`⚠️  ${message}`);
+export function logSuccess(message: string, params: LogParams = {}) {
+  log(`✅ ${message}`, params);
 }
 
-export function logError(message) {
-  console.error(`❌ ${message}`);
+export function logWarn(message: string, params: LogParams = {}) {
+  log(`⚠️  ${message}`, params);
 }
 
-export function assertNonEmpty(value, message, usageMessage) {
+export function logError(message: string, params: LogParams = {}) {
+  log(`❌ ${message}`, params);
+}
+
+export function assertNonEmpty(
+  value: string,
+  message: string,
+  usageMessage?: string,
+) {
   if (!value || value.trim().length === 0) {
     if (usageMessage) {
       console.error(usageMessage);
@@ -82,8 +117,8 @@ export function assertNonEmpty(value, message, usageMessage) {
   }
 }
 
-export function commandExists(command) {
-  const isExecutable = (candidatePath) => {
+export function commandExists(command: string) {
+  const isExecutable = (candidatePath: string) => {
     try {
       accessSync(candidatePath, constants.X_OK);
       return true;
@@ -98,25 +133,27 @@ export function commandExists(command) {
 
   const pathValue = process.env.PATH ?? "";
   const dirs = pathValue.split(path.delimiter).filter(Boolean);
-  return dirs.some((dirPath) => isExecutable(path.join(dirPath, command)));
+  return dirs.some((dirPath: string) =>
+    isExecutable(path.join(dirPath, command)),
+  );
 }
 
-export function ensureDirExists(dirPath) {
+export function ensureDirExists(dirPath: string) {
   mkdirSync(dirPath, { recursive: true });
 }
 
-export function readJsonFile(filePath) {
+export function readJsonFile(filePath: string) {
   return JSON.parse(readFileSync(filePath, "utf8"));
 }
 
-export function writeJsonFile(filePath, value) {
+export function writeJsonFile(filePath: string, value: unknown) {
   writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
-export function readNodeMajorVersion(rootDir = ROOT_DIR) {
+export function readNodeMajorVersion(rootDir = ROOT_DIR): string {
   const nodeVersionPath = path.join(rootDir, ".node_ver");
 
-  let fileText;
+  let fileText: string = "";
   try {
     fileText = readFileSync(nodeVersionPath, "utf8");
   } catch (error) {
@@ -134,7 +171,10 @@ export function readNodeMajorVersion(rootDir = ROOT_DIR) {
     fail(".node_ver must contain exactly one non-empty line.");
   }
 
-  const rawVersion = lines[0];
+  const rawVersion = lines[0] ?? "";
+  if (rawVersion.length === 0) {
+    fail(".node_ver must contain exactly one non-empty line.");
+  }
   if (!/^\d+$/.test(rawVersion)) {
     fail(
       ".node_ver must contain only the Node.js major version (e.g. 20, 24).",
@@ -144,7 +184,9 @@ export function readNodeMajorVersion(rootDir = ROOT_DIR) {
   return rawVersion;
 }
 
-function normalizeRunOptions(optionsOrQuiet) {
+function normalizeExecOptions(
+  optionsOrQuiet: boolean | ExecFileSyncOptions | undefined,
+): ExecFileSyncOptions {
   if (typeof optionsOrQuiet === "boolean") {
     return {
       cwd: ROOT_DIR,
@@ -159,13 +201,43 @@ function normalizeRunOptions(optionsOrQuiet) {
     cwd: options.cwd ?? ROOT_DIR,
     env: options.env ?? process.env,
     encoding: options.encoding ?? "utf8",
-    stdio:
-      options.stdio ?? (options.stdout || options.stderr ? "pipe" : "inherit"),
+    maxBuffer: options.maxBuffer,
+    killSignal: options.killSignal,
+    shell: options.shell,
+    uid: options.uid,
+    gid: options.gid,
+    timeout: options.timeout,
   };
 }
 
-export function run(command, args = [], optionsOrQuiet = {}) {
-  const options = normalizeRunOptions(optionsOrQuiet);
+function normalizeSpawnOptions(
+  optionsOrQuiet: boolean | SpawnSyncOptions | undefined,
+  forcePipe = false,
+): SpawnSyncOptions {
+  if (typeof optionsOrQuiet === "boolean") {
+    return {
+      cwd: ROOT_DIR,
+      env: process.env,
+      encoding: "utf8",
+      stdio: forcePipe ? "pipe" : optionsOrQuiet ? "pipe" : "inherit",
+    } satisfies SpawnSyncOptions;
+  }
+
+  const options = optionsOrQuiet ?? {};
+  return {
+    cwd: options.cwd ?? ROOT_DIR,
+    env: options.env ?? process.env,
+    encoding: options.encoding ?? "utf8",
+    stdio: forcePipe ? "pipe" : (options.stdio ?? "inherit"),
+  } satisfies SpawnSyncOptions;
+}
+
+export function run(
+  command: string,
+  args: string[] = [],
+  optionsOrQuiet: boolean | ExecFileSyncOptions | undefined = undefined,
+) {
+  const options = normalizeExecOptions(optionsOrQuiet);
   try {
     return execFileSync(command, args, options);
   } catch (error) {
@@ -176,8 +248,12 @@ export function run(command, args = [], optionsOrQuiet = {}) {
   }
 }
 
-export function tryRun(command, args = [], optionsOrQuiet = {}) {
-  const options = normalizeRunOptions(optionsOrQuiet);
+export function tryRun(
+  command: string,
+  args: string[] = [],
+  optionsOrQuiet: boolean | SpawnSyncOptions | undefined = undefined,
+) {
+  const options = normalizeSpawnOptions(optionsOrQuiet);
   const result = spawnSync(command, args, options);
 
   if (result.error) {
@@ -194,18 +270,32 @@ export function tryRun(command, args = [], optionsOrQuiet = {}) {
   };
 }
 
-export function runCaptureOutput(command, args = [], options = {}) {
-  return run(command, args, {
-    ...options,
-    stdout: "pipe",
-    stderr: "pipe",
-  }).trim();
+export function runCaptureOutput(
+  command: string,
+  args: string[] = [],
+  options: boolean | SpawnSyncOptions | undefined = undefined,
+) {
+  const normalizedOptions = normalizeSpawnOptions(options, true);
+  const result = spawnSync(command, args, normalizedOptions);
+
+  if (result.error) {
+    throw new Error(
+      `Failed to spawn '${command} ${args.join(" ")}'. ${result.error.message}`,
+    );
+  }
+  if (result.status !== 0) {
+    throw new Error(
+      `Command '${command} ${args.join(" ")}' exited with status ${result.status}:\n${String(result.stderr ?? "").trim()}`,
+    );
+  }
+
+  return String(result.stdout ?? "").trim();
 }
 
 export async function confirmPrompt(
-  message,
-  yesPattern = /^[yY]$/,
-  noPattern = /^[nN]$/,
+  message: string,
+  yesPattern: RegExp = /^[yY]$/,
+  noPattern: RegExp = /^[nN]$/,
 ) {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -213,7 +303,7 @@ export async function confirmPrompt(
   });
 
   try {
-    const getText = (pattern) =>
+    const getText = (pattern: RegExp) =>
       pattern.source
         .trim()
         .replace(/^\^/, "")
@@ -224,7 +314,7 @@ export async function confirmPrompt(
         .question(
           `${message} [${getText(yesPattern)} | ${getText(noPattern)}] `,
         )
-        .then((ans) => ans.trim().toLowerCase());
+        .then((ans: string) => ans.trim().toLowerCase());
       if (yesPattern.test(answer) || answer.trim() === "") {
         return;
       }

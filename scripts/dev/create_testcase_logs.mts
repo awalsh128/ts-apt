@@ -1,17 +1,35 @@
 #!/usr/bin/env -S node --experimental-strip-types
-// @ts-nocheck
+/// <reference types="node" />
 
-import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { spawn } from "child_process";
+import { mkdir, writeFile } from "fs/promises";
+import { dirname, resolve } from "path";
+import process from "process";
 import { ROOT_DIR, fail, logInfo, logSuccess } from "../devopslib.mts";
 
-function toLog(result) {
+type LogResult = {
+  cmdLine: string;
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+};
+
+type TestLogEntry = {
+  filepath: string;
+  execCmdLine: string;
+  preExecCmdLine?: string[];
+  postExecCmdLine?: string[];
+};
+
+function toLog(result: LogResult): string {
   return `*** CMD_LINE ${result.cmdLine}\n*** EXIT_CODE ${result.exitCode}\n*** STDOUT\n${result.stdout}*** STDERR\n${result.stderr}`;
 }
 
 /** Determine exit code: use code if available, else map signal to 137 (SIGKILL) or 143 (SIGTERM) */
-function getFinalExitCode(code, signal) {
+function getFinalExitCode(
+  code: number | null,
+  signal: NodeJS.Signals | null,
+): number {
   if (code !== null) {
     return code;
   } else if (signal === "SIGTERM") {
@@ -22,11 +40,14 @@ function getFinalExitCode(code, signal) {
   return 1; // Fallback for unknown signal
 }
 
-async function execute(cmdLine) {
-  return await new Promise((resolve, reject) => {
+async function execute(cmdLine: string): Promise<LogResult> {
+  return await new Promise<LogResult>((resolve, reject) => {
     const parts = cmdLine.trim().split(/\s+/);
-    const command = parts[0]; // "apt-get"
-    const args = parts.slice(1);
+    const [command, ...args] = parts;
+    if (!command) {
+      reject(new Error("Command line cannot be empty."));
+      return;
+    }
     const env = { ...process.env };
     if (!env.LC_ALL) {
       env.LC_ALL = "C";
@@ -52,7 +73,7 @@ async function execute(cmdLine) {
      *
      * @param fn Finalizer callback to execute once settled.
      */
-    const finalize = (fn) => {
+    const finalize = (fn: () => void) => {
       if (settled) {
         return;
       }
@@ -61,25 +82,26 @@ async function execute(cmdLine) {
     };
 
     // 1. Attach 'error' FIRST (Critical for crash safety)
-    child.on("error", (error) => {
+    child.on("error", (error: Error) => {
       finalize(() => reject(error));
     });
 
     // 2. Attach 'stdout' and 'stderr' stream listeners (Capture output)
-    child.stdout?.on("data", (chunk) => {
+    child.stdout?.on("data", (chunk: Buffer) => {
       const str = chunk.toString("utf8");
       stdout += str;
     });
-    child.stderr?.on("data", (chunk) => {
+    child.stderr?.on("data", (chunk: Buffer) => {
       const str = chunk.toString("utf8");
       stderr += str;
     });
 
     // 3. Attach 'close' last (Handles exit logic)
-    child.on("close", (code, signal) => {
+    child.on("close", (code: number | null, signal: NodeJS.Signals | null) => {
       if (stderr.includes("Permission denied")) {
-        reject(
-          new Error(`Permission denied error:
+        finalize(() =>
+          reject(
+            new Error(`Permission denied error:
           - command: ${command}
           - args: ${args.join(" ")}
           - stdout: ${stdout}
@@ -87,6 +109,7 @@ async function execute(cmdLine) {
           - code: ${code}
           - signal: ${signal}
           `),
+          ),
         );
         return;
       }
@@ -104,7 +127,11 @@ async function execute(cmdLine) {
   });
 }
 
-async function writeLogFile(baseDir, relativePath, result) {
+async function writeLogFile(
+  baseDir: string,
+  relativePath: string,
+  result: LogResult,
+): Promise<string> {
   const outputPath = resolve(baseDir, `${relativePath}.log`);
   await mkdir(dirname(outputPath), { recursive: true });
   await writeFile(outputPath, toLog(result), "utf8");
@@ -113,7 +140,7 @@ async function writeLogFile(baseDir, relativePath, result) {
 
 const PERMISSION_DENIED_EXIT_CODE = 100;
 
-async function main() {
+async function main(): Promise<void> {
   const testDataDir = resolve(ROOT_DIR, "test/data");
   let written = 0;
 
@@ -142,7 +169,7 @@ async function main() {
   logSuccess(`Wrote ${written} command execution log(s).`);
 }
 
-const testLogFiles = [
+const testLogFiles: TestLogEntry[] = [
   {
     filepath: "autoclean",
     execCmdLine:
