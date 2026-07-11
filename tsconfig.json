@@ -3,6 +3,7 @@
   "include": [
     "src/**/*.ts",
     "test/**/*.ts",
+    "scripts/**/*.mts",
     "scripts/dist/**/*.ts"
   ],
   "exclude": [
@@ -14,6 +15,7 @@
       "node",
       "vitest/globals"
     ],
+    "allowImportingTsExtensions": true,
     "noEmit": true
   }
 }

@@ -3,8 +3,16 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { defineCommand, defineOptions } from "@robingenz/zli";
+import { z } from "zod";
+import {
+  loadActionRepoData,
+  parseActionRepoSlug,
+  resolveActionRefSha,
+} from "./opslib.mts";
 import {
   COLORS,
+  createCliConfig,
   fail,
   GITHUB_API_BASE_URL,
   GITHUB_USER_AGENT,
@@ -13,13 +21,10 @@ import {
   logInfo,
   logSuccess,
   logWarn,
+  runCli,
+  runMain,
   runCaptureOutput,
-  usage,
 } from "../devopslib.mts";
-
-type ScanInput =
-  | { mode: "scan"; rootDir: string }
-  | { mode: "single"; actionPath: string; currentRef: string };
 
 type ActionPin = {
   filePath: string;
@@ -51,123 +56,10 @@ type ActionAnalysis = {
   isCurrent: boolean;
 };
 
-const usageMessage = usage(
-  process.argv[1] ?? "check_latest_action_pin.mts",
-  "<owner/repo[/path]@ref | owner/repo[/path] ref | --scan [directory]>",
-);
-
-function parseInput(argv: string[]): ScanInput {
-  const firstArg = argv[0] ?? "";
-  if (firstArg === "--scan") {
-    return {
-      mode: "scan",
-      rootDir: argv[1] ?? ".github",
-    };
-  }
-
-  if (argv.length === 1) {
-    if (firstArg.length === 0) {
-      fail(usageMessage);
-    }
-    const singleArg = firstArg;
-
-    const atIndex = singleArg.lastIndexOf("@");
-    if (atIndex <= 0 || atIndex === singleArg.length - 1) {
-      fail(usageMessage);
-    }
-
-    return {
-      mode: "single",
-      actionPath: singleArg.slice(0, atIndex),
-      currentRef: singleArg.slice(atIndex + 1),
-    };
-  }
-
-  if (argv.length === 2) {
-    const actionPath = argv[0] ?? "";
-    const currentRef = argv[1] ?? "";
-    if (actionPath.length === 0 || currentRef.length === 0) {
-      fail(usageMessage);
-    }
-
-    return {
-      mode: "single",
-      actionPath,
-      currentRef,
-    };
-  }
-
-  fail(usageMessage);
-  throw new Error("unreachable");
-}
-
-function parseRepoSlug(actionPath: string): string {
-  const parts = actionPath.split("/").filter(Boolean);
-  if (parts.length < 2) {
-    throw new Error(
-      `Action path '${actionPath}' must include at least owner/repo.`,
-    );
-  }
-
-  return `${parts[0]}/${parts[1]}`;
-}
-
 function git(args: string[]): string {
   return runCaptureOutput("git", args, {
     cwd: process.cwd(),
   });
-}
-
-function buildTagMap(repoSlug: string): Map<string, string> {
-  const remoteUrl = `https://github.com/${repoSlug}.git`;
-  const output = git(["ls-remote", "--tags", remoteUrl]);
-  const tagMap = new Map<string, string>();
-
-  for (const line of output.split("\n")) {
-    if (!line.trim()) {
-      continue;
-    }
-
-    const [sha, ref] = line.split(/\s+/);
-    const prefix = "refs/tags/";
-    if (!sha || !ref || !ref.startsWith(prefix)) {
-      continue;
-    }
-
-    const rawTag = ref.slice(prefix.length);
-    const isPeeled = rawTag.endsWith("^{}");
-    const tag = isPeeled ? rawTag.slice(0, -3) : rawTag;
-    if (isPeeled || !tagMap.has(tag)) {
-      tagMap.set(tag, sha.toLowerCase());
-    }
-  }
-
-  return tagMap;
-}
-
-function resolveRefSha(
-  repoSlug: string,
-  ref: string,
-  tagMap: Map<string, string>,
-): string {
-  const normalizedRef = ref.toLowerCase();
-  if (/^[0-9a-f]{40}$/.test(normalizedRef)) {
-    return normalizedRef;
-  }
-
-  if (tagMap.has(ref)) {
-    return tagMap.get(ref) ?? ref;
-  }
-
-  const remoteUrl = `https://github.com/${repoSlug}.git`;
-  const output = git(["ls-remote", remoteUrl, ref]);
-  const firstLine = output.split("\n")[0] ?? "";
-  const [sha] = firstLine.split(/\s+/);
-  if (!sha) {
-    throw new Error(`Unable to resolve ref '${ref}' for ${repoSlug}.`);
-  }
-
-  return sha.toLowerCase();
 }
 
 async function fetchJson(url: string): Promise<unknown | null> {
@@ -292,7 +184,7 @@ async function getRepoData(repoSlug: string): Promise<RepoData> {
   }
 
   const promise = (async (): Promise<RepoData> => {
-    const tagMap = buildTagMap(repoSlug);
+    const { tagToSha: tagMap } = loadActionRepoData(repoSlug, process.cwd());
     const [latestRelease, releases] = await Promise.all([
       getLatestRelease(repoSlug),
       getReleases(repoSlug),
@@ -308,9 +200,17 @@ async function analyzeAction(
   actionPath: string,
   currentRef: string,
 ): Promise<ActionAnalysis> {
-  const repoSlug = parseRepoSlug(actionPath);
+  const repoSlug = parseActionRepoSlug(actionPath);
   const { tagMap, latestRelease, releases } = await getRepoData(repoSlug);
-  const currentSha = resolveRefSha(repoSlug, currentRef, tagMap);
+  const currentSha = resolveActionRefSha(
+    repoSlug,
+    currentRef,
+    tagMap,
+    process.cwd(),
+  );
+  if (!currentSha) {
+    throw new Error(`Unable to resolve ref '${currentRef}' for ${repoSlug}.`);
+  }
   const currentRelease = findReleaseBySha(releases, tagMap, currentSha);
   const latestSha = latestRelease
     ? (tagMap.get(latestRelease.tag_name) ?? null)
@@ -368,44 +268,97 @@ function printAnalysis(analysis: ActionAnalysis): number {
   return 0;
 }
 
-async function main(): Promise<void> {
-  const input = parseInput(process.argv.slice(2));
+const checkLatestActionPinCommand = defineCommand({
+  description: "Check whether a GitHub Actions reference is up to date",
+  options: defineOptions(
+    z.object({
+      scan: z
+        .boolean()
+        .default(false)
+        .describe("Scan a directory for pinned GitHub Actions references"),
+    }),
+    { s: "scan" },
+  ),
+  args: z.array(z.string()).max(2),
+  action: async (options, args) => {
+    if (options.scan) {
+      if (args.length > 1) {
+        fail("--scan accepts at most one directory argument.");
+      }
 
-  if (input.mode === "scan") {
-    const rootDir = path.resolve(process.cwd(), input.rootDir);
-    const pins = findActionPins(rootDir);
-    if (pins.length === 0) {
-      logInfo(`No pinned GitHub Actions found under ${input.rootDir}.`);
+      const rootDir = path.resolve(process.cwd(), args[0] ?? ".github");
+      const pins = findActionPins(rootDir);
+      if (pins.length === 0) {
+        logInfo(`No pinned GitHub Actions found under ${rootDir}.`);
+        return;
+      }
+
+      let updateCount = 0;
+      for (const pin of pins) {
+        const analysis = await analyzeAction(pin.actionPath, pin.currentRef);
+        logInfo(`File: ${pin.filePath}:${pin.lineNumber}`, {
+          color: COLORS.yellow,
+        });
+        printAnalysis(analysis);
+        console.log("");
+        if (analysis.latestSha && !analysis.isCurrent) {
+          updateCount += 1;
+        }
+      }
+
+      logSuccess(`Scanned ${pins.length} pinned action reference(s).`);
+      logWarn(`Updates available: ${updateCount}`);
       return;
     }
 
-    let updateCount = 0;
-    for (const pin of pins) {
-      const analysis = await analyzeAction(pin.actionPath, pin.currentRef);
-      logInfo(`File: ${pin.filePath}:${pin.lineNumber}`, {
-        color: COLORS.yellow,
-      });
-      printAnalysis(analysis);
-      console.log("");
-      if (analysis.latestSha && !analysis.isCurrent) {
-        updateCount += 1;
+    let actionPath = "";
+    let currentRef = "";
+
+    if (args.length === 1) {
+      const singleArg = args[0] ?? "";
+      const atIndex = singleArg.lastIndexOf("@");
+      if (atIndex <= 0 || atIndex === singleArg.length - 1) {
+        fail(
+          "Action reference must be provided as <owner/repo[/path]@ref> or <owner/repo[/path] ref>.",
+        );
       }
+
+      actionPath = singleArg.slice(0, atIndex);
+      currentRef = singleArg.slice(atIndex + 1);
+    } else if (args.length === 2) {
+      actionPath = args[0] ?? "";
+      currentRef = args[1] ?? "";
+      if (actionPath.length === 0 || currentRef.length === 0) {
+        fail(
+          "Action reference must be provided as <owner/repo[/path]@ref> or <owner/repo[/path] ref>.",
+        );
+      }
+    } else {
+      fail(
+        "Action reference must be provided as <owner/repo[/path]@ref> or <owner/repo[/path] ref>.",
+      );
     }
 
-    logSuccess(`Scanned ${pins.length} pinned action reference(s).`);
-    logWarn(`Updates available: ${updateCount}`);
-    return;
-  }
+    const analysis = await analyzeAction(actionPath, currentRef);
+    printAnalysis(analysis);
 
-  const analysis = await analyzeAction(input.actionPath, input.currentRef);
-  printAnalysis(analysis);
+    if (analysis.latestSha && !analysis.isCurrent) {
+      process.exitCode = 2;
+    }
+  },
+});
 
-  if (analysis.latestSha && !analysis.isCurrent) {
-    process.exitCode = 2;
-  }
+const cliConfig = createCliConfig({
+  importMetaUrl: import.meta.url,
+  description: "Check whether a GitHub Actions reference is up to date",
+  commands: {
+    run: checkLatestActionPinCommand,
+  },
+  defaultCommand: checkLatestActionPinCommand,
+});
+
+async function main(): Promise<void> {
+  await runCli(cliConfig);
 }
 
-main().catch((error) => {
-  logError(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+await runMain(main, 1);
