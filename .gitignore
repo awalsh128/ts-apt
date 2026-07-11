@@ -5,3 +5,5 @@ dist/
 docs/api/
 docs/api-md/
 node_modules/
+!scripts/dist/
+!scripts/dist/**
