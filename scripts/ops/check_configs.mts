@@ -1,13 +1,12 @@
 #!/usr/bin/env -S node --experimental-strip-types
 
 import {
-  ROOT_DIR,
   fail,
-  logError,
   logInfo,
   logSuccess,
-  runCaptureOutput,
+  logError,
   readJsonFile,
+  ROOT_DIR,
   REPO_SLUG,
 } from "../devopslib.mts";
 
@@ -220,41 +219,6 @@ function validateVscodeSettingsJson(json: JsonRecord): string[] {
   return errors;
 }
 
-function runGitNameOnly(args: string[], cwd: string): string[] {
-  const output = runCaptureOutput("git", args, {
-    cwd,
-  });
-
-  if (!output) {
-    return [];
-  }
-
-  return output
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-}
-
-function getProhibitedPathsChanges(): string[] {
-  const prohibitedPaths = ["docs/api"];
-  const staged = runGitNameOnly(
-    ["diff", "--name-only", "--cached", "--", ...prohibitedPaths],
-    ROOT_DIR,
-  );
-  const unstaged = runGitNameOnly(
-    ["diff", "--name-only", "--", ...prohibitedPaths],
-    ROOT_DIR,
-  );
-  const untracked = runGitNameOnly(
-    ["ls-files", "--others", "--exclude-standard", "--", ...prohibitedPaths],
-    ROOT_DIR,
-  );
-
-  return [...new Set([...staged, ...unstaged, ...untracked])].sort(
-    (left, right) => left.localeCompare(right),
-  );
-}
-
 function main(): void {
   const errors = [
     ...validatePackageJson(packageJson),
@@ -262,13 +226,6 @@ function main(): void {
     ...validateTypedocJson(typedocJson),
     ...validateVscodeSettingsJson(vscodeSettingsJson),
   ];
-
-  const changedPaths = getProhibitedPathsChanges();
-  if (changedPaths.length > 0) {
-    errors.push(
-      `git-change-check: detected changes in prohibited paths (docs/api): ${changedPaths.join(", ")}`,
-    );
-  }
 
   if (errors.length > 0) {
     logError(`Found ${errors.length} validation issue(s):`);

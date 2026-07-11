@@ -4,6 +4,7 @@
     "src/index.ts",
     "src/types.ts"
   ],
+  "out": "./docs/api",
   "plugin": [
     "typedoc-plugin-markdown"
   ],
@@ -16,6 +17,10 @@
       "name": "markdown",
       "path": "./docs/api-md"
     }
+  ],
+  "exclude": [
+    "scripts/**/*",
+    "test/**/*"
   ],
   "tsconfig": "tsconfig.json",
   "excludePrivate": true,

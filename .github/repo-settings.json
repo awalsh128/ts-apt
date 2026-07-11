@@ -1,7 +1,7 @@
 {
   "owner": "awalsh128",
   "repo": "ts-apt",
-  "exportedAt": "2026-07-05T21:12:45.900Z",
+  "exportedAt": "2026-07-11T21:24:37.873Z",
   "settings": {
     "name": "ts-apt",
     "description": "TypeScript library for APT and APT-fast package operations on Debian-based Linux systems.",

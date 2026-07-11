@@ -10,7 +10,9 @@ import type {
 import { AptOutputParser } from "./parser.js";
 import { validatePackageName } from "./package.js";
 import winston from "winston";
-import path from "path/win32";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** Environment overrides for non-interactive APT commands. */
 export const APT_ENV = [
@@ -63,6 +65,24 @@ interface BinaryMeta {
   defaultArgs: string[];
 }
 
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+
+function resolveBundledAptFastPath(): string {
+  const candidates = [
+    path.resolve(MODULE_DIR, "..", "scripts", "dist", "apt-fast.sh"),
+    path.resolve(MODULE_DIR, "..", "..", "scripts", "dist", "apt-fast.sh"),
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  // Keep deterministic behavior even when the script is not present at startup.
+  return candidates[0] ?? path.resolve("scripts", "dist", "apt-fast.sh");
+}
+
 export const Binary = {
   Apt: {
     name: "apt",
@@ -76,7 +96,7 @@ export const Binary = {
   },
   AptFast: {
     name: "apt-fast",
-    path: path.posix.join(__dirname, "..", "scripts", "apt-fast.sh"),
+    path: resolveBundledAptFastPath(),
     defaultArgs: ["--quiet=0", APT_FLAGS.assumeYes],
   },
   AptGet: {

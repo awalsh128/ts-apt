@@ -18,10 +18,13 @@
   "files": [
     "dist/src",
     "!dist/test",
-    "scripts",
+    "scripts/dist",
     "LICENSE",
     "README.md"
   ],
+  "bin": {
+    "apt-fast": "./scripts/dist/apt-fast.sh"
+  },
   "type": "module",
   "main": "dist/src/index.js",
   "types": "dist/src/types.d.ts",
@@ -41,24 +44,32 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "runall": "node ./node_modules/npm-run-all/bin/npm-run-all/index.js",
+    "build:lib": "tsc -p tsconfig.build.json",
+    "build:scripts": "tsc -p tsconfig.scripts.json --noEmit",
+    "build": "npm run -s runall -- build:lib build:scripts",
     "clean": "rm -rf dist coverage",
-    "check:latest-action-pin": "node ./dev_scripts/check_latest_action_pin.mjs",
-    "check:latest-action-pins": "node ./dev_scripts/check_latest_action_pin.mjs --scan",
-    "check:configs": "node ./dev_scripts/verify_configs.mjs",
-    "check": "npm-run-all check:*",
-    "setup:dev": "node ./dev_scripts/setup_devenv.mjs",
-    "docs:api": "typedoc",
-    "docs:api-md": "typedoc --options typedoc.json",
-    "docs": "npm-run-all docs:*",
+    "check:latest-action-pin": "node --experimental-strip-types ./scripts/ops/check_latest_action_pin.mts",
+    "check:latest-action-pins": "node --experimental-strip-types ./scripts/ops/check_latest_action_pin.mts --scan",
+    "check:pr": "node --experimental-strip-types ./scripts/ops/pr_checks.mts",
+    "check:configs": "node --experimental-strip-types ./scripts/ops/check_configs.mts",
+    "check": "npm run -s runall -- check:latest-action-pins check:pr check:configs",
+    "gh:auth": "gh auth status >/dev/null 2>&1 || gh auth login --web && gh auth setup-git",
+    "setup:dev": "node --experimental-strip-types ./scripts/dev/setup_devenv.mts",
+    "repo:settings:download": "node --experimental-strip-types ./scripts/dev/repo_settings_sync.mts download",
+    "repo:settings:upload": "node --experimental-strip-types ./scripts/dev/repo_settings_sync.mts upload",
+    "docs:api": "typedoc --options typedoc.json",
     "release": "semantic-release",
     "release:dry-run": "semantic-release --dry-run",
-    "lint": "eslint src test --ext .ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:converage": "vitest run --coverage",
-    "test:unit": "vitest run --exclude test/ubuntu.integration.test.ts --coverage",
-    "test:integration": "vitest run --coverage test/ubuntu.integration.test.ts",
-    "test": "npm-run-all test:*",
+    "lint": "eslint src test scripts --ext .ts,.mts",
+    "typecheck:lib": "tsc -p tsconfig.json --noEmit",
+    "typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit",
+    "typecheck": "npm run -s runall -- typecheck:lib typecheck:scripts",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run --exclude test/ubuntu.integration.test.ts --exclude test/ubuntu.mutating.integration.test.ts --coverage",
+    "test:integration": "vitest run --coverage test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
+    "test:integration:docker": "TS_APT_FORCE_DEVCONTAINER=true vitest run --coverage test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
+    "test": "npm run -s runall -- test:unit test:integration",
     "dev": "vitest"
   },
   "dependencies": {
@@ -67,6 +78,7 @@
   },
   "devDependencies": {
     "@devcontainers/cli": "^0.87.0",
+    "@robingenz/zli": "^0.2.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
@@ -79,12 +91,13 @@
     "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^10.6.0",
     "internet-message": "^1.0.0",
-    "npm-run-all2": "^9.0.2",
+    "npm-run-all": "^4.1.5",
     "semantic-release": "^25.0.5",
     "type-coverage": "^2.29.7",
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.12.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "zod": "^4.4.3"
   }
 }
