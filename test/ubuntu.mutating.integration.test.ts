@@ -19,7 +19,7 @@ import {
   packageName,
   removeTestPackage,
   runWithTimeout,
-} from "./ubuntu.integration.helpers.js";
+} from "./ubuntu.integration.common.js";
 
 (canRunMutatingIntegration ? describe : describe.skip)(
   "ubuntu integration for mutating operations",

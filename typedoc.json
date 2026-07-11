@@ -18,6 +18,10 @@
       "path": "./docs/api-md"
     }
   ],
+  "exclude": [
+    "scripts/**/*",
+    "test/**/*"
+  ],
   "tsconfig": "tsconfig.json",
   "excludePrivate": true,
   "excludeProtected": true,
