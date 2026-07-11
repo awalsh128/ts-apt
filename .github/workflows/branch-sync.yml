@@ -1,0 +1,48 @@
+name: Branch Sync
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  staging-ancestry:
+    name: Verify staging is ancestor of main
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Check staging ancestry
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin staging
+          STAGING_SHA=$(git rev-parse origin/staging)
+          MAIN_SHA=$(git rev-parse origin/main)
+
+          echo "main:    $MAIN_SHA"
+          echo "staging: $STAGING_SHA"
+
+          if git merge-base --is-ancestor "$STAGING_SHA" "$MAIN_SHA"; then
+            echo "✅ staging is an ancestor of main — branches are in sync."
+          else
+            echo "❌ staging is NOT an ancestor of main."
+            echo ""
+            echo "This typically means staging was merged into main using a squash or rebase"
+            echo "merge instead of a true merge commit, which breaks the ancestry link."
+            echo ""
+            echo "To fix:"
+            echo "  git fetch origin main staging"
+            echo "  git checkout main"
+            echo "  git merge --no-ff origin/staging -m 'Sync staging ancestry into main'"
+            echo "  git push"
+            exit 1
+          fi
