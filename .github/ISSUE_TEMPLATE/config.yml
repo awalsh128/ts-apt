@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Usage and API documentation
+    url: https://github.com/awalsh128/ts-apt#readme
+    about: Read package usage and API details before opening an issue.
+  - name: Contribution guide
+    url: https://github.com/awalsh128/ts-apt/blob/main/CONTRIBUTING.md
+    about: Review contribution expectations, coding standards, and workflow.
+  - name: Questions and support
+    url: https://github.com/awalsh128/ts-apt/discussions
+    about: Ask questions and get support in Discussions instead of opening a bug report.

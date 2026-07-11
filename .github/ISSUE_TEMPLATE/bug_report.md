@@ -1,38 +1,57 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
+about: Report a bug in the ts-apt npm package
+title: "[Bug]: "
+labels: bug
+assignees: ""
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Bug summary
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Provide a clear and concise description of what is wrong.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Reproduction
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+Provide exact steps and commands.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+1. Install dependencies
+2. Run the command or code snippet
+3. Observe the failure
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+```bash
+# Example
+npm install ts-apt
+node ./repro.mjs
+```
 
-**Additional context**
-Add any other context about the problem here.
+## Minimal repro code
+
+Paste a minimal script or test case, if applicable.
+
+```ts
+// minimal example
+```
+
+## Expected behavior
+
+Describe what you expected to happen.
+
+## Actual behavior
+
+Describe what actually happened. Include full error text and stack trace.
+
+```text
+Paste error output here
+```
+
+## Environment
+
+- Package version: <!-- e.g. 1.2.3 -->
+- Install method: <!-- npm | pnpm | yarn -->
+- Node.js version: <!-- output of node -v -->
+- npm version: <!-- output of npm -v -->
+- OS and version: <!-- e.g. Ubuntu 24.04 -->
+
+## Additional context
+
+Add anything else that may help, such as related packages, CI logs, or recent upgrades.

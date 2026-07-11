@@ -1,37 +1,23 @@
 #!/usr/bin/env -S node --experimental-strip-types
 
 import process from "node:process";
+import { defineCommand } from "@robingenz/zli";
+import { z } from "zod";
 import {
+  createCliConfig,
   ROOT_DIR,
-  assertNonEmpty,
   confirmPrompt,
   fail,
   logInfo,
   logSuccess,
+  runCli,
+  runMain,
   run,
   runCaptureOutput,
   tryRun,
-  usage,
 } from "../devopslib.mts";
 
 type BranchName = string;
-
-const issueId = process.argv[2] ?? "";
-const base = process.argv[3] ?? "";
-const usageMessage = usage(
-  process.argv[1] ?? "hotfix_pr.mts",
-  "<issue ID> <target branch>",
-);
-
-assertNonEmpty(issueId, "Issue ID is empty", usageMessage);
-assertNonEmpty(base, "Target branch is empty", usageMessage);
-
-if (!/^\d+$/.test(issueId)) {
-  fail("Issue ID must be an integer.");
-}
-
-const branchSuffix = `issue-${issueId}`;
-const hotfixBranch = `hotfix/${branchSuffix}`;
 
 function branchExistsOnOrigin(branch: BranchName): boolean {
   return tryRun(
@@ -42,6 +28,7 @@ function branchExistsOnOrigin(branch: BranchName): boolean {
 }
 
 function createOrCheckoutBranch(
+  issueId: string,
   checkoutBranch: BranchName,
   baseBranch: BranchName,
 ): void {
@@ -78,6 +65,7 @@ function commitIfNeeded(message: string): void {
 }
 
 function pushChanges(
+  issueId: string,
   fixType: string,
   syncBranch: BranchName,
   syncBase: BranchName,
@@ -128,20 +116,47 @@ function pushChanges(
   run("git", ["push", "origin", syncBranch], { cwd: ROOT_DIR });
 }
 
+const hotfixCommand = defineCommand({
+  description: "Create or update hotfix and sync branches for an issue",
+  args: z.tuple([
+    z.string().describe("Issue ID"),
+    z.string().describe("Target branch"),
+  ]),
+  action: async (_options, args) => {
+    const [issueId, base] = args;
+
+    if (!/^\d+$/.test(issueId)) {
+      fail("Issue ID must be an integer.");
+    }
+
+    const branchSuffix = `issue-${issueId}`;
+    const hotfixBranch = `hotfix/${branchSuffix}`;
+
+    createOrCheckoutBranch(issueId, hotfixBranch, base);
+
+    await confirmPrompt(
+      "Edit files and confirm to continue. This can always be rerun to pickup where you left off. Continue?",
+    );
+
+    pushChanges(issueId, "fix", hotfixBranch, base);
+
+    const syncBranch = `sync/staging-${branchSuffix}`;
+    createOrCheckoutBranch(issueId, syncBranch, hotfixBranch);
+    pushChanges(issueId, "sync", syncBranch, "staging");
+  },
+});
+
+const cliConfig = createCliConfig({
+  importMetaUrl: import.meta.url,
+  description: "Create or update hotfix and sync branches for an issue",
+  commands: {
+    run: hotfixCommand,
+  },
+  defaultCommand: hotfixCommand,
+});
+
 async function main(): Promise<void> {
-  createOrCheckoutBranch(hotfixBranch, base);
-
-  await confirmPrompt(
-    "Edit files and confirm to continue. This can always be rerun to pickup where you left off. Continue?",
-  );
-
-  pushChanges("fix", hotfixBranch, base);
-
-  const syncBranch = `sync/staging-${branchSuffix}`;
-  createOrCheckoutBranch(syncBranch, hotfixBranch);
-  pushChanges("sync", syncBranch, "staging");
+  await runCli(cliConfig);
 }
 
-main().catch((error) => {
-  fail(error instanceof Error ? error.message : String(error));
-});
+await runMain(main);

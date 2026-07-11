@@ -1,10 +1,6 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type {
-  CommandResult,
-  PackageInfo,
-  PackageStatus,
-} from "../src/types.js";
+import type { CommandResult, PackageInfo } from "../src/types.js";
 import { AptOutputParser } from "../src/parser.js";
 import { deserializeCommandResult, nullLogger } from "./common.js";
 
@@ -15,12 +11,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const DATA_DIR = resolve(__dirname, "data");
-
-function dumpPackages(packages: PackageInfo[]): string {
-  return JSON.stringify(packages, (_, value) =>
-    value instanceof Map ? Object.fromEntries(value) : value,
-  );
-}
 
 function jsonToPackageInfos(
   jsonArray: Record<string, unknown>[],
