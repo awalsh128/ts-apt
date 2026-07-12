@@ -1,0 +1,9 @@
+# JetBrains plugin recommendations for this repository
+# Install via Settings > Plugins
+
+NodeJS
+JavaScript and TypeScript
+GitHub
+Shell Script
+EditorConfig
+Prettier

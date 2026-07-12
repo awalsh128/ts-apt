@@ -30,6 +30,7 @@ import {
 type PrCheckOptions = {
   baseRef: string;
   headRef: string;
+  allowAdminBypass: boolean;
 };
 
 type ActionUse = {
@@ -450,11 +451,8 @@ const prChecksCommand = defineCommand({
       a: "allowAdminBypass",
     },
   ),
-  action: async (options) => {
-    const errors = await runChecks({
-      baseRef: options.baseRef,
-      headRef: options.headRef,
-    });
+  action: async (options: PrCheckOptions) => {
+    const errors = await runChecks(options);
 
     if (errors.length == 0) {
       logSuccess("Pull request checks passed.");

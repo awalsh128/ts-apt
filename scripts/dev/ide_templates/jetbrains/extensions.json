@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    "NodeJS",
+    "JavaScript and TypeScript",
+    "GitHub",
+    "Shell Script",
+    "EditorConfig",
+    "Prettier"
+  ]
+}

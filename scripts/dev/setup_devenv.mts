@@ -1,64 +1,244 @@
 #!/usr/bin/env -S node --experimental-strip-types
 
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { defineCommand, defineOptions } from "@robingenz/zli";
+import { z } from "zod";
 import {
   ROOT_DIR,
   commandExists,
+  createCliConfig,
   ensureDirExists,
   fail,
-  logError,
   logInfo,
   logSuccess,
   logWarn,
+  path,
   readNodeMajorVersion,
   readJsonFile,
+  runCli,
+  runMain,
   run,
   tryRun,
-  VSCODE_SETTINGS_DEFAULTS,
-  VSCODE_SETTINGS_RELPATH,
   writeJsonFile,
 } from "../devopslib.mts";
 
-type VscodeSettings = Record<string, unknown>;
+type IdeSettings = Record<string, unknown>;
 
 type AuditCounts = {
   critical: number;
   high: number;
 };
 
-function ensureVscodeSettingsFile(): string {
-  const vscodeDir = `${ROOT_DIR}/.vscode`;
-  const vscodeSettingsPath = `${ROOT_DIR}/${VSCODE_SETTINGS_RELPATH}`;
+type SupportedIde = "vscode" | "cursor" | "windsurf" | "zed" | "jetbrains";
 
-  ensureDirExists(vscodeDir);
+type SetupDevEnvOptions = {
+  ide: SupportedIde;
+};
 
-  if (!existsSync(vscodeSettingsPath)) {
-    writeJsonFile(vscodeSettingsPath, VSCODE_SETTINGS_DEFAULTS);
-    logWarn(`Created missing ${vscodeSettingsPath}`);
+const SUPPORTED_IDES: SupportedIde[] = [
+  "vscode",
+  "cursor",
+  "windsurf",
+  "zed",
+  "jetbrains",
+];
+
+const IDE_TARGET_DIRS: Record<SupportedIde, string> = {
+  vscode: ".vscode",
+  cursor: ".cursor",
+  windsurf: ".windsurf",
+  zed: ".zed",
+  jetbrains: ".idea",
+};
+
+const IDE_SETTINGS_RELPATHS: Partial<Record<SupportedIde, string>> = {
+  vscode: ".vscode/settings.json",
+  cursor: ".cursor/settings.json",
+  windsurf: ".windsurf/settings.json",
+  zed: ".zed/settings.json",
+};
+
+const AGENTS_MD_SETTING_KEY = "chat.useAgentsMdFile";
+const AGENTS_MD_SUPPORTED_IDES: ReadonlySet<SupportedIde> = new Set([
+  "vscode",
+  "cursor",
+  "windsurf",
+]);
+
+type JsonPrimitive = null | boolean | number | string;
+interface JsonArray extends Array<JsonLike> {}
+interface JsonRecord {
+  [key: string]: JsonLike;
+}
+type JsonLike = JsonPrimitive | JsonArray | JsonRecord;
+
+function isJsonRecord(value: unknown): value is JsonRecord {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function mergeJsonArrays(
+  existing: JsonLike[],
+  template: JsonLike[],
+): JsonLike[] {
+  const merged = [...existing];
+  const seen = new Set(existing.map((item) => JSON.stringify(item)));
+
+  for (const item of template) {
+    const key = JSON.stringify(item);
+    if (!seen.has(key)) {
+      merged.push(item);
+      seen.add(key);
+    }
   }
 
-  return vscodeSettingsPath;
+  return merged;
 }
 
-function loadVscodeSettingsJson(): {
-  vscodeSettingsPath: string;
-  vscodeSettingsJson: VscodeSettings;
-} {
-  const vscodeSettingsPath = ensureVscodeSettingsFile();
-  return {
-    vscodeSettingsPath,
-    vscodeSettingsJson: readJsonFile(vscodeSettingsPath),
-  };
+function mergeJsonWithTemplate(
+  existing: JsonLike,
+  template: JsonLike,
+): JsonLike {
+  if (Array.isArray(existing) && Array.isArray(template)) {
+    return mergeJsonArrays(existing, template);
+  }
+
+  if (isJsonRecord(existing) && isJsonRecord(template)) {
+    const merged: JsonRecord = { ...existing };
+
+    for (const [key, templateValue] of Object.entries(template)) {
+      const existingValue = merged[key];
+      if (existingValue === undefined) {
+        merged[key] = templateValue;
+        continue;
+      }
+
+      merged[key] = mergeJsonWithTemplate(existingValue, templateValue);
+    }
+
+    return merged;
+  }
+
+  // For scalar/shape mismatches, template wins.
+  return template;
 }
 
-function ensureAgentsFilesUsed(): void {
-  const { vscodeSettingsPath, vscodeSettingsJson } = loadVscodeSettingsJson();
+function applyIdeTemplate(ide: SupportedIde): void {
+  const templateDir = path.join(
+    ROOT_DIR,
+    "scripts",
+    "dev",
+    "ide_templates",
+    ide,
+  );
+  if (!existsSync(templateDir)) {
+    fail(`IDE template directory does not exist: ${templateDir}`);
+  }
 
-  if (!vscodeSettingsJson["chat.useAgentsMdFile"]) {
-    vscodeSettingsJson["chat.useAgentsMdFile"] = true;
-    writeJsonFile(vscodeSettingsPath, vscodeSettingsJson);
+  const targetDir = path.join(ROOT_DIR, IDE_TARGET_DIRS[ide]);
+  ensureDirExists(targetDir);
+
+  const entries = readdirSync(templateDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isFile()) {
+      continue;
+    }
+
+    const templatePath = path.join(templateDir, entry.name);
+    const targetPath = path.join(targetDir, entry.name);
+
+    if (!entry.name.endsWith(".json")) {
+      if (!existsSync(targetPath)) {
+        writeFileSync(targetPath, readFileSync(templatePath, "utf8"), "utf8");
+        logInfo(`Applied template file ${targetPath}`);
+      } else {
+        logInfo(`Skipped existing non-JSON file ${targetPath}`);
+      }
+      continue;
+    }
+
+    const templateJson = readJsonFile(templatePath) as JsonLike;
+    if (!existsSync(targetPath)) {
+      writeJsonFile(targetPath, templateJson);
+      logInfo(`Applied JSON template ${targetPath}`);
+      continue;
+    }
+
+    const existingJson = readJsonFile(targetPath) as JsonLike;
+    const mergedJson = mergeJsonWithTemplate(existingJson, templateJson);
+    writeJsonFile(targetPath, mergedJson);
+    logInfo(`Merged JSON template into ${targetPath}`);
+  }
+}
+
+function getIdeSettingsPath(ide: SupportedIde): string | null {
+  const relPath = IDE_SETTINGS_RELPATHS[ide];
+  if (!relPath) {
+    return null;
+  }
+  return path.join(ROOT_DIR, relPath);
+}
+
+function ensureIdeSettingsFile(ide: SupportedIde): string | null {
+  const ideSettingsPath = getIdeSettingsPath(ide);
+  if (!ideSettingsPath) {
+    return null;
+  }
+
+  const ideSettingsDir = path.dirname(ideSettingsPath);
+  ensureDirExists(ideSettingsDir);
+
+  const templateSettingsPath = path.join(
+    ROOT_DIR,
+    "scripts",
+    "dev",
+    "ide_templates",
+    ide,
+    "settings.json",
+  );
+
+  if (!existsSync(templateSettingsPath)) {
+    if (!existsSync(ideSettingsPath)) {
+      writeJsonFile(ideSettingsPath, {});
+      logWarn(`Created missing ${ideSettingsPath}`);
+    }
+    return ideSettingsPath;
+  }
+
+  const templateSettingsJson = readJsonFile(templateSettingsPath) as JsonLike;
+
+  if (!existsSync(ideSettingsPath)) {
+    writeJsonFile(ideSettingsPath, templateSettingsJson);
+    logWarn(`Created missing ${ideSettingsPath}`);
+    return ideSettingsPath;
+  }
+
+  const existingSettingsJson = readJsonFile(ideSettingsPath) as JsonLike;
+  const mergedSettingsJson = mergeJsonWithTemplate(
+    existingSettingsJson,
+    templateSettingsJson,
+  );
+  writeJsonFile(ideSettingsPath, mergedSettingsJson);
+
+  return ideSettingsPath;
+}
+
+function ensureAgentsFilesUsed(ide: SupportedIde): void {
+  if (!AGENTS_MD_SUPPORTED_IDES.has(ide)) {
+    return;
+  }
+
+  const ideSettingsPath = getIdeSettingsPath(ide);
+  if (!ideSettingsPath || !existsSync(ideSettingsPath)) {
+    return;
+  }
+
+  const ideSettingsJson = readJsonFile(ideSettingsPath) as IdeSettings;
+
+  if (!ideSettingsJson[AGENTS_MD_SETTING_KEY]) {
+    ideSettingsJson[AGENTS_MD_SETTING_KEY] = true;
+    writeJsonFile(ideSettingsPath, ideSettingsJson);
     logWarn(
-      `Updated ${vscodeSettingsPath} to enable chat.useAgentsMdFile for AGENTS.md support.`,
+      `Updated ${ideSettingsPath} to enable chat.useAgentsMdFile for AGENTS.md support.`,
     );
   }
 }
@@ -219,12 +399,18 @@ function ensureAuditRemediation(): void {
   logSuccess("High/critical npm vulnerabilities remediated.");
 }
 
-async function main(): Promise<void> {
+async function main(options: SetupDevEnvOptions): Promise<void> {
   const nodeVersionMajor = readNodeMajorVersion();
-  logInfo("Ensuring .vscode settings file present...");
-  ensureVscodeSettingsFile();
-  logInfo("Ensuring chat.useAgentsMdFile is enabled...");
-  ensureAgentsFilesUsed();
+
+  logInfo(`Applying IDE template for '${options.ide}'...`);
+  applyIdeTemplate(options.ide);
+
+  logInfo(`Ensuring ${options.ide} settings file is present and aligned...`);
+  ensureIdeSettingsFile(options.ide);
+  if (AGENTS_MD_SUPPORTED_IDES.has(options.ide)) {
+    logInfo(`Ensuring chat.useAgentsMdFile is enabled for ${options.ide}...`);
+    ensureAgentsFilesUsed(options.ide);
+  }
   logInfo("Ensuring required APT dependencies are installed...");
   ensureAptDependencies();
   logInfo("Checking optional Docker support...");
@@ -237,9 +423,33 @@ async function main(): Promise<void> {
   logSuccess("Development environment setup complete.");
 }
 
-try {
-  await main();
-} catch (error) {
-  logError(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-}
+const setupDevenvCommand = defineCommand({
+  description: "Set up local development environment",
+  options: defineOptions(
+    z.object({
+      ide: z
+        .enum(SUPPORTED_IDES as [SupportedIde, ...SupportedIde[]])
+        .default("vscode")
+        .describe("IDE template to apply before dependency setup"),
+    }),
+    {
+      i: "ide",
+    },
+  ),
+  action: async (options: SetupDevEnvOptions) => {
+    await main(options);
+  },
+});
+
+const cliConfig = createCliConfig({
+  importMetaUrl: import.meta.url,
+  description: "Set up local development environment",
+  commands: {
+    run: setupDevenvCommand,
+  },
+  defaultCommand: setupDevenvCommand,
+});
+
+await runMain(async () => {
+  await runCli(cliConfig);
+});

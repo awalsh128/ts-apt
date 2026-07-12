@@ -11,6 +11,10 @@
     "apt-fast",
     "helper"
   ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/awalsh128"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/awalsh128/ts-apt.git"
