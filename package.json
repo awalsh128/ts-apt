@@ -73,7 +73,7 @@
     "test:unit": "vitest run --exclude test/ubuntu.integration.test.ts --exclude test/ubuntu.mutating.integration.test.ts --coverage",
     "test:integration": "vitest run test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
     "test:integration:docker": "TS_APT_FORCE_DEVCONTAINER=true vitest run test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
-    "test": "npm run -s runall -- --sequential test:unit test:integration",
+    "test": "npm run -s test:unit && npm run -s test:integration",
     "dev": "vitest"
   },
   "dependencies": {
