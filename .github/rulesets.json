@@ -1,0 +1,12 @@
+{
+  "owner": "awalsh128",
+  "repo": "ts-apt",
+  "exportedAt": "2026-07-13T00:00:00.000Z",
+  "appsBypassActors": [
+    {
+      "appSlug": "release-bot",
+      "bypassMode": "always"
+    }
+  ],
+  "rulesets": []
+}

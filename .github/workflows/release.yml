@@ -30,6 +30,44 @@ jobs:
         with:
           client-id: ${{ vars.RELEASE_BOT_APP_ID }}
           private-key: ${{ secrets.RELEASE_BOT_PK }}
+          permission-administration: write
+
+      - name: Configure ruleset bypass for release-bot
+        run: |
+          set -euo pipefail
+          installation_id="${{ steps.bot-token.outputs.installation-id }}"
+          repo="${{ github.repository }}"
+
+          ruleset_ids=$(gh api "repos/${repo}/rulesets" --jq '.[].id' 2>/dev/null || true)
+          if [ -z "$ruleset_ids" ]; then
+            echo "No rulesets found; nothing to configure."
+            exit 0
+          fi
+
+          for ruleset_id in $ruleset_ids; do
+            bypass_actors=$(gh api "repos/${repo}/rulesets/${ruleset_id}" \
+              --jq '.bypass_actors // []')
+
+            already=$(echo "$bypass_actors" | jq \
+              --argjson id "$installation_id" \
+              '[.[] | select(.actor_id == $id and .actor_type == "Integration")] | length > 0')
+
+            if [ "$already" = "true" ]; then
+              echo "Ruleset ${ruleset_id}: release-bot is already a bypass actor."
+              continue
+            fi
+
+            updated=$(echo "$bypass_actors" | jq \
+              --argjson id "$installation_id" \
+              '. + [{"actor_id": $id, "actor_type": "Integration", "bypass_mode": "always"}]')
+
+            echo "{\"bypass_actors\": $updated}" \
+              | gh api -X PATCH "repos/${repo}/rulesets/${ruleset_id}" --input -
+
+            echo "Ruleset ${ruleset_id}: release-bot added as bypass actor."
+          done
+        env:
+          GH_TOKEN: ${{ steps.bot-token.outputs.token }}
 
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
