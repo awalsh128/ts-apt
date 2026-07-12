@@ -1,7 +1,7 @@
 {
   "owner": "awalsh128",
   "repo": "ts-apt",
-  "exportedAt": "2026-07-11T21:24:37.873Z",
+  "exportedAt": "2026-07-12T11:37:12.587Z",
   "settings": {
     "name": "ts-apt",
     "description": "TypeScript library for APT and APT-fast package operations on Debian-based Linux systems.",
@@ -11,11 +11,11 @@
     "has_projects": true,
     "has_wiki": true,
     "is_template": false,
-    "allow_squash_merge": true,
+    "allow_squash_merge": false,
     "allow_merge_commit": true,
-    "allow_rebase_merge": true,
+    "allow_rebase_merge": false,
     "allow_auto_merge": true,
-    "delete_branch_on_merge": false,
+    "delete_branch_on_merge": true,
     "allow_update_branch": true,
     "web_commit_signoff_required": false,
     "squash_merge_commit_title": "COMMIT_OR_PR_TITLE",
