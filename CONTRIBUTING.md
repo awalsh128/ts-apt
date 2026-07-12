@@ -16,13 +16,23 @@ Primary CI is defined in [.github/workflows/ci.yml](.github/workflows/ci.yml).
   - Security gates: CodeQL analysis and dependency audit (`npm audit --audit-level=high --omit=dev`).
   - Coverage: Codecov upload from `coverage/lcov.info`.
 
-### Pull Request Docs Sync
+### Pull Request Branch Policy
 
-PR docs sync is defined in [.github/workflows/pr.yml](.github/workflows/pr.yml).
+Pull request policy checks are defined in [.github/workflows/pr.yml](.github/workflows/pr.yml).
 
-- Triggered on PR open/update/reopen/ready-for-review events.
-- Regenerates docs and commits only `docs/` changes.
-- Pushes doc updates to same-repository PR branches (fork PRs are skipped).
+- Triggered on PR open/update/reopen/edited events.
+- Runs `npm run check:pr` to enforce branch policy and pinned action ref validation.
+- Pull requests into `main` must come from `staging`.
+- Treat short-lived task branches as disposable and prefer deleting them after merge.
+
+### Branch Sync and Merge Policy
+
+Branch ancestry enforcement is defined in [.github/workflows/branch-sync.yml](.github/workflows/branch-sync.yml).
+
+- Triggered on pushes to `main`, on a daily schedule, and manually via `workflow_dispatch`.
+- Verifies that `staging` remains an ancestor of `main`.
+- `staging` into `main` should preserve ancestry with a merge commit; squash and rebase merges break this guardrail.
+- If `staging` ancestry is broken, repair it immediately with a merge-commit-based sync before taking further releases.
 
 ### Release and Publishing
 
@@ -80,3 +90,4 @@ Integration test suite is [test/ubuntu.integration.test.ts](test/ubuntu.integrat
 - Keep `package-lock.json` committed and synchronized with dependency changes.
 - Prefer updating workflow action SHAs with care and validate in CI.
 - Prefer full commit SHA pinning for all third-party GitHub Actions.
+- Repository settings are tracked in [.github/repo-settings.json](.github/repo-settings.json) and can be applied with `npm run repo:settings:upload`.

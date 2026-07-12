@@ -344,7 +344,6 @@ function validateModifiedActionRefs(
 const PROHIBITED_PATHS = [
   "docs/api",
   "docs/api-md",
-  ".github/repo-settings.json",
 ];
 
 function getProhibitedPathsChanges(): string[] {
