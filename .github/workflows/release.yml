@@ -56,6 +56,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Generate API docs
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: npm run docs:api
+
       - name: Setup Pages
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
