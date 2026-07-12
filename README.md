@@ -5,10 +5,10 @@
 [![CI status](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml/badge.svg)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/awalsh128/ts-apt/branch/main/graph/badge.svg)](https://codecov.io/gh/awalsh128/ts-apt)
 
-TypeScript library for APT package operations on Debian-based Linux systems. It supports both standard APT binaries and the apt-fast wrapper.
+TypeScript library for APT package operations on Debian-based Linux systems. It supports both standard APT binaries and the [apt-fast](https://github.com/ilikenwf/apt-fast) bundled wrapper.
 
 > [!NOTE]
-> If you find this project useful, please consider supporting ongoing maintenance: [Buy Me a Coffee](http://buymeacoffee.com/awalsh128)
+> If you find this project useful, please consider supporting it as a sponsor and show some ❤️ for open source maintainers.
 
 ## Features
 
@@ -20,7 +20,7 @@ TypeScript library for APT package operations on Debian-based Linux systems. It 
 - Use apt-fast when available, with automatic fallback to apt-get
 - Structured command execution via pluggable command runners
 - Typed error model for validation, availability, and command failures
-- Safe locking support for mutating operations
+- Safe locking support for mutating operations and parallelism for read-only operations
 
 ## Runtime Requirements
 
@@ -67,8 +67,8 @@ Generated docs are written to [docs/api](docs/api).
 
 ## Credits
 
-- [ilikenwf/apt-fast](https://github.com/ilikenwf/apt-fast)
-- [moll/js-internet-message](https://github.com/moll/js-internet-message)
+- [ilikenwf/apt-fast](https://github.com/ilikenwf/apt-fast) - Optimized fast APT downloads.
+- [moll/js-internet-message](https://github.com/moll/js-internet-message) - RFC compliant parsing of some apt output to avoid brittle string parsing.
 
 ## Maintainer Notes
 
