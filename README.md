@@ -8,7 +8,7 @@
 TypeScript library for APT package operations on Debian-based Linux systems. It supports both standard APT binaries and the [apt-fast](https://github.com/ilikenwf/apt-fast) bundled wrapper.
 
 > [!NOTE]
-> If you find this project useful, please consider supporting it as a sponsor and show some ❤️ for open source maintainers.
+> If you find this project useful, please consider supporting it [as a sponsor and show some ❤️ for open source maintainers](https://github.com/sponsors/awalsh128).
 
 ## Features
 
