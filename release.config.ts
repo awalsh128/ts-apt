@@ -48,7 +48,7 @@ export default {
     ],
 
     // Creates a GitHub Release with the generated notes and uploads assets.
-    // 'successComment: true' enables automatic comments on resolved issues/PRs.
-    ["@semantic-release/github", { successComment: true }],
+    // Default behavior posts automatic comments on resolved issues/PRs.
+    "@semantic-release/github",
   ],
 };
