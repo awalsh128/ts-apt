@@ -57,6 +57,7 @@ npm run -s test:unit
 
 - [ ] Required status checks pass.
 - [ ] Required reviews are complete.
+- [ ] Merge target follows branch policy: feature branches merge to `staging`, and `main` only accepts merges from `staging`.
 - [ ] Branch is up to date with base branch requirements.
 - [ ] Workflow/action updates keep pinned commit SHAs.
 
