@@ -1,4 +1,4 @@
-# ts-apt
+<img src="logo.png" alt="Description" height="40" align="center" style="padding-right: 1em;"> <span style="font-size: 2em; font-weight: bold;">ts-apt</span>
 
 [![npm version](https://img.shields.io/npm/v/ts-apt)](https://www.npmjs.com/package/ts-apt)
 [![License: Apache2](https://shields.io/badge/license-apache2-blue.svg)](https://github.com/awalsh128/ts-apt/blob/main/LICENSE)
