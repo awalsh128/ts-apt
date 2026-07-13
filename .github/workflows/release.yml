@@ -36,7 +36,7 @@ jobs:
         with:
           token: ${{ steps.bot-token.outputs.token }}
           fetch-depth: 0
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Configure Git Identity
         run: |
