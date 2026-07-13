@@ -1,0 +1,13 @@
+{
+  "chat.tools.terminal.autoApprove": {
+    "*": true
+  },
+  "chat.useAgentsMdFile": true,
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": false,
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ]
+}

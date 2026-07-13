@@ -48,8 +48,10 @@ For every code update:
 
 - Run tests, fix failures, and iterate.
 - Avoid infinite loops and explain the reason when stopping.
-- Use `dev_scripts/` only for development tooling and CI/CD commands.
-- Use `scripts/` for release/packaging.
+- Use `scripts/dev/` for development tooling.
+- Use `scripts/ops/` for repository checks and release-support automation.
+- Use `scripts/dist/` for shell assets bundled with the npm package.
+- Use `scripts/` as the repo-owned automation root.
 - Warn about breaking changes that affect backward compatibility and confirm before proceeding.
 
 ### Refinement Prompts
@@ -196,7 +198,7 @@ The `Role & Behavior` section explicitly instructs the agent to **push back**and
 
 ### 2. Directory Separation
 
-The configuration enforces a strict separation between `dev_scripts/` (local tooling) and `scripts/` (release/packaging). This aligns with your requirement to isolate development commands from production release logic.
+The configuration enforces a strict separation between `scripts/dev/` (local tooling), `scripts/ops/` (checks and release support), and `scripts/dist/` (bundled npm shell assets). This aligns with your requirement to isolate development commands from packaged release logic.
 
 ### 3. Testing Rigor
 
@@ -208,4 +210,30 @@ The `Testing Strategy` section encodes your specific constraints:
 
 ### 4. CI/CD Abstraction
 
-The file mandates abstracting common logic from GitHub Actions YAML into reusable components, directly addressing your requirement to follow best practices and reduce duplication.
+The file mandates abstracting common logic from GitHub Actions YAML into reusable components, directly addressing your requirement to follow best practices and reduce duplication. Release-support automation should stay in `scripts/ops/` and reusable local tooling should stay in `scripts/dev/`.
+
+## Latest AGENTS.md Refresh
+
+### Prompt
+
+```text
+refine AGENTS_META.md to follow the previous format of encasing literal prompts and responses in code blocks as well as the header 2 being the summary title like in previous entries. also update AGENTS.md to reflect the latest scripts layout and behavior (no more dev_scripts and scripts now contains ops, dev tooling and a dist folder that contains scripts to bundle with with the NPM)
+```
+
+### Response
+
+```text
+I’m going to keep AGENTS_META.md consistent with the earlier refinement entries by using a summary heading plus fenced prompt and response blocks, and I’ll update AGENTS.md so its path guidance matches the current scripts layout: scripts/dev, scripts/ops, and scripts/dist.
+
+Updated:
+
+- AGENTS.md
+- AGENTS_META.md
+
+What changed:
+
+- Replaced stale `dev_scripts/` references with the current `scripts/dev/`, `scripts/ops/`, and `scripts/dist/` layout.
+- Documented that `scripts/dist/` contains shell assets bundled with the npm package and referenced by package metadata.
+- Kept the agent guidance focused on minimum necessary context, explicit failure, and narrow validation.
+- Re-formatted the AGENTS_META entry to match the older summary/title plus fenced prompt/response style.
+```

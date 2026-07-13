@@ -5,8 +5,6 @@ on:
   schedule:
     - cron: "30 5 * * *"
   workflow_dispatch:
-  release:
-    types: [published]
 
 jobs:
   setup-and-cache:
@@ -83,7 +81,7 @@ jobs:
 
       - name: Test
         shell: bash
-        run: npm run test
+        run: npm test
 
       - name: Type Coverage
         shell: bash

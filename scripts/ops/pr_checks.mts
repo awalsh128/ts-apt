@@ -30,6 +30,7 @@ import {
 type PrCheckOptions = {
   baseRef: string;
   headRef: string;
+  allowAdminBypass: boolean;
 };
 
 type ActionUse = {
@@ -343,7 +344,6 @@ function validateModifiedActionRefs(
 const PROHIBITED_PATHS = [
   "docs/api",
   "docs/api-md",
-  ".github/repo-settings.json",
 ];
 
 function getProhibitedPathsChanges(): string[] {
@@ -425,6 +425,19 @@ async function runChecks(options: PrCheckOptions): Promise<string[]> {
   return errors;
 }
 
+async function shouldAllowAdminBypass(
+  options: PrCheckOptions,
+): Promise<boolean> {
+  if (!options.allowAdminBypass) {
+    return false;
+  }
+
+  return isAdminActor(
+    process.env.GITHUB_ACTOR ?? "",
+    process.env.GITHUB_REPOSITORY ?? "",
+  );
+}
+
 const prChecksCommand = defineCommand({
   description: "Run pull request checks",
   options: defineOptions(
@@ -450,11 +463,9 @@ const prChecksCommand = defineCommand({
       a: "allowAdminBypass",
     },
   ),
-  action: async (options) => {
-    const errors = await runChecks({
-      baseRef: options.baseRef,
-      headRef: options.headRef,
-    });
+  action: async (options: PrCheckOptions) => {
+    const errors = await runChecks(options);
+    const allowAdminBypass = await shouldAllowAdminBypass(options);
 
     if (errors.length == 0) {
       logSuccess("Pull request checks passed.");
@@ -464,9 +475,9 @@ const prChecksCommand = defineCommand({
     for (const error of errors) {
       logError(error);
     }
-    if (options.allowAdminBypass) {
+    if (allowAdminBypass) {
       logWarn(
-        "Admin bypass is allowed for this pull request. Treating as warning only. ",
+        "Admin bypass is allowed for this pull request actor. Treating as warning only.",
       );
     } else {
       fail("Pull request checks failed.");

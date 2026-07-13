@@ -8,7 +8,8 @@ This document contains maintainer-oriented notes that are intentionally separate
 
 Primary CI is defined in [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
-- Triggers: `pull_request`, nightly `schedule`, `workflow_dispatch`, and `release.published`.
+- Triggers: `pull_request`, nightly `schedule`, and `workflow_dispatch`.
+- This workflow is the merge gate for PRs; it does not publish releases.
 - Job groups by concern:
   - Setup and build artifact reuse via [.github/actions/setup/action.yml](.github/actions/setup/action.yml).
   - Static quality gates: lint and typecheck.
@@ -16,22 +17,38 @@ Primary CI is defined in [.github/workflows/ci.yml](.github/workflows/ci.yml).
   - Security gates: CodeQL analysis and dependency audit (`npm audit --audit-level=high --omit=dev`).
   - Coverage: Codecov upload from `coverage/lcov.info`.
 
-### Pull Request Docs Sync
+### Pull Request Branch Policy
 
-PR docs sync is defined in [.github/workflows/pr.yml](.github/workflows/pr.yml).
+- Branch policy is enforced by [.github/workflows/pr.yml](.github/workflows/pr.yml) and [scripts/ops/pr_checks.mts](scripts/ops/pr_checks.mts).
+- Feature branches should target `staging`.
+- `main` only accepts merges from `staging`.
+- A release-bot role has bypass permission for the `main` and `staging` branch protections.
 
-- Triggered on PR open/update/reopen/ready-for-review events.
-- Regenerates docs and commits only `docs/` changes.
-- Pushes doc updates to same-repository PR branches (fork PRs are skipped).
+Pull request policy checks are defined in [.github/workflows/pr.yml](.github/workflows/pr.yml).
+
+- Triggered on PR open/update/reopen/edited events.
+- Runs `npm run check:pr` to enforce branch policy and pinned action ref validation.
+- Pull requests into `main` must come from `staging`.
+- Treat short-lived task branches as disposable and prefer deleting them after merge.
+
+### Branch Sync and Merge Policy
+
+Branch ancestry enforcement is defined in [.github/workflows/branch-sync.yml](.github/workflows/branch-sync.yml).
+
+- Triggered on pushes to `main`, on a daily schedule, and manually via `workflow_dispatch`.
+- Verifies that `staging` remains an ancestor of `main`.
+- `staging` into `main` should preserve ancestry with a merge commit; squash and rebase merges break this guardrail.
+- If `staging` ancestry is broken, repair it immediately with a merge-commit-based sync before taking further releases.
 
 ### Release and Publishing
 
 Release automation is defined in [.github/workflows/release.yml](.github/workflows/release.yml) and uses semantic-release.
 
-- Triggers: `release.published` and `workflow_dispatch`.
-- `workflow_dispatch` supports `dry_run` for previewing behavior without publishing.
-- Tag-based release flow can sync `package.json` and `package-lock.json` version fields.
-- Publishes package releases and deploys docs to GitHub Pages when running from `main`.
+- Triggers: push to `main` or `staging`, plus `workflow_dispatch`.
+- `staging` produces prereleases on the `next` channel with `rc` suffixes.
+- `main` produces stable releases and deploys API docs to GitHub Pages.
+- semantic-release updates package metadata as part of its own prepare/commit flow.
+- The release-bot GitHub App token is used so the release job can publish, tag, and push release commits back to the branch that triggered it.
 
 Release configuration is in [release.config.ts](release.config.ts).
 
@@ -47,19 +64,17 @@ git commit -m "feat(manager): add availability check"
 git commit -m "feat!: remove deprecated API"
 ```
 
-## Development Scripts
+## Repository Scripts
 
-Development scripts are in [dev_scripts](dev_scripts).
+Repository scripts are grouped under [scripts/dev](scripts/dev) and [scripts/ops](scripts/ops).
 
-- [check_latest_action_pin.mjs](dev_scripts/check_latest_action_pin.mjs): checks whether pinned GitHub Action refs are up to date against upstream releases.
-- [check_release_tag.mjs](dev_scripts/check_release_tag.mjs): validates `RELEASE_TAG` format and consistency with `package.json` version.
-- [create_testcase_logs.mjs](dev_scripts/create_testcase_logs.mjs): regenerates command execution logs used by integration/parser fixtures.
-- [hotfix_pr.mjs](dev_scripts/hotfix_pr.mjs): automates hotfix branch creation, sync branch creation, and PR creation/update flow.
-- [lib.mjs](dev_scripts/lib.mjs): shared script utilities (logging, command wrappers, JSON helpers, repo paths, prompts).
-- [node_ver.mjs](dev_scripts/node_ver.mjs): verifies or updates Node version alignment across repo files and local Node installation.
-- [setup_devenv.mjs](dev_scripts/setup_devenv.mjs): bootstraps local developer dependencies, workspace settings, and npm audit remediation.
-- [verify_configs.mjs](dev_scripts/verify_configs.mjs): enforces repository config invariants and blocks prohibited path edits.
-- [wipe_commit_history.mjs](dev_scripts/wipe_commit_history.mjs): destructive history rewrite utility with backup branch/tag/mirror safeguards.
+- [check_latest_action_pin.mts](scripts/ops/check_latest_action_pin.mts): checks whether pinned GitHub Action refs are up to date against upstream releases.
+- [check_release_tag.mts](scripts/ops/check_release_tag.mts): validates release tag format and consistency with `package.json` version.
+- [create_testcase_logs.mts](scripts/dev/create_testcase_logs.mts): regenerates command execution logs used by integration/parser fixtures.
+- [hotfix_pr.mts](scripts/dev/hotfix_pr.mts): automates hotfix branch creation and PR creation/update flow.
+- [repo_settings_sync.mts](scripts/dev/repo_settings_sync.mts): synchronizes repository settings JSON.
+- [setup_devenv.mts](scripts/dev/setup_devenv.mts): bootstraps local developer dependencies, workspace settings, and npm audit remediation.
+- [node_ver.mts](scripts/dev/node_ver.mts): verifies or updates Node version alignment across repo files and local Node installation.
 
 ## Integration Test Notes
 
@@ -80,3 +95,6 @@ Integration test suite is [test/ubuntu.integration.test.ts](test/ubuntu.integrat
 - Keep `package-lock.json` committed and synchronized with dependency changes.
 - Prefer updating workflow action SHAs with care and validate in CI.
 - Prefer full commit SHA pinning for all third-party GitHub Actions.
+- Repository settings are tracked in [.github/repo-settings.json](.github/repo-settings.json) and can be applied with `npm run repo:settings:upload`.
+- Prefer explicit status checks and branch protections over informal merge discipline.
+- Keep release automation branch-based and semantic-release driven.
