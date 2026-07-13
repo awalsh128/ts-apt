@@ -1,6 +1,6 @@
 {
   "name": "ts-apt",
-  "version": "1.0.0",
+  "version": "0.0.0-semantically-released",
   "description": "TypeScript APT and APT-fast package management library",
   "author": "Andrew Walsh",
   "license": "Apache-2.0",
