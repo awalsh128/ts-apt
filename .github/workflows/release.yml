@@ -10,47 +10,25 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: >-
-      ${{
-        github.event_name == 'workflow_dispatch' ||
-        (github.event_name == 'push' &&
-         (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') &&
-         !contains(github.event.head_commit.message, '[skip ci]'))
-      }}
-
     permissions:
-      contents: write
-      pages: write
-      issues: write
-      id-token: write
+      contents: write # For tags/commits
+      pages: write # For GitHub Pages deployment
+      id-token: write # For OIDC verification (required for Pages and NPM)
+      issues: write # For semantic-release comments
+      pull-requests: write # For semantic-release comments
     steps:
-      - name: Generate Release Bot Token
-        id: bot-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ vars.RELEASE_BOT_APP_ID }}
-          private-key: ${{ secrets.RELEASE_BOT_PK }}
-
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          token: ${{ steps.bot-token.outputs.token }}
-          fetch-depth: 0
-          persist-credentials: true
-
-      - name: Configure Git Identity
-        run: |
-          git config user.name "release-bot[bot]"
-          git config user.email "release-bot[bot]@users.noreply.github.com"
-
+          fetch-depth: 0 # Crucial for semantic-release to analyze history
+          persist-credentials: false
       - name: Setup
         uses: ./.github/actions/setup
 
       - name: Publish with semantic-release
         run: npm run release
         env:
-          GITHUB_TOKEN: ${{ steps.bot-token.outputs.token }}
-          GH_TOKEN: ${{ steps.bot-token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate API docs
         if: ${{ github.ref == 'refs/heads/main' }}
@@ -69,3 +47,5 @@ jobs:
       - name: Deploy to GitHub Pages
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

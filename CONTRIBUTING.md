@@ -72,7 +72,7 @@ Repository scripts are grouped under [scripts/dev](scripts/dev) and [scripts/ops
 - [check_release_tag.mts](scripts/ops/check_release_tag.mts): validates release tag format and consistency with `package.json` version.
 - [create_testcase_logs.mts](scripts/dev/create_testcase_logs.mts): regenerates command execution logs used by integration/parser fixtures.
 - [hotfix_pr.mts](scripts/dev/hotfix_pr.mts): automates hotfix branch creation and PR creation/update flow.
-- [repo_settings_sync.mts](scripts/dev/repo_settings_sync.mts): synchronizes repository settings JSON.
+- [gh_sync.mts](scripts/dev/gh_sync.mts): synchronizes repository settings, rulesets, variables, and tags JSON.
 - [setup_devenv.mts](scripts/dev/setup_devenv.mts): bootstraps local developer dependencies, workspace settings, and npm audit remediation.
 - [node_ver.mts](scripts/dev/node_ver.mts): verifies or updates Node version alignment across repo files and local Node installation.
 
@@ -95,6 +95,11 @@ Integration test suite is [test/ubuntu.integration.test.ts](test/ubuntu.integrat
 - Keep `package-lock.json` committed and synchronized with dependency changes.
 - Prefer updating workflow action SHAs with care and validate in CI.
 - Prefer full commit SHA pinning for all third-party GitHub Actions.
+- Repository settings, rulesets, variables, and tags are synchronized via `scripts/dev/gh_sync.mts`.
 - Repository settings are tracked in [.github/repo-settings.json](.github/repo-settings.json) and can be applied with `npm run repo:settings:upload`.
+- Repository rulesets are tracked in [.github/repo-rulesets.json](.github/repo-rulesets.json) and can be applied with `npm run repo:rulesets:upload`.
+- Repository variables are tracked in `.github/repo-vars.json` and can be applied with `npm run repo:vars:upload`.
+- Repository tags are tracked in `.github/repo-tags.json` and can be applied with `npm run repo:tags:upload`.
+- Use `npm run repo:all:download` and `npm run repo:all:upload` to synchronize every tracked GitHub metadata target in one pass.
 - Prefer explicit status checks and branch protections over informal merge discipline.
 - Keep release automation branch-based and semantic-release driven.
