@@ -7,5 +7,4 @@ docs/api-md/
 node_modules/
 !scripts/dist/
 !scripts/dist/**
-**/repo-rulesets.json
-**/repo-settings.json
+.github/repo-*.json
