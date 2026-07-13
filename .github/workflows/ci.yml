@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  pull_request:
+  schedule:
+    - cron: "30 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  setup-and-cache:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        node-version: [24]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+  codeql:
+    # Fork PRs do not have permission to upload security events.
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    needs: setup-and-cache
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4
+        with:
+          languages: javascript-typescript
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4
+
+  linters:
+    runs-on: ubuntu-latest
+    needs: setup-and-cache
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: ES Lint
+        shell: bash
+        run: npm run lint
+
+      - name: Typecheck
+        shell: bash
+        run: npm run typecheck
+
+  testing:
+    runs-on: ubuntu-latest
+    needs: setup-and-cache
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Test
+        shell: bash
+        run: npm test
+
+      - name: Type Coverage
+        shell: bash
+        run: npx type-coverage --at-least 95
+
+      # NOTE: Requires GH account authorization to http://app.codecov.io
+      - name: Upload coverage info
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          use_oidc: true
+          files: ./coverage/lcov.info
+          fail_ci_if_error: true
+          slug: "${{ github.repository }}"
+
+      # Make this run last so all previous step failures surface but still run this as well
+      - name: Audit NPM dependencies
+        if: always()
+        shell: bash
+        run: npm audit --audit-level=high --omit=dev

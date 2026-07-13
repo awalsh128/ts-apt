@@ -1,0 +1,6 @@
+*** CMD_LINE dpkg-query -L nonexistentpackage
+*** EXIT_CODE 1
+*** STDOUT
+*** STDERR
+dpkg-query: package 'nonexistentpackage' is not installed
+Use dpkg --contents (= dpkg-deb --contents) to list archive files contents.
