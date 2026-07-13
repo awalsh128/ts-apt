@@ -19,10 +19,11 @@ jobs:
       }}
 
     permissions:
-      contents: write
-      pages: write
-      issues: write
-      id-token: write
+      contents: write # For tags/commits
+      pages: write # For GitHub Pages deployment
+      id-token: write # For OIDC verification (required for Pages)
+      issues: write # For semantic-release comments
+      pull-requests: write # For semantic-release comments
     steps:
       - name: Generate Release Bot Token
         id: bot-token
@@ -69,3 +70,5 @@ jobs:
       - name: Deploy to GitHub Pages
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+        with:
+          token: ${{ steps.bot-token.outputs.token }}

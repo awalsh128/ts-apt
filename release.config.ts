@@ -50,5 +50,11 @@ export default {
     // Creates a GitHub Release with the generated notes and uploads assets.
     // Default behavior posts automatic comments on resolved issues/PRs.
     "@semantic-release/github",
+    "@qiwi/semantic-release-gh-pages-plugin",
+    {
+      src: "dist",
+      branch: "gh-pages",
+      msg: "docs: release ${nextRelease.version}",
+    },
   ],
 };
