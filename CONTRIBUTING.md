@@ -96,5 +96,6 @@ Integration test suite is [test/ubuntu.integration.test.ts](test/ubuntu.integrat
 - Prefer updating workflow action SHAs with care and validate in CI.
 - Prefer full commit SHA pinning for all third-party GitHub Actions.
 - Repository settings are tracked in [.github/repo-settings.json](.github/repo-settings.json) and can be applied with `npm run repo:settings:upload`.
+- Repository ruleset are tracked in [.github/rulesets.json](.github/rulesets.json) and can be applied with `npm run repo:rulesets:upload`.
 - Prefer explicit status checks and branch protections over informal merge discipline.
 - Keep release automation branch-based and semantic-release driven.

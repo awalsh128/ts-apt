@@ -60,6 +60,8 @@
     "check": "npm run -s runall -- check:latest-action-pins check:pr check:configs",
     "gh:auth": "gh auth status >/dev/null 2>&1 || gh auth login --web && gh auth setup-git",
     "setup:dev": "node --experimental-strip-types ./scripts/dev/setup_devenv.mts",
+    "repo:rulesets:download": "node --experimental-strip-types ./scripts/dev/repo_rulesets_sync.mts download",
+    "repo:rulesets:upload": "node --experimental-strip-types ./scripts/dev/repo_rulesets_sync.mts upload",
     "repo:settings:download": "node --experimental-strip-types ./scripts/dev/repo_settings_sync.mts download",
     "repo:settings:upload": "node --experimental-strip-types ./scripts/dev/repo_settings_sync.mts upload",
     "docs:api": "typedoc --options typedoc.json",
