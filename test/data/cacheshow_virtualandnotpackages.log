@@ -1,0 +1,38 @@
+*** CMD_LINE apt-cache show --quiet=0 libvips xdot
+*** EXIT_CODE 0
+*** STDOUT
+Package: xdot
+Architecture: all
+Version: 1.1-2
+Priority: optional
+Section: universe/python
+Origin: Ubuntu
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Original-Maintainer: Python Applications Packaging Team <python-apps-team@lists.alioth.debian.org>
+Bugs: https://bugs.launchpad.net/ubuntu/+filebug
+Installed-Size: 153
+Depends: gir1.2-gtk-3.0, graphviz, python3-gi, python3-gi-cairo, python3:any
+Filename: pool/universe/x/xdot/xdot_1.1-2_all.deb
+Size: 26708
+MD5sum: aab630b6e1f73a0e3ae85b208b8b6d00
+SHA1: 202155c123c7bd7628023b848e997f342d14359d
+SHA256: 4b7ecb2c4dc948a850024a9b7378d58195230659307bbde4018a1be17645e690
+Homepage: https://github.com/jrfonseca/xdot.py
+Description-en: interactive viewer for Graphviz dot files
+ xdot is an interactive viewer for graphs written in Graphviz's dot language.
+ It uses internally the graphviz's xdot output format as an intermediate
+ format, and PyGTK and Cairo for rendering. xdot can be used either as a
+ standalone application from command line, or as a library embedded in your
+ Python 3 application.
+ .
+ Features:
+  * Since it doesn't use bitmaps it is fast and has a small memory footprint.
+  * Arbitrary zoom.
+  * Keyboard/mouse navigation.
+  * Supports events on the nodes with URLs.
+  * Animated jumping between nodes.
+  * Highlights node/edge under mouse.
+Description-md5: eb58f25a628b48a744f1b904af3b9282
+
+*** STDERR
+N: Can't select versions from package 'libvips' as it is purely virtual

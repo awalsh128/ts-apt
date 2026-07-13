@@ -1,0 +1,16 @@
+*** CMD_LINE apt-get upgrade
+*** EXIT_CODE 0
+*** STDOUT
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+The following packages were automatically installed and are no longer required:
+  golang-1.13 golang-1.13-doc golang-1.13-go golang-1.13-src golang-1.23-go
+  golang-1.23-src linux-headers-5.4.0-144 linux-headers-5.4.0-144-generic
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+*** STDERR
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+

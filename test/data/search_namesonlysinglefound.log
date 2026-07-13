@@ -1,0 +1,45 @@
+*** CMD_LINE apt search --names-only bash
+*** EXIT_CODE 0
+*** STDOUT
+Sorting...
+Full Text Search...
+bash/focal-updates,focal-security,now 5.0-6ubuntu1.2 amd64 [installed]
+  GNU Bourne Again SHell
+
+bash-builtins/focal-updates,focal-security 5.0-6ubuntu1.2 amd64
+  Bash loadable builtins - headers & examples
+
+bash-completion/focal,now 1:2.10-1ubuntu1 all [installed]
+  programmable completion for the bash shell
+
+bash-doc/focal-updates,focal-security 5.0-6ubuntu1.2 all
+  Documentation and examples for the GNU Bourne Again SHell
+
+bash-static/focal-updates,focal-security 5.0-6ubuntu1.2 amd64
+  GNU Bourne Again SHell (static version)
+
+libbash/focal 0.9.11-2 all
+  bash dynamic-like shared libraries
+
+libbash-doc/focal 0.9.11-2 all
+  bash dynamic-like shared libraries - documentation
+
+netdata-plugins-bash/focal 1.19.0-3ubuntu1 all
+  real-time performance monitoring (bash plugins)
+
+node-bash-match/focal 1.0.2-1 all
+  Node module to match strings using bash
+
+python-bashate-doc/focal 0.6.0-4 all
+  bash script style guide checker - doc
+
+python3-bashate/focal 0.6.0-4 all
+  bash script style guide checker - Python 3.x
+
+rosbash/focal 1.14.7-3build2 all
+  Assorted shell commands for using Robot OS with bash
+
+*** STDERR
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+

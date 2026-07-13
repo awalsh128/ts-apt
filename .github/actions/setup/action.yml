@@ -1,0 +1,43 @@
+name: "Setup environment"
+description: "Checks out code, sets up Node.js, and builds the project or fetches cached build artifacts, caching build artifacts for faster subsequent runs"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      with:
+        node-version: 24
+        cache: "npm"
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+
+    - name: Create Build Artifacts Name
+      id: get-artifacts-name
+      shell: bash
+      env:
+        build_artifacts_name: "build-dist-${{ github.sha }}"
+      run: |
+        echo "build-artifacts-name=${{ env.build_artifacts_name }}" >> $GITHUB_ENV
+
+    - name: Try Download Build Artifacts
+      id: try-download-artifact
+      uses: dawidd6/action-download-artifact@b6e2e70617bc3265edd6dab6c906732b2f1ae151 # v21
+      with:
+        name: ${{ env.build-artifacts-name }}
+        if_no_artifact_found: ignore
+
+    - name: Build
+      if: steps.try-download-artifact.outcome == 'failure'
+      shell: bash
+      run: npm run build # Generates dist/ folder
+
+    - name: Upload Build Artifacts
+      if: steps.try-download-artifact.outcome == 'failure'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ env.build-artifacts-name }}
+        path: dist
+        retention-days: 1

@@ -1,0 +1,9 @@
+*** CMD_LINE apt list --upgradeable
+*** EXIT_CODE 0
+*** STDOUT
+Listing...
+firefox-locale-en/focal-updates,focal-security 136.0+build3-0ubuntu0.20.04.1 amd64 [upgradable from: 75.0+build3-0ubuntu1]
+*** STDERR
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
