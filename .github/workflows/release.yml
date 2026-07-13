@@ -17,7 +17,6 @@ jobs:
          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') &&
          !contains(github.event.head_commit.message, '[skip ci]'))
       }}
-
     permissions:
       contents: write # For tags/commits
       pages: write # For GitHub Pages deployment
@@ -35,7 +34,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          token: ${{ steps.bot-token.outputs.token }}
+          token: ${{ github.event_name == 'workflow_dispatch' && github.token || steps.bot-token.outputs.token }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -50,8 +49,8 @@ jobs:
       - name: Publish with semantic-release
         run: npm run release
         env:
-          GITHUB_TOKEN: ${{ steps.bot-token.outputs.token }}
-          GH_TOKEN: ${{ steps.bot-token.outputs.token }}
+          GITHUB_TOKEN: ${{ github.event_name == 'workflow_dispatch' && github.token || steps.bot-token.outputs.token }}
+          GH_TOKEN: ${{ github.event_name == 'workflow_dispatch' && github.token || steps.bot-token.outputs.token }}
 
       - name: Generate API docs
         if: ${{ github.ref == 'refs/heads/main' }}
@@ -71,4 +70,4 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
         with:
-          token: ${{ steps.bot-token.outputs.token }}
+          token: ${{ github.event_name == 'workflow_dispatch' && github.token || steps.bot-token.outputs.token }}
