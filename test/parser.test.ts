@@ -1,7 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { CommandResult, PackageInfo } from "../src/types.js";
+import type {
+  CommandResult,
+  PackageInfo,
+  PackageStatus,
+} from "../src/types.js";
 import { AptOutputParser } from "../src/parser.js";
+import { createPackageName } from "../src/package.js";
 import { deserializeCommandResult, nullLogger } from "./common.js";
 
 import listInstalledExpected from "./data/parser/listinstalled_expected.json" with { type: "json" };
@@ -15,18 +23,17 @@ const DATA_DIR = resolve(__dirname, "data");
 function jsonToPackageInfos(
   jsonArray: Record<string, unknown>[],
 ): PackageInfo[] {
-  return jsonArray.map(
-    (json) =>
-      ({
-        name: json.name,
-        version: json.version,
-        status: json.status,
-        arch: json.arch,
-        metadata: json.metadata
-          ? new Map(Object.entries(json.metadata as Record<string, string>))
-          : undefined,
-      }) as PackageInfo,
-  );
+  return jsonArray.map((json) => ({
+    name: createPackageName(
+      json.name as string,
+      json.version as string | undefined,
+      json.arch as string | undefined,
+    ),
+    status: json.status as PackageStatus | undefined,
+    metadata: json.metadata
+      ? new Map(Object.entries(json.metadata as Record<string, string>))
+      : undefined,
+  }));
 }
 
 function withoutUndefinedFields<T extends object>(value: T): Partial<T> {
@@ -45,13 +52,11 @@ describe("apt output parser", () => {
 
   const available = (
     name: string,
-    version = "",
-    arch: string | undefined = undefined,
+    version?: string,
+    arch?: string,
   ): PackageInfo => ({
-    name,
-    version,
+    name: createPackageName(name, version, arch),
     status: "available",
-    arch,
   });
 
   const installed = (
@@ -59,10 +64,8 @@ describe("apt output parser", () => {
     version: string,
     arch?: string,
   ): PackageInfo => ({
-    name,
-    version,
+    name: createPackageName(name, version, arch),
     status: "installed",
-    arch,
   });
 
   function expectPackagesOrError(
@@ -178,10 +181,12 @@ describe("apt output parser", () => {
       "listupgradable_found.log",
       [
         {
-          name: "firefox-locale-en",
-          version: "75.0+build3-0ubuntu1",
+          name: createPackageName(
+            "firefox-locale-en",
+            "75.0+build3-0ubuntu1",
+            "amd64",
+          ),
           status: "upgradeable" as const,
-          arch: "amd64",
           metadata: new Map([["newVersion", "136.0+build3-0ubuntu0.20.04.1"]]),
         } as PackageInfo,
       ],
@@ -204,9 +209,12 @@ describe("apt output parser", () => {
       "search_singlefound.log",
       [
         {
-          name: "vim-vimerl-syntax",
-          version: "1.4.1+git20120509.89111c7-2",
-          arch: "all",
+          name: createPackageName(
+            "vim-vimerl-syntax",
+            "1.4.1+git20120509.89111c7-2",
+            "all",
+          ),
+          status: "available" as const,
           metadata: new Map([
             ["description", "Erlang syntax for Vim"],
             ["repos", "focal"],
@@ -217,8 +225,6 @@ describe("apt output parser", () => {
   ])("parseSearchOutput uses %s", (file, expected) => {
     const result = deserialize(file);
     const parsed = parser.parseSearchOutput(result);
-
-    // expect(dumpPackages(parsed)).toEqual("");
 
     expectPackagesOrError(result, parsed, expected);
   });
@@ -253,13 +259,14 @@ describe("apt output parser", () => {
     expect(parsed).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          name: "curl",
-          version: "8.5.0-2ubuntu10.6",
+          name: expect.objectContaining({
+            name: "curl",
+            version: "8.5.0-2ubuntu10.6",
+          }),
           status: "installed",
         }),
         expect.objectContaining({
-          name: "vim",
-          version: "2:9.0-1",
+          name: expect.objectContaining({ name: "vim", version: "2:9.0-1" }),
           status: "available",
         }),
       ]),
@@ -268,7 +275,7 @@ describe("apt output parser", () => {
 
   test("parseQueryOutput parses dpkg-query formatted lines", () => {
     const parsed = parser.parseQueryOutput({
-      cmdLine: "dpkg-query -W -f=${binary:Package}:${Architecture}=${Version}",
+      cmdLine: "dpkg-query -W -f=${binary:Package}=${Version}",
       exitCode: 0,
       stdout: "openssl:amd64=3.0.13-0ubuntu3.5\ninvalid-line\n",
       stderr: "",
@@ -276,9 +283,11 @@ describe("apt output parser", () => {
 
     expect(parsed).toEqual([
       expect.objectContaining({
-        name: "openssl",
-        arch: "amd64",
-        version: "3.0.13-0ubuntu3.5",
+        name: expect.objectContaining({
+          name: "openssl",
+          version: "3.0.13-0ubuntu3.5",
+          arch: "amd64",
+        }),
         status: "installed",
       }),
     ]);
@@ -294,9 +303,9 @@ describe("apt output parser", () => {
 
     expect(parsed).toHaveLength(1);
     expect(parsed[0]).toMatchObject({
-      name: "openssl",
-      arch: "amd64",
-      version: "3.0.13-0ubuntu3.5",
+      name: expect.objectContaining({
+        name: createPackageName("openssl", "3.0.13-0ubuntu3.5", "amd64"),
+      }),
       status: "installed",
     });
   });
@@ -311,9 +320,15 @@ describe("apt output parser", () => {
 
     expect(parsed).toEqual([
       expect.objectContaining({
-        name: "libc6",
-        arch: "amd64",
-        version: "2.39-0ubuntu8.4",
+        name: expect.objectContaining({
+          name: {
+            name: "libc6",
+            version: "2.39-0ubuntu8.4",
+            arch: "amd64",
+          },
+          version: "2.39-0ubuntu8.4",
+          arch: "amd64",
+        }),
         status: "installed",
       }),
     ]);

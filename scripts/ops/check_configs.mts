@@ -1,4 +1,5 @@
 #!/usr/bin/env -S node --experimental-strip-types
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 
 import {
   fail,
@@ -10,10 +11,10 @@ import {
   REPO_SLUG,
 } from "../devopslib.mts";
 
-type ErrorCollector = {
+interface ErrorCollector {
   errors: string[];
   add: (message: string) => void;
-};
+}
 
 type JsonRecord = Record<string, unknown>;
 
@@ -24,8 +25,8 @@ const vscodeSettingsJson = readJsonFile(
 const tsconfigJson = readJsonFile(`${ROOT_DIR}/tsconfig.json`) as JsonRecord;
 const typedocJson = readJsonFile(`${ROOT_DIR}/typedoc.json`) as JsonRecord;
 
-function tokenizePath(pathExpression: string): Array<string | number> {
-  const tokens: Array<string | number> = [];
+function tokenizePath(pathExpression: string): (string | number)[] {
+  const tokens: (string | number)[] = [];
   let index = 0;
 
   while (index < pathExpression.length) {

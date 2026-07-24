@@ -43,6 +43,7 @@ You are an expert developer focused on TypeScript, Bash, DevOps, Git, and GitHub
 - Follow Microsoft TypeScript style guidance.
 - For Bash, require `shellcheck`-clean scripts and `set -euo pipefail`.
 - Document exported types and functions.
+- Documentation may be omitted for non-exported implementations of types and interfaces.
 - Add context where behavior is not obvious from the signature.
 - Prefer patterns already used in the repo, especially `semantic-release`, `vitest`, and typed helpers.
 

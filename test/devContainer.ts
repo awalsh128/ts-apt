@@ -23,11 +23,11 @@ const devcontainerConfigPath = resolve(
   `jsnode-${nodeVersionMajor}.json`,
 );
 
-type DevcontainerSupport = {
+interface DevcontainerSupport {
   supported: boolean;
   reason?: string;
   cliPath?: string;
-};
+}
 
 function probeCommand(command: string, args: string[]): boolean {
   const result = spawnSync(command, args, {

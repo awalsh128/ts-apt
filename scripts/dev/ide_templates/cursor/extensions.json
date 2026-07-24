@@ -7,8 +7,9 @@
     "timonwong.shellcheck",
     "editorconfig.editorconfig",
     "esbenp.prettier-vscode",
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
     "eamodio.gitlens",
     "mhutchie.git-graph",
-    "streetsidesoftware.code-spell-checker"
   ]
 }

@@ -27,25 +27,25 @@ import {
   tryRun,
 } from "../devopslib.mts";
 
-type PrCheckOptions = {
+interface PrCheckOptions {
   baseRef: string;
   headRef: string;
   allowAdminBypass: boolean;
-};
+}
 
-type ActionUse = {
+interface ActionUse {
   actionPath: string;
   ref: string;
   lineNumber: number;
-};
+}
 
-type ActionRefChange = {
+interface ActionRefChange {
   filePath: string;
   lineNumber: number;
   actionPath: string;
   previousRef: string | null;
   currentRef: string;
-};
+}
 
 function runGitNameOnly(args: string[], cwd: string): string[] {
   const output = runCaptureOutput("git", args, {
@@ -341,10 +341,7 @@ function validateModifiedActionRefs(
   return errors;
 }
 
-const PROHIBITED_PATHS = [
-  "docs/api",
-  "docs/api-md",
-];
+const PROHIBITED_PATHS = ["docs/api", "docs/api-md"];
 
 function getProhibitedPathsChanges(): string[] {
   const prohibitedPaths = PROHIBITED_PATHS;
@@ -375,10 +372,10 @@ function resolveRefs(options: PrCheckOptions): {
   headRef: string;
 } {
   const baseRef = getNormalizedRef(
-    options.baseRef || process.env.GITHUB_BASE_REF || "",
+    (options.baseRef || process.env.GITHUB_BASE_REF) ?? "",
   );
   const headRef = getNormalizedRef(
-    options.headRef || process.env.GITHUB_HEAD_REF || "",
+    (options.headRef || process.env.GITHUB_HEAD_REF) ?? "",
   );
 
   if (
@@ -394,7 +391,7 @@ function resolveRefs(options: PrCheckOptions): {
   return { baseRef, headRef };
 }
 
-async function runChecks(options: PrCheckOptions): Promise<string[]> {
+function runChecks(options: PrCheckOptions): string[] {
   const { baseRef, headRef } = resolveRefs(options);
   const errors: string[] = [];
 
@@ -464,7 +461,7 @@ const prChecksCommand = defineCommand({
     },
   ),
   action: async (options: PrCheckOptions) => {
-    const errors = await runChecks(options);
+    const errors = runChecks(options);
     const allowAdminBypass = await shouldAllowAdminBypass(options);
 
     if (errors.length == 0) {

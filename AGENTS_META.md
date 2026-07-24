@@ -20,6 +20,7 @@ Code must follow:
 - Consistent naming for semantically equivalent classes, interfaces, types, methods, variables, and member fields.
 - Consistent documentation for those naming targets.
 - Always document exported types.
+- Documentation can be omitted for non-exported implementations of types and interfaces.
 - Provide additional context for new readers where behavior is not obvious from signatures.
 
 CI/CD must follow best practices:

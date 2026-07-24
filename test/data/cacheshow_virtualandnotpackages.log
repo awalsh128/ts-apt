@@ -1,4 +1,4 @@
-*** CMD_LINE apt-cache show --quiet=0 libvips xdot
+*** CMD_LINE /usr/bin/apt-cache --quiet=0 --no-all-versions show libvips xdot
 *** EXIT_CODE 0
 *** STDOUT
 Package: xdot
@@ -35,4 +35,5 @@ Description-en: interactive viewer for Graphviz dot files
 Description-md5: eb58f25a628b48a744f1b904af3b9282
 
 *** STDERR
+N: Can't select candidate version from package libvips as it has no candidate
 N: Can't select versions from package 'libvips' as it is purely virtual

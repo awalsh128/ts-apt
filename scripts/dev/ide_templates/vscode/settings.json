@@ -9,5 +9,10 @@
     {
       "mode": "auto"
     }
-  ]
+  ],
+  "eslint.lintTask.enable": true,
+  "[markdown]": {
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 110
+  }
 }

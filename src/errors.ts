@@ -57,6 +57,8 @@ export class CommandExecutionError extends TsAptError {
   public readonly stderr: string;
   /** Captured standard output output. */
   public readonly stdout: string;
+  /** Signal that caused the process to terminate, if any. */
+  public readonly signal?: NodeJS.Signals;
 
   /**
    * Creates a command execution error.
@@ -69,6 +71,7 @@ export class CommandExecutionError extends TsAptError {
     exitCode: number;
     stderr: string;
     stdout: string;
+    signal?: NodeJS.Signals;
   }) {
     super(
       `Command failed: ${params.command} ${params.args.join(" ")}\n` +
@@ -82,5 +85,6 @@ export class CommandExecutionError extends TsAptError {
     this.exitCode = params.exitCode;
     this.stderr = params.stderr;
     this.stdout = params.stdout;
+    this.signal = params.signal;
   }
 }

@@ -1,13 +1,14 @@
-<img src="logo.png" alt="Description" height="40" align="center" style="padding-right: 1em;"> <span style="font-size: 2em; font-weight: bold;">ts-apt</span>
+<img src="logo.png" alt="Description" height="40" align="center" style="padding-right: 1em;"> <span style="font-size: 2em; font-weight: bold;">Typescript APT Library</span>
 
 [![npm version](https://img.shields.io/npm/v/ts-apt)](https://www.npmjs.com/package/ts-apt)
 [![License: Apache2](https://shields.io/badge/license-apache2-blue.svg)](https://github.com/awalsh128/ts-apt/blob/main/LICENSE)
-[![CI status](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml/badge.svg)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml)
+![Main CI](https://img.shields.io/github/actions/workflow/status/awalsh128/cache-apt-pkgs-action/ci.yml?label=CI%20Main&branch=main)
+![Staging CI](https://img.shields.io/github/actions/workflow/status/awalsh128/cache-apt-pkgs-action/ci.yml?label=CI%20Staging&branch=staging)
 [![codecov](https://codecov.io/gh/awalsh128/ts-apt/branch/main/graph/badge.svg)](https://codecov.io/gh/awalsh128/ts-apt)
 
 TypeScript library for APT package operations on Debian-based Linux systems. It supports both standard APT binaries and the [apt-fast](https://github.com/ilikenwf/apt-fast) bundled wrapper.
 
-> [!NOTE]
+> [!TIP]
 > If you find this project useful, please consider supporting it [as a sponsor and show some ❤️ for open source maintainers](https://github.com/sponsors/awalsh128).
 
 ## Features
@@ -35,12 +36,16 @@ npm install ts-apt
 
 ## Usage
 
+> [!IMPORTANT]
+> `sudo` is required for mutating operations. If the running user does not have sudo privilege the calls will
+> fail.
+
 ```ts
 import { createPackageManager } from "ts-apt";
 
 const manager = await createPackageManager(false);
 
-const searchResults = await manager.search(["vim"]);
+const searchResults = await manager.search(["vim", "python"]);
 const installed = await manager.listInstalled();
 
 console.log(searchResults.length, installed.length);

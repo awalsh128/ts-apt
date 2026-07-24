@@ -1,4 +1,5 @@
 #!/usr/bin/env -S node --experimental-strip-types
+/* eslint-disable @typescript-eslint/require-await */
 
 /**
  * Sync GitHub repository metadata using GitHub CLI.
@@ -16,14 +17,7 @@
  *   node --experimental-strip-types ./scripts/dev/gh_sync.mts download --target vars
  */
 
-import { spawnSync } from "node:child_process";
-import {
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { defineCommand, defineOptions } from "@robingenz/zli";
@@ -33,17 +27,20 @@ import {
   REPO_OWNER,
   commandExists,
   createCliConfig,
+  ensureDirForFile,
   fail,
   logInfo,
   logSuccess,
   logWarn,
+  runCaptureOutput,
   runCli,
   runMain,
+  tryRun,
 } from "../devopslib.mts";
 
 type SyncTarget = "settings" | "rulesets" | "vars" | "tags" | "all";
 
-type RepoSettings = {
+interface RepoSettings {
   name?: string;
   description?: string | null;
   homepage?: string | null;
@@ -68,16 +65,16 @@ type RepoSettings = {
     secret_scanning?: { status?: string };
     secret_scanning_push_protection?: { status?: string };
   };
-};
+}
 
-type SettingsFile = {
+interface SettingsFile {
   owner: string;
   repo: string;
   exportedAt: string;
   settings: RepoSettings;
-};
+}
 
-type BypassActor = {
+interface BypassActor {
   actor_id: number;
   actor_type:
     | "RepositoryRole"
@@ -86,9 +83,9 @@ type BypassActor = {
     | "OrganizationAdmin"
     | "DeployKey";
   bypass_mode: "always" | "pull_request";
-};
+}
 
-type Ruleset = {
+interface Ruleset {
   id: number;
   name: string;
   target: string;
@@ -99,47 +96,47 @@ type Ruleset = {
       exclude?: string[];
     };
   };
-  rules?: Array<Record<string, unknown>>;
+  rules?: Record<string, unknown>[];
   bypass_actors: BypassActor[];
-};
+}
 
-type AppBypassConfig = {
+interface AppBypassConfig {
   appId: number;
   appLabel?: string;
   bypassMode: "always" | "pull_request";
-};
+}
 
-type RulesetsFile = {
+interface RulesetsFile {
   owner: string;
   repo: string;
   exportedAt: string;
   appsBypassActors: AppBypassConfig[];
   rulesets: Ruleset[];
-};
+}
 
-type RepoVariable = {
+interface RepoVariable {
   name: string;
   value: string;
-};
+}
 
-type VariablesFile = {
+interface VariablesFile {
   owner: string;
   repo: string;
   exportedAt: string;
   variables: RepoVariable[];
-};
+}
 
-type RepoTag = {
+interface RepoTag {
   name: string;
   sha: string;
-};
+}
 
-type TagsFile = {
+interface TagsFile {
   owner: string;
   repo: string;
   exportedAt: string;
   tags: RepoTag[];
-};
+}
 
 const DEFAULT_TARGET_PATHS = {
   settings: ".github/repo-settings.json",
@@ -148,7 +145,7 @@ const DEFAULT_TARGET_PATHS = {
   tags: ".github/repo-tags.json",
 } as const;
 
-const SETTINGS_KEYS: Array<keyof RepoSettings> = [
+const SETTINGS_KEYS: (keyof RepoSettings)[] = [
   "name",
   "description",
   "homepage",
@@ -171,27 +168,8 @@ const SETTINGS_KEYS: Array<keyof RepoSettings> = [
   "security_and_analysis",
 ];
 
-function runGh(args: string[], input?: string): string {
-  const result = spawnSync("gh", args, {
-    cwd: process.cwd(),
-    env: process.env,
-    encoding: "utf8",
-    stdio: "pipe",
-    input,
-  });
-
-  if (result.status !== 0) {
-    const stderr = result.stderr?.trim() || "unknown error";
-    fail(`gh ${args.join(" ")} failed: ${stderr}`);
-  }
-
-  return result.stdout ?? "";
-}
-
-function ensureDirForFile(filePath: string): string {
-  const absPath = path.resolve(filePath);
-  mkdirSync(path.dirname(absPath), { recursive: true });
-  return absPath;
+function runGh(args: string[], stdin?: string): string {
+  return runCaptureOutput("gh", args, { cwd: process.cwd(), input: stdin });
 }
 
 function writeJsonFile(
@@ -214,13 +192,6 @@ function readJsonFile<T>(filePath: string, defaultValue: T): T {
   }
 
   return { ...defaultValue, ...parsed };
-}
-
-function writeTempPayload(payload: unknown, prefix: string): string {
-  const tempDir = mkdtempSync(path.join(tmpdir(), prefix));
-  const payloadFile = path.join(tempDir, "payload.json");
-  writeFileSync(payloadFile, JSON.stringify(payload), "utf8");
-  return payloadFile;
 }
 
 function withTempPayload<T>(
@@ -247,7 +218,7 @@ function pickSettings(repoJson: Record<string, unknown>): RepoSettings {
       continue;
     }
 
-    (settings as Record<string, unknown>)[key] = repoJson[key] as unknown;
+    (settings as Record<string, unknown>)[key] = repoJson[key];
   }
 
   return settings;
@@ -339,7 +310,7 @@ function readRulesetsFile(filePath: string): RulesetsFile {
 
 function fetchRulesets(owner: string, repo: string): Ruleset[] {
   const listRaw = runGh(["api", `/repos/${owner}/${repo}/rulesets`]);
-  const list = JSON.parse(listRaw) as Array<{ id: number }>;
+  const list = JSON.parse(listRaw) as { id: number }[];
 
   return list.map((entry) => {
     const detailRaw = runGh([
@@ -493,7 +464,7 @@ function readVariablesFile(filePath: string): VariablesFile {
 function fetchVariables(owner: string, repo: string): RepoVariable[] {
   const output = runGh(["api", `/repos/${owner}/${repo}/actions/variables`]);
   const parsed = JSON.parse(output) as {
-    variables?: Array<{ name: string; value: string }>;
+    variables?: { name: string; value: string }[];
   };
   return (parsed.variables ?? [])
     .map((variable) => ({ name: variable.name, value: variable.value }))
@@ -593,10 +564,10 @@ function readTagsFile(filePath: string): TagsFile {
 
 function fetchTags(owner: string, repo: string): RepoTag[] {
   const output = runGh(["api", `/repos/${owner}/${repo}/tags?per_page=100`]);
-  const parsed = JSON.parse(output) as Array<{
+  const parsed = JSON.parse(output) as {
     name: string;
     commit?: { sha?: string };
-  }>;
+  }[];
   return parsed
     .map((tag) => ({ name: tag.name, sha: tag.commit?.sha ?? "" }))
     .filter((tag) => tag.sha.length > 0)
@@ -673,7 +644,7 @@ function resolveFilePath(
   target: Exclude<SyncTarget, "all">,
   fileOverride?: string,
 ): string {
-  return fileOverride?.trim() || DEFAULT_TARGET_PATHS[target];
+  return fileOverride?.trim() ?? DEFAULT_TARGET_PATHS[target];
 }
 
 function applyTarget(
@@ -754,14 +725,11 @@ function ensurePrerequisites(): void {
     fail("GitHub CLI ('gh') is required.");
   }
 
-  const authCheck = spawnSync("gh", ["auth", "status"], {
+  const authCheck = tryRun("gh", ["auth", "status"], {
     cwd: process.cwd(),
-    env: process.env,
-    encoding: "utf8",
     stdio: "pipe",
   });
-
-  if (authCheck.status !== 0) {
+  if (!authCheck.ok) {
     fail("GitHub CLI is not authenticated. Run 'gh auth login' first.");
   }
 }

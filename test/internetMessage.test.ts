@@ -36,7 +36,7 @@ describe("internet message", () => {
     expect(Array.from(headers.keys())).toEqual(["subject", "x-test"]);
     expect(Array.from(headers.values())).toEqual(["Hello", "1"]);
 
-    const iterated: Array<[string, string]> = [];
+    const iterated: [string, string][] = [];
     headers.forEach((value, name) => iterated.push([name, value]));
     expect(iterated).toEqual([
       ["subject", "Hello"],

@@ -1,4 +1,5 @@
 #!/usr/bin/env -S node --experimental-strip-types
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /// <reference types="node" />
 
 import { spawn } from "child_process";
@@ -7,19 +8,79 @@ import { dirname, resolve } from "path";
 import process from "process";
 import { ROOT_DIR, fail, logInfo, logSuccess } from "../devopslib.mts";
 
-type LogResult = {
+interface LogResult {
   cmdLine: string;
   exitCode: number;
   stdout: string;
   stderr: string;
-};
+}
 
-type TestLogEntry = {
+interface TestLogEntry {
   filepath: string;
   execCmdLine: string;
   preExecCmdLine?: string[];
   postExecCmdLine?: string[];
-};
+}
+
+const APT_GET_BINARY = "/usr/bin/apt-get";
+const APT_BINARY = "/usr/bin/apt";
+const APT_CACHE_BINARY = "/usr/bin/apt-cache";
+const DPKG_QUERY_BINARY = "/usr/bin/dpkg-query";
+
+const APT_GET_DEFAULT_ARGS = ["--quiet=0", "-y"] as const;
+const APT_LOCK_TIMEOUT_ARGS = ["-o", "DPkg::Lock::Timeout=-1"] as const;
+const APT_CACHE_DEFAULT_ARGS = ["--quiet=0", "--no-all-versions"] as const;
+
+const APT_FLAGS = {
+  fixBroken: "-f",
+  autoRemove: "--autoremove",
+  simulate: "--simulate",
+} as const;
+
+function buildAptGetMutatingCmd(
+  operation: string,
+  args: readonly string[] = [],
+  options: { simulate?: boolean } = {},
+): string {
+  const commandArgs = [
+    ...APT_GET_DEFAULT_ARGS,
+    ...(options.simulate ? [APT_FLAGS.simulate] : []),
+    ...APT_LOCK_TIMEOUT_ARGS,
+    operation,
+    ...args,
+  ];
+
+  return `${APT_GET_BINARY} ${commandArgs.join(" ")}`;
+}
+
+function buildAptReadCmd(
+  operation: string,
+  args: readonly string[] = [],
+): string {
+  return `${APT_BINARY} --quiet=0 ${[operation, ...args].join(" ")}`;
+}
+
+function buildAptCacheCmd(
+  operation: string,
+  args: readonly string[] = [],
+): string {
+  return `${APT_CACHE_BINARY} ${[
+    ...APT_CACHE_DEFAULT_ARGS,
+    operation,
+    ...args,
+  ].join(" ")}`;
+}
+
+function buildDpkgQueryCmd(args: readonly string[]): string {
+  return `${DPKG_QUERY_BINARY} ${args.join(" ")}`;
+}
+
+function isNonSimulatedMutation(cmdLine: string): boolean {
+  return (
+    cmdLine.startsWith(`${APT_GET_BINARY} `) &&
+    !cmdLine.includes(` ${APT_FLAGS.simulate} `)
+  );
+}
 
 function toLog(result: LogResult): string {
   return `*** CMD_LINE ${result.cmdLine}\n*** EXIT_CODE ${result.exitCode}\n*** STDOUT\n${result.stdout}*** STDERR\n${result.stderr}`;
@@ -49,9 +110,7 @@ async function execute(cmdLine: string): Promise<LogResult> {
       return;
     }
     const env = { ...process.env };
-    if (!env.LC_ALL) {
-      env.LC_ALL = "C";
-    }
+    env.LC_ALL ??= "C";
 
     const commonEnv = {
       ...env,
@@ -138,24 +197,30 @@ async function writeLogFile(
   return outputPath;
 }
 
-const PERMISSION_DENIED_EXIT_CODE = 100;
-
 async function main(): Promise<void> {
   const testDataDir = resolve(ROOT_DIR, "test/data");
   let written = 0;
+  let artifactsLeft = false;
+
+  const executeAndTrack = async (cmd: string): Promise<LogResult> => {
+    if (isNonSimulatedMutation(cmd)) {
+      artifactsLeft = true;
+    }
+    return await execute(cmd);
+  };
 
   for (const entry of testLogFiles) {
     if (entry.preExecCmdLine) {
       for (const cmd of entry.preExecCmdLine) {
-        await execute(cmd);
+        await executeAndTrack(cmd);
       }
     }
 
-    const result = await execute(entry.execCmdLine);
+    const result = await executeAndTrack(entry.execCmdLine);
     const outputPath = await writeLogFile(testDataDir, entry.filepath, result);
     if (entry.postExecCmdLine) {
       for (const cmd of entry.postExecCmdLine) {
-        await execute(cmd);
+        await executeAndTrack(cmd);
       }
     }
 
@@ -163,8 +228,12 @@ async function main(): Promise<void> {
     logInfo(`Wrote ${outputPath}`);
   }
 
-  await execute("apt-get upgrade -y");
-  await execute("apt-get autoremove -y");
+  if (artifactsLeft) {
+    await execute(buildAptGetMutatingCmd("upgrade"));
+    await execute(buildAptGetMutatingCmd("autoremove"));
+  } else {
+    logInfo("Skipping cleanup because no artifacts were left.");
+  }
 
   logSuccess(`Wrote ${written} command execution log(s).`);
 }
@@ -172,201 +241,315 @@ async function main(): Promise<void> {
 const testLogFiles: TestLogEntry[] = [
   {
     filepath: "autoclean",
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 autoclean",
+    execCmdLine: buildAptGetMutatingCmd("autoclean", [], { simulate: true }),
   },
   {
     filepath: "autoremove_found",
-    preExecCmdLine: ["apt-get install -y xdot", "apt-get remove -y xdot"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 autoremove",
+    preExecCmdLine: [
+      buildAptGetMutatingCmd("install", [APT_FLAGS.fixBroken, "xdot"]),
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "xdot",
+        APT_FLAGS.autoRemove,
+      ]),
+    ],
+    execCmdLine: buildAptGetMutatingCmd("autoremove", [], { simulate: true }),
   },
   {
     filepath: "autoremove_notfound",
-    preExecCmdLine: ["apt-get autoremove -y"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 autoremove",
+    preExecCmdLine: [buildAptGetMutatingCmd("autoremove")],
+    execCmdLine: buildAptGetMutatingCmd("autoremove", [], { simulate: true }),
   },
   {
     filepath: "cacheshow_mixedfoundnotfound",
-    execCmdLine:
-      "/usr/bin/apt-cache --quiet=0 --no-all-versions show xdot python3 nonexistentpackage",
+    execCmdLine: buildAptCacheCmd("show", [
+      "xdot",
+      "python3",
+      "nonexistentpackage",
+    ]),
   },
   {
     filepath: "cacheshow_multiplefound",
-    execCmdLine:
-      "/usr/bin/apt-cache --quiet=0 --no-all-versions show xdot python3",
+    execCmdLine: buildAptCacheCmd("show", ["xdot", "python3"]),
   },
   {
     filepath: "cacheshow_singlefound",
-    execCmdLine: "/usr/bin/apt-cache --quiet=0 --no-all-versions show python3",
+    execCmdLine: buildAptCacheCmd("show", ["python3"]),
   },
   {
     filepath: "cacheshow_singlenotfound",
-    execCmdLine:
-      "/usr/bin/apt-cache --quiet=0 --no-all-versions show nonexistentpackage",
+    execCmdLine: buildAptCacheCmd("show", ["nonexistentpackage"]),
   },
   {
     filepath: "cacheshow_virtualpackage",
-    execCmdLine: "/usr/bin/apt-cache --quiet=0 --no-all-versions show libvips",
+    execCmdLine: buildAptCacheCmd("show", ["libvips"]),
   },
   {
     filepath: "cacheshow_virtualandnotpackages",
-    execCmdLine:
-      "/usr/bin/apt-cache --quiet=0 --no-all-versions show libvips xdot",
+    execCmdLine: buildAptCacheCmd("show", ["libvips", "xdot"]),
   },
   {
     filepath: "cacheshowpkg_virtualpackage",
-    execCmdLine: "apt-cache showpkg --quiet=0 libvips",
+    execCmdLine: buildAptCacheCmd("showpkg", ["libvips"]),
   },
   {
     filepath: "install_mixedfoundnotfound",
-    preExecCmdLine: ["apt-get remove -y xdot"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f xdot nonexistentpackage",
+    preExecCmdLine: [
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "xdot",
+        APT_FLAGS.autoRemove,
+      ]),
+    ],
+    execCmdLine: buildAptGetMutatingCmd(
+      "install",
+      [APT_FLAGS.fixBroken, "xdot", "nonexistentpackage"],
+      { simulate: true },
+    ),
   },
   {
     filepath: "install_mixedinstallstatus",
     preExecCmdLine: [
-      "apt-get install -y xdot",
-      "apt-get remove -y rolldice",
-      "apt-get autoremove -y",
+      buildAptGetMutatingCmd("install", [APT_FLAGS.fixBroken, "xdot"]),
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "rolldice",
+        APT_FLAGS.autoRemove,
+      ]),
+      buildAptGetMutatingCmd("autoremove"),
     ],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f rolldice xdot",
+    execCmdLine: buildAptGetMutatingCmd(
+      "install",
+      [APT_FLAGS.fixBroken, "rolldice", "xdot"],
+      { simulate: true },
+    ),
   },
   {
     filepath: "install_singleinstalled",
-    preExecCmdLine: ["apt-get install -y xdot"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f xdot",
+    preExecCmdLine: [
+      buildAptGetMutatingCmd("install", [APT_FLAGS.fixBroken, "xdot"]),
+    ],
+    execCmdLine: buildAptGetMutatingCmd(
+      "install",
+      [APT_FLAGS.fixBroken, "xdot"],
+      { simulate: true },
+    ),
   },
   {
     filepath: "install_singlenotfound",
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f nonexistentpackage",
+    execCmdLine: buildAptGetMutatingCmd(
+      "install",
+      [APT_FLAGS.fixBroken, "nonexistentpackage"],
+      { simulate: true },
+    ),
   },
   {
     filepath: "install_singlenotinstalled",
-    preExecCmdLine: ["apt-get remove -y xdot", "apt-get autoremove -y"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f xdot",
+    preExecCmdLine: [
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "xdot",
+        APT_FLAGS.autoRemove,
+      ]),
+      buildAptGetMutatingCmd("autoremove"),
+    ],
+    execCmdLine: buildAptGetMutatingCmd(
+      "install",
+      [APT_FLAGS.fixBroken, "xdot"],
+      { simulate: true },
+    ),
   },
   {
     filepath: "listinstalled",
-    execCmdLine: "/usr/bin/dpkg-query -W -f ${binary:Package}=${Version}\\n",
+    execCmdLine: buildDpkgQueryCmd([
+      "-W",
+      "-f",
+      "${binary:Package}=${Version}\\n",
+    ]),
   },
   {
     filepath: "listinstalledfiles_found",
-    execCmdLine: "/usr/bin/dpkg-query -L xdot",
+    execCmdLine: buildDpkgQueryCmd(["-L", "xdot"]),
   },
   {
     filepath: "listinstalledfiles_notfound",
-    execCmdLine: "/usr/bin/dpkg-query -L nonexistentpackage",
+    execCmdLine: buildDpkgQueryCmd(["-L", "nonexistentpackage"]),
   },
   {
     filepath: "listupgradable_found",
     preExecCmdLine: [
-      "apt-get remove -y firefox-locale-en",
-      "apt-get install -y firefox-locale-en=75.0+build3-0ubuntu1",
-      "apt-get remove -y uuid-dev",
-      "apt-get install -y uuid-dev=2.34-0.1ubuntu9",
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "firefox-locale-en",
+        APT_FLAGS.autoRemove,
+      ]),
+      buildAptGetMutatingCmd("install", [
+        APT_FLAGS.fixBroken,
+        "firefox-locale-en=75.0+build3-0ubuntu1",
+      ]),
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "uuid-dev",
+        APT_FLAGS.autoRemove,
+      ]),
+      buildAptGetMutatingCmd("install", [
+        APT_FLAGS.fixBroken,
+        "uuid-dev=2.34-0.1ubuntu9",
+      ]),
     ],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o APT::Get::Show-User-Simulation-Note=false -V --simulate dist-upgrade",
+    execCmdLine: buildAptReadCmd("list", ["--upgradable"]),
   },
   {
     filepath: "listupgradable_notfound",
-    preExecCmdLine: ["apt-get upgrade -y"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o APT::Get::Show-User-Simulation-Note=false -V --simulate dist-upgrade",
+    preExecCmdLine: [buildAptGetMutatingCmd("upgrade")],
+    execCmdLine: buildAptReadCmd("list", ["--upgradable"]),
   },
   {
     filepath: "remove_mixedfoundnotfound",
-    preExecCmdLine: ["apt-get install -y xdot"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 remove -f xdot nonexistentpackage --autoremove",
+    preExecCmdLine: [
+      buildAptGetMutatingCmd("install", [APT_FLAGS.fixBroken, "xdot"]),
+    ],
+    execCmdLine: buildAptGetMutatingCmd(
+      "remove",
+      [APT_FLAGS.fixBroken, "xdot", "nonexistentpackage", APT_FLAGS.autoRemove],
+      { simulate: true },
+    ),
   },
   {
     filepath: "remove_mixedinstallstatus",
-    preExecCmdLine: ["apt-get install -y xdot", "apt-get remove -y rolldice"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 remove -f rolldice xdot --autoremove",
+    preExecCmdLine: [
+      buildAptGetMutatingCmd("install", [APT_FLAGS.fixBroken, "xdot"]),
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "rolldice",
+        APT_FLAGS.autoRemove,
+      ]),
+    ],
+    execCmdLine: buildAptGetMutatingCmd(
+      "remove",
+      [APT_FLAGS.fixBroken, "rolldice", "xdot", APT_FLAGS.autoRemove],
+      { simulate: true },
+    ),
   },
   {
     filepath: "remove_singlenotinstalled",
-    preExecCmdLine: ["apt-get remove -y xdot"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 remove -f xdot --autoremove",
+    preExecCmdLine: [
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "xdot",
+        APT_FLAGS.autoRemove,
+      ]),
+    ],
+    execCmdLine: buildAptGetMutatingCmd(
+      "remove",
+      [APT_FLAGS.fixBroken, "xdot", APT_FLAGS.autoRemove],
+      { simulate: true },
+    ),
   },
   {
     filepath: "remove_singlenotfound",
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 remove -f nonexistentpackage --autoremove",
+    execCmdLine: buildAptGetMutatingCmd(
+      "remove",
+      [APT_FLAGS.fixBroken, "nonexistentpackage", APT_FLAGS.autoRemove],
+      { simulate: true },
+    ),
   },
   {
     filepath: "remove_singleinstalled",
-    preExecCmdLine: ["apt-get install -y xdot"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 remove -f xdot --autoremove",
+    preExecCmdLine: [
+      buildAptGetMutatingCmd("install", [APT_FLAGS.fixBroken, "xdot"]),
+    ],
+    execCmdLine: buildAptGetMutatingCmd(
+      "remove",
+      [APT_FLAGS.fixBroken, "xdot", APT_FLAGS.autoRemove],
+      { simulate: true },
+    ),
   },
   {
     filepath: "search_multiplefound",
-    execCmdLine: "/usr/bin/apt-cache --quiet=0 search vim",
+    execCmdLine: buildAptReadCmd("search", ["vim"]),
   },
   {
     filepath: "search_nonefound",
-    execCmdLine: "/usr/bin/apt-cache --quiet=0 search nonexistentpackage",
+    execCmdLine: buildAptReadCmd("search", ["nonexistentpackage"]),
   },
   {
     filepath: "search_singlefound",
-    execCmdLine: "/usr/bin/apt-cache --quiet=0 search vim-vimerl-syntax",
+    execCmdLine: buildAptReadCmd("search", ["vim-vimerl-syntax"]),
   },
   {
     filepath: "update",
-    execCmdLine: "flock /var/lib/apt/lists/lock /usr/bin/apt-get update",
+    execCmdLine: buildAptGetMutatingCmd("update", [], { simulate: true }),
   },
   {
     filepath: "upgrade_mixedfoundnotfound",
-    preExecCmdLine: ["apt-get remove -y xdot"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install xdot nonexistentpackage",
+    preExecCmdLine: [
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "xdot",
+        APT_FLAGS.autoRemove,
+      ]),
+    ],
+    execCmdLine: buildAptGetMutatingCmd(
+      "install",
+      ["xdot", "nonexistentpackage"],
+      { simulate: true },
+    ),
   },
   {
     filepath: "upgrade_mixedupgradestatus",
     preExecCmdLine: [
-      "apt-get install -y xdot",
-      "apt-get remove -y xxd",
-      "apt-get install -y xxd=2:8.1.2269-1ubuntu5.30",
+      buildAptGetMutatingCmd("install", [APT_FLAGS.fixBroken, "xdot"]),
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "xxd",
+        APT_FLAGS.autoRemove,
+      ]),
+      buildAptGetMutatingCmd("install", [
+        APT_FLAGS.fixBroken,
+        "xxd=2:8.1.2269-1ubuntu5.30",
+      ]),
     ],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install xxd xdot",
+    execCmdLine: buildAptGetMutatingCmd("install", ["xxd", "xdot"], {
+      simulate: true,
+    }),
   },
   {
     filepath: "upgrade_singleupgraded",
-    preExecCmdLine: ["apt-get upgrade -y xdot"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 upgrade",
+    preExecCmdLine: [buildAptGetMutatingCmd("install", ["xdot"])],
+    execCmdLine: buildAptGetMutatingCmd("upgrade", [], { simulate: true }),
   },
   {
     filepath: "upgrade_singlenotfound",
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install nonexistentpackage",
+    execCmdLine: buildAptGetMutatingCmd("install", ["nonexistentpackage"], {
+      simulate: true,
+    }),
   },
   {
     filepath: "upgrade_singlenotupgraded",
     preExecCmdLine: [
-      "apt-get remove -y xxd",
-      "apt-get install -y xxd=2:8.1.2269-1ubuntu5.30",
+      buildAptGetMutatingCmd("remove", [
+        APT_FLAGS.fixBroken,
+        "xxd",
+        APT_FLAGS.autoRemove,
+      ]),
+      buildAptGetMutatingCmd("install", [
+        APT_FLAGS.fixBroken,
+        "xxd=2:8.1.2269-1ubuntu5.30",
+      ]),
     ],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install xxd",
+    execCmdLine: buildAptGetMutatingCmd("install", ["xxd"], {
+      simulate: true,
+    }),
   },
   {
     filepath: "upgrade_singleinstalled",
-    preExecCmdLine: ["apt-get install xdot"],
-    execCmdLine:
-      "/usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install xdot",
+    preExecCmdLine: [
+      buildAptGetMutatingCmd("install", [APT_FLAGS.fixBroken, "xdot"]),
+    ],
+    execCmdLine: buildAptGetMutatingCmd("install", ["xdot"], {
+      simulate: true,
+    }),
   },
 ];
 
@@ -375,6 +558,6 @@ await main().catch((error) => {
     "Error occurred during log creation:\n" +
       String(error) +
       "\n" +
-      (error.stack || ""),
+      (error.stack ?? "no stack trace available"),
   );
 });

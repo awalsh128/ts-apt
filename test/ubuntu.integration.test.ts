@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   afterAll,
   beforeAll,
@@ -41,9 +42,9 @@ class TrackingNoopDefaultRunner extends DefaultCommandRunner {
     args: string[] = [],
     _options: CommandOptions = {},
   ): Promise<CommandResult> {
-    const isWrite =
-      command === "flock" &&
-      [Binary.AptGet.path, Binary.AptFast.path].includes(args[3] ?? "");
+    const isWrite = [Binary.AptGet.path, Binary.AptFast.path].includes(
+      args[3] ?? "",
+    );
     if (isWrite) {
       this.writeCalls += 1;
     } else {
@@ -99,14 +100,16 @@ class TrackingNoopDefaultRunner extends DefaultCommandRunner {
       const installed = await manager.listInstalled();
 
       expect(installed.length).toBeGreaterThan(0);
-      expect(installed.some((pkg) => pkg.name.length > 0)).toBe(true);
+      expect(installed.some((pkg) => pkg.name.name.length > 0)).toBe(true);
     });
 
     test(`searches for ${packageName}`, async () => {
-      let found = await manager.search([packageName], true);
+      const found = await manager.search([packageName], true);
 
       expect(found.length).toBeGreaterThan(0);
-      expect(found.some((pkg) => pkg.name.includes(packageName))).toBe(true);
+      expect(found.some((pkg) => pkg.name.name.includes(packageName))).toBe(
+        true,
+      );
     });
 
     test(`gets ${packageName} package info`, async () => {
@@ -115,8 +118,8 @@ class TrackingNoopDefaultRunner extends DefaultCommandRunner {
       ]);
 
       expect(info.length).toBeGreaterThan(0);
-      expect(info[0]?.name).toBe(packageName);
-      expect(info[0]?.version).toMatch(/\S/);
+      expect(info[0]?.name.name).toBe(packageName);
+      expect(info[0]?.name.version).toMatch(/\S/);
     });
 
     test(`lists files installed by ${packageName}`, async () => {
@@ -160,7 +163,7 @@ describe("ubuntu integration for parallel execution semantics", () => {
     expect(runner.maxInFlight).toBeGreaterThan(1);
   });
 
-  test("only writes are serialized by the global lock and mutex", async () => {
+  test("only writes are serialized", async () => {
     await runWithTimeout(
       Promise.all([
         manager.autoClean(),

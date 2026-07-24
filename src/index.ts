@@ -1,5 +1,6 @@
 /** Public type exports for consumers of the library. */
 export type {
+  PackageName,
   PackageInfo,
   PackageManager,
   PackageStatus,
@@ -13,6 +14,13 @@ export { createPackageManager } from "./manager.js";
 
 /** Default process runner export. */
 export { DefaultCommandRunner } from "./commandRunner.js";
+
+export {
+  createPackageName,
+  packageNameFromJSON,
+  deserializePackageName,
+  validatePackageName,
+} from "./package.js";
 
 /** Custom error type exports. */
 export {

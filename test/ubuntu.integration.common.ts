@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Mutex } from "async-mutex";
 import { expect } from "vitest";
 import { AptPackageManager } from "../src/manager.js";
 import { AptOutputParser } from "../src/parser.js";
-import type { CommandRunner } from "../src/index.js";
+import type { CommandRunner, PackageName } from "../src/index.js";
 import {
   createRealCommandRunner,
   getDevcontainerSupport,
@@ -30,10 +32,10 @@ export const canRunIntegration =
 export const canRunMutatingIntegration =
   forceDevcontainer && devcontainerSupport.supported;
 
-export type IntegrationContext = {
+export interface IntegrationContext {
   manager: AptPackageManager;
   runner: CommandRunner;
-};
+}
 
 export async function runWithTimeout<T>(
   promise: Promise<T>,
@@ -103,13 +105,17 @@ export async function ensurePackageMissing(
   await runScript(runner, aptFastPath, ["autoremove", "-y"]);
 }
 
-export function expectNamedEntries<T extends { name: string }>(
+export function expectNamedEntries<T extends { name: PackageName }>(
   entries: T[],
   expectedNames: string[],
 ): void {
   expect(entries).toEqual(
     expect.arrayContaining(
-      expectedNames.map((name) => expect.objectContaining({ name })),
+      expectedNames.map((n) =>
+        expect.objectContaining({
+          name: expect.objectContaining({ name: n }),
+        }),
+      ),
     ),
   );
 }

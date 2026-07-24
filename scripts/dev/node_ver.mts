@@ -23,14 +23,14 @@ import {
   tryRun,
 } from "../devopslib.mts";
 
-type ReferenceSpec = {
+interface ReferenceSpec {
   path: string;
-  replacements: Array<[RegExp, string]>;
-};
+  replacements: [RegExp, string][];
+}
 
-type NodeRegistryPackage = {
+interface NodeRegistryPackage {
   versions?: Record<string, unknown>;
-};
+}
 
 type AptRunner = (args: string[]) => void;
 

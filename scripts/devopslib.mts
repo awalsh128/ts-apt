@@ -1,4 +1,7 @@
 #!/usr/bin/env -S node --experimental-strip-types
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import {
   accessSync,
@@ -79,10 +82,10 @@ export const COLORS = {
 
 export type COLOR = (typeof COLORS)[keyof typeof COLORS];
 
-export type LogParams = {
+export interface LogParams {
   color?: COLOR;
   indent?: number;
-};
+}
 
 export function fail(message: string, exitCode = 1, params: LogParams = {}) {
   logError(message, params);
@@ -149,6 +152,12 @@ export function ensureDirExists(dirPath: string) {
   mkdirSync(dirPath, { recursive: true });
 }
 
+export function ensureDirForFile(filePath: string): string {
+  const absPath = path.resolve(filePath);
+  mkdirSync(path.dirname(absPath), { recursive: true });
+  return absPath;
+}
+
 export function readJsonFile(filePath: string) {
   return JSON.parse(readFileSync(filePath, "utf8"));
 }
@@ -160,7 +169,7 @@ export function writeJsonFile(filePath: string, value: unknown) {
 export function readNodeMajorVersion(rootDir = ROOT_DIR): string {
   const nodeVersionPath = path.join(rootDir, ".node_ver");
 
-  let fileText: string = "";
+  let fileText = "";
   try {
     fileText = readFileSync(nodeVersionPath, "utf8");
   } catch (error) {
@@ -236,6 +245,7 @@ function normalizeSpawnOptions(
     env: options.env ?? process.env,
     encoding: options.encoding ?? "utf8",
     stdio: forcePipe ? "pipe" : (options.stdio ?? "inherit"),
+    ...(options.input !== undefined ? { input: options.input } : {}),
   } satisfies SpawnSyncOptions;
 }
 
@@ -310,21 +320,21 @@ type CliCommands = Record<string, CommandDefinition<any, any>>;
 
 type CliConfig = DefineConfig<CliCommands>;
 
-type CliConfigParams = {
+interface CliConfigParams {
   name?: string;
   importMetaUrl?: string;
   description: string;
   commands: CliCommands;
   defaultCommand?: CommandDefinition<any, any>;
-};
+}
 
-type CliResultCommand = {
+interface CliResultCommand {
   command: {
     action: CliAction;
   };
   options: unknown;
   args: string[];
-};
+}
 
 export function createCliConfig(params: CliConfigParams) {
   const derivedName = (() => {
@@ -378,8 +388,8 @@ export async function runMain(
 
 export async function confirmPrompt(
   message: string,
-  yesPattern: RegExp = /^[yY]$/,
-  noPattern: RegExp = /^[nN]$/,
+  yesPattern = /^[yY]$/,
+  noPattern = /^[nN]$/,
 ) {
   const rl = readline.createInterface({
     input: process.stdin,

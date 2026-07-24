@@ -100,7 +100,7 @@ export class MessageHeaders implements Iterable<[string, string]> {
       }
     } else {
       for (const [name, value] of Object.entries(init)) {
-        this.set(name, value);
+        this.set(name, String(value));
       }
     }
   }

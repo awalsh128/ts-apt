@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/require-await */
 import { readFileSync } from "fs";
 import path, { dirname, resolve } from "path";
 import { CommandExecutionError } from "../src/errors.js";
@@ -72,11 +74,11 @@ export class FakeCommandRunner implements CommandRunner {
   }
 }
 
-type CommandCall = {
+interface CommandCall {
   command: string;
   args: string[];
   options: CommandOptions;
-};
+}
 
 /**
  * Mutable in-memory runner for tests that need to script responses per command line.
@@ -136,12 +138,12 @@ function getFileText(filename: string): string {
 export function deserializeCommandResult(filepath: string): CommandResult {
   const text = getFileText(filepath);
 
-  const cmdLine = text.match(/^\*\*\*\sCMD_LINE\s(.+)/)?.[1]?.trim();
-  const exitCodeStr = text.match(/\*\*\*\sEXIT_CODE\s(\d+)/)?.[1]?.trim();
-  const stdout = text.match(
-    /\*\*\*\sSTDOUT\r?\n([\s\S]*?)\r?\n?\*\*\*\sSTDERR/,
+  const cmdLine = /^\*\*\*\sCMD_LINE\s(.+)/.exec(text)?.[1]?.trim();
+  const exitCodeStr = /\*\*\*\sEXIT_CODE\s(\d+)/.exec(text)?.[1]?.trim();
+  const stdout = /\*\*\*\sSTDOUT\r?\n([\s\S]*?)\r?\n?\*\*\*\sSTDERR/.exec(
+    text,
   )?.[1];
-  const stderr = text.match(/\*\*\*\sSTDERR\r?\n([\s\S]*)/)?.[1];
+  const stderr = /\*\*\*\sSTDERR\r?\n([\s\S]*)/.exec(text)?.[1];
 
   if (!cmdLine) {
     throw new Error(`${filepath}: CMD_LINE section not found in log file`);
@@ -187,7 +189,7 @@ export function createFakeCommandRunner(filename: string): CommandRunner {
 export async function createRealCommandRunner(
   appLogger: winston.Logger,
   execLogger: winston.Logger,
-  forceDevcontainer: boolean = false,
+  forceDevcontainer = false,
 ): Promise<CommandRunner> {
   if (process.env.GITHUB_ACTIONS === "true") {
     appLogger.info(
@@ -202,7 +204,7 @@ export async function createRealCommandRunner(
       throw err;
     }
     appLogger.warn(
-      `Failed to create DevcontainerCommandRunner, falling back to DefaultCommandRunner: ${err}`,
+      `Failed to create DevcontainerCommandRunner, falling back to DefaultCommandRunner: ${String(err)}`,
     );
     return new DefaultCommandRunner(appLogger, execLogger);
   }

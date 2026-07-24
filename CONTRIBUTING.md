@@ -1,6 +1,20 @@
 # Contributing
 
-This document contains maintainer-oriented notes that are intentionally separated from the user-facing README.
+This document contains maintainer-oriented notes that are intentionally separated from the user-facing [README](README.md).
+
+## Development Environment
+
+> [!NOTE]
+> Typescript version is 6.0.3 (most recent and stable). If you get conflicts your local global version of TS
+> may be outdated. Ensure all type checks are performed with `npx tsc` and that `npm install` is executed so
+> this version is installed in the context of your project.
+
+`./scripts/dev` containing all development related concerns. To get started after cloning the repository you
+can run `./scripts/dev/setup_devenv.mts run --ide [your IDE]`. This will setup some of the common settings and
+extensions typically used. You do not have to use this though.
+
+To quickly establish credentials you can run `./scripts/dev/gh_auth.sh`. It is just a helper script to get you
+authenticated with GitHub.
 
 ## Workflow Concerns
 
@@ -72,7 +86,7 @@ Repository scripts are grouped under [scripts/dev](scripts/dev) and [scripts/ops
 - [check_release_tag.mts](scripts/ops/check_release_tag.mts): validates release tag format and consistency with `package.json` version.
 - [create_testcase_logs.mts](scripts/dev/create_testcase_logs.mts): regenerates command execution logs used by integration/parser fixtures.
 - [hotfix_pr.mts](scripts/dev/hotfix_pr.mts): automates hotfix branch creation and PR creation/update flow.
-- [gh_sync.mts](scripts/dev/gh_sync.mts): synchronizes repository settings, rulesets, variables, and tags JSON.
+- [gh_sync.mts](scripts/dev/gh_sync.mts): synchronizes repository settings, rulesets, variables, and tags JSON. **These are not for source control** since they leak information.
 - [setup_devenv.mts](scripts/dev/setup_devenv.mts): bootstraps local developer dependencies, workspace settings, and npm audit remediation.
 - [node_ver.mts](scripts/dev/node_ver.mts): verifies or updates Node version alignment across repo files and local Node installation.
 
@@ -86,7 +100,8 @@ Integration test suite is [test/ubuntu.integration.test.ts](test/ubuntu.integrat
 
 ## Docs and Publishing
 
-- API docs are generated into [docs/api](docs/api).
+- API docs are generated into [docs/api](docs/api) and are generated during the release process, not
+  committed to source.
 - Release workflow publishes package artifacts and deploys docs via GitHub Pages.
 
 ## Operational Concerns

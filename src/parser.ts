@@ -1,4 +1,6 @@
-import type { CommandResult, PackageInfo, PackageStatus } from "./types.js";
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+import type { CommandResult, PackageInfo } from "./types.js";
+import { createPackageName } from "./package.js";
 import { ValidationError } from "./errors.js";
 import winston from "winston";
 import { parseMessage } from "./internetMessage.js";
@@ -6,9 +8,9 @@ import { parseMessage } from "./internetMessage.js";
 // NOTE: Package names and versions use [^\s]+ to be as permissive as possible, since some packages have
 // unusual names or versions. It is always assumed a space will follow which is why negation is used.
 
-/** Matches the cache search line emitted by apt search in '<name>/<repos> <version> <arch>\n<description>' format. */
+/** Matches the cache search line emitted by apt search in '<name>/<release codename> <version> <arch> [\[installed\]]\n<description>' format. */
 const SEARCH_REGEX =
-  /^([^ \n\/]+)\/([^\s]+)\s+([^\s]+)\s+(\w+)\n\s*(.+?)(?=\n\n|\n[^ \n]|$)/gm;
+  /^([^ \n\/]+)\/([^\s]+)\s+([^\s]+)\s+(\w+)\n\s*(.+?)(\s+\[installed\])?(?=\n\n|\n[^ \n]|$)/gm;
 /** Matches the prefix of a stanza in apt-cache show output in order to separate stanzas for parsing. */
 const CACHE_SHOW_STANZA_REGEX = /.+?((?:\r\n|\r|\n)\s*(?:\r\n|\r|\n))|.+$/gs;
 
@@ -78,11 +80,11 @@ export class AptOutputParser {
       const body = bodyRaw.endsWith("\n") ? bodyRaw : `${bodyRaw}\n`;
       const message = parseMessage(body);
       const isInstalled = message.getHeader("Installed") !== "(none)";
+      const version = isInstalled
+        ? message.getHeader("Installed")!
+        : message.getHeader("Candidate")!;
       return {
-        name,
-        version: isInstalled
-          ? message.getHeader("Installed")!
-          : message.getHeader("Candidate")!,
+        name: createPackageName(name, version),
         status: isInstalled ? "installed" : "available",
         metadata: new Map(Object.entries(message.headers.toObject())),
       };
@@ -102,7 +104,7 @@ export class AptOutputParser {
    */
   parseCacheShowOutput(
     result: CommandResult,
-    includeMetadata: boolean = false,
+    includeMetadata = false,
   ): PackageInfo[] {
     const stanzas =
       normText(result.stdout).match(CACHE_SHOW_STANZA_REGEX) ?? [];
@@ -110,10 +112,11 @@ export class AptOutputParser {
     return stanzas
       .map((stanza) => parseMessage(stanza.trimEnd() + "\n\n"))
       .map((message): PackageInfo => {
+        const nameStr = message.getHeader("Package") ?? "";
+        const versionStr = message.getHeader("Version") ?? undefined;
+        const archStr = message.getHeader("Architecture") ?? undefined;
         return {
-          name: message.getHeader("Package") ?? "",
-          version: message.getHeader("Version") ?? "",
-          arch: message.getHeader("Architecture") ?? undefined,
+          name: createPackageName(nameStr, versionStr, archStr),
           status: message.getHeader("Status")?.includes("installed")
             ? "installed"
             : "available",
@@ -145,9 +148,7 @@ export class AptOutputParser {
 
       const [, name, archPart, version] = match;
       packages.push({
-        name: name!,
-        arch: archPart,
-        version: version!,
+        name: createPackageName(name!, version!, archPart),
         status: "installed",
       });
     }
@@ -178,9 +179,7 @@ export class AptOutputParser {
 
       const [, name, arch = undefined, version] = match;
       packages.push({
-        name: name!,
-        arch,
-        version: version!,
+        name: createPackageName(name!, version!, arch),
         status: "available",
       });
     }
@@ -220,9 +219,7 @@ export class AptOutputParser {
       this.assertNotEmpty("version", version, line);
 
       packages.push({
-        name: name!,
-        arch,
-        version: version!,
+        name: createPackageName(name!, version!, arch),
         status: "installed",
       });
     }
@@ -253,9 +250,7 @@ export class AptOutputParser {
       const [, name, newVersion, arch, oldVersion] = matched;
 
       packages.push({
-        name: name!,
-        arch,
-        version: oldVersion!,
+        name: createPackageName(name!, oldVersion!, arch),
         status: "upgradeable",
         metadata: new Map([["newVersion", newVersion!]]),
       });
@@ -290,9 +285,7 @@ export class AptOutputParser {
       const [, name, arch, version] = matched;
 
       packages.push({
-        name: name!,
-        arch,
-        version: version!,
+        name: createPackageName(name!, version!, arch),
         status: "installed",
       });
     }
@@ -305,21 +298,21 @@ export class AptOutputParser {
    *
    * Example output parsed:
    * ```text
-   * curl/jammy-updates,jammy-security 8.5.0-2ubuntu10.6 amd64
+   * curl/jammy-updates,jammy-security 8.5.0-2ubuntu10.6 amd64 [installed]
    *   command line tool for transferring data with URL syntax
    * ```
    */
   parseSearchOutput(result: CommandResult): PackageInfo[] {
     const packages: PackageInfo[] = [];
     for (const match of normText(result.stdout).matchAll(SEARCH_REGEX)) {
-      const [, name, repos, version, arch, description] = match;
+      const [, name, release_codename, version, arch, installed, description] =
+        match;
       packages.push({
-        name: name!,
-        version: version!,
-        arch: arch!,
+        name: createPackageName(name!, version!, arch!),
+        status: installed ? "installed" : "available",
         metadata: new Map([
           ["description", description!],
-          ["repos", repos!],
+          ["release_codename", release_codename!],
         ]),
       });
     }
@@ -341,7 +334,7 @@ export class AptOutputParser {
       .trimEnd()
       .split("\n");
     const lastLine = lines[lines.length - 1] ?? "";
-    const match = lastLine.match(/(\d+) packages can be upgraded/);
+    const match = /(\d+) packages can be upgraded/.exec(lastLine);
     return match ? parseInt(match[1]!, 10) : 0;
   }
 
@@ -370,9 +363,7 @@ export class AptOutputParser {
       const [, name, arch, version] = match;
 
       packages.push({
-        name: name!,
-        arch,
-        version: version!,
+        name: createPackageName(name!, version!, arch),
         status: "installed",
       });
     }

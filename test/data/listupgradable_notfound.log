@@ -1,7 +1,7 @@
-*** CMD_LINE apt list --upgradeable
+*** CMD_LINE /usr/bin/apt --quiet=0 list --upgradable
 *** EXIT_CODE 0
 *** STDOUT
-Listing...
+Listing... 0%Listing... 0%Listing... 0%Listing... Done
 *** STDERR
 
 WARNING: apt does not have a stable CLI interface. Use with caution in scripts.

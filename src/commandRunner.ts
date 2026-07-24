@@ -1,4 +1,3 @@
-import path from "node:path";
 import { spawn } from "node:child_process";
 import { CommandExecutionError } from "./errors.js";
 import type { CommandOptions, CommandResult, CommandRunner } from "./types.js";
@@ -6,6 +5,22 @@ import winston from "winston";
 
 /** Default process timeout for commands without an explicit timeout. */
 const DEFAULT_TIMEOUT_MS = 30_000;
+
+function getEnv(options: CommandOptions) {
+  const env = { ...process.env };
+  for (const pair of options.env ?? []) {
+    const idx = pair.indexOf("=");
+    if (idx <= 0) {
+      continue;
+    }
+    const key = pair.slice(0, idx);
+    const value = pair.slice(idx + 1);
+    env[key] = value;
+  }
+
+  env.LC_ALL ??= "C";
+  return env;
+}
 
 /**
  * Production command runner backed by child_process spawn.
@@ -38,46 +53,58 @@ export class DefaultCommandRunner implements CommandRunner {
     this.appLogger.info(`Executing command: ${cmdLine}`);
 
     return await new Promise<CommandResult>((resolve, reject) => {
-      const env = { ...process.env };
-      for (const pair of options.env ?? []) {
-        const idx = pair.indexOf("=");
-        if (idx <= 0) {
-          continue;
-        }
-        const key = pair.slice(0, idx);
-        const value = pair.slice(idx + 1);
-        env[key] = value;
-      }
-
-      if (!env.LC_ALL) {
-        env.LC_ALL = "C";
-      }
-
       const child = spawn(command, args, {
-        env,
+        env: getEnv(options),
         stdio: "pipe",
       });
 
       let stdout = "";
       let stderr = "";
-      let combinedOut = "";
       let settled = false;
+      // eslint-disable-next-line prefer-const
       let timeoutId: NodeJS.Timeout | undefined;
+
+      const cleanup = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        // Remove listeners to prevent memory leaks if process hangs
+        child.removeAllListeners();
+      };
+
+      const execError = (exitCode: number, signal?: NodeJS.Signals) => {
+        const error = new CommandExecutionError({
+          command,
+          args,
+          exitCode,
+          stdout,
+          stderr,
+          signal,
+        });
+        this.appLogger.error(
+          `Command '${cmdLine}' failed with exit code ${exitCode}` +
+            `${signal ? ` (signal: ${signal})` : ""}:\n${stderr}`,
+        );
+        return error;
+      };
 
       /**
        * Ensures promise resolution or rejection happens once.
        *
        * @param fn Finalizer callback to execute once settled.
        */
-      const finalize = (fn: () => void): void => {
-        if (settled) {
-          return;
-        }
+      const finalize = (
+        status: "success" | "error",
+        result?: CommandResult,
+        error?: Error,
+      ) => {
+        if (settled) return;
         settled = true;
-        if (timeoutId) {
-          clearTimeout(timeoutId);
+        cleanup();
+
+        if (status === "success" && result) {
+          resolve(result);
+        } else {
+          reject(error ?? execError(1));
         }
-        fn();
       };
 
       child.stdout?.on("data", (chunk: Buffer) => {
@@ -91,52 +118,38 @@ export class DefaultCommandRunner implements CommandRunner {
         this.execLogger.error(str);
       });
 
-      child.on("error", (error) => {
+      child.on("error", (error: Error) => {
         this.appLogger.error(
           `Command '${cmdLine}' failed with error:\n${JSON.stringify(error)}`,
         );
-        finalize(() => reject(error));
+        finalize("error", undefined, error);
       });
 
-      child.on("close", (code) => {
-        const exitCode = code ?? 1;
-        finalize(() => {
-          if (exitCode === 0) {
-            resolve({
-              cmdLine,
-              stdout,
-              stderr,
-              exitCode,
-            });
-            return;
-          }
-          reject(
-            new CommandExecutionError({
-              command,
-              args,
-              exitCode,
-              stdout,
-              stderr,
-            }),
-          );
-        });
+      child.on("close", (code?: number, signal?: NodeJS.Signals) => {
+        // Prevent double handling if timeout fired first
+        if (settled) return;
+
+        const exitCode = code ?? (signal ? 128 : 1); // Handle signal termination
+        const isSuccess = exitCode === 0 && !signal;
+
+        if (isSuccess) {
+          finalize("success", { cmdLine, stdout, stderr, exitCode: 0 });
+        } else {
+          finalize("error", undefined, execError(exitCode, signal));
+        }
       });
 
       timeoutId = setTimeout(() => {
-        child.kill("SIGTERM");
+        if (settled) return;
+
         const message = `Command '${cmdLine}' timed out after ${timeoutMs}ms`;
         this.appLogger.error(message);
-        finalize(() => {
-          reject(
-            new CommandExecutionError({
-              command,
-              args,
-              exitCode: 124,
-              stdout,
-              stderr: stderr || message,
-            }),
-          );
-        });
+
+        child.kill("SIGTERM");
+
+        stderr ??= message;
+        // Standard timeout exit code
+        finalize("error", undefined, execError(124));
       }, timeoutMs);
     });
   }
