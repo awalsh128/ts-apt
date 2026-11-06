@@ -1,10 +1,12 @@
 name: Publish Release
 
+# Releases are always gated by CI:
+# - staging: ci.yml calls this after all CI jobs pass, releasing a candidate (e.g. 1.2.0-rc.1).
+# - main: promote.yml starts this after fast-forwarding main to a CI-passed staging commit,
+#   releasing an official version (e.g. 1.2.0).
+# - Manual runs first require a successful CI run for the commit.
 on:
-  push:
-    branches:
-      - main
-      - staging # pre-release candidates (i.e. *-rc)
+  workflow_call:
   workflow_dispatch:
     inputs:
       dry-run:
@@ -15,10 +17,15 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # One release per branch at a time; never cancel one that is tagging.
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
     permissions:
-      contents: write # For tags/commits
+      actions: read # For checking CI results on manual runs
+      contents: write # For tags
       pages: write # For GitHub Pages deployment
-      id-token: write # For OIDC verification (required for Pages and NPM)
+      id-token: write # For OIDC verification (required for Pages)
       issues: write # For semantic-release comments
       pull-requests: write # For semantic-release comments
     steps:
@@ -27,12 +34,20 @@ jobs:
         with:
           fetch-depth: 0 # Crucial for semantic-release to analyze history
           persist-credentials: false
+
+      - name: Require CI success
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: ./.github/actions/require-ci-success
+        with:
+          sha: ${{ github.sha }}
+          token: ${{ github.token }}
+
       - name: Setup
         uses: ./.github/actions/setup
 
       - name: Publish with semantic-release
         shell: bash
-        run: npm run release ${{ inputs.dry-run == 'true' && '--dry-run' || '' }}
+        run: npm run release -- ${{ inputs.dry-run == 'true' && '--dry-run' || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

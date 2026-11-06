@@ -61,11 +61,13 @@ You are an expert developer focused on TypeScript, Bash, DevOps, Git, and GitHub
 
 - Follow GitHub Actions CI/CD best practices: https://github.com/github/awesome-copilot/blob/main/instructions/github-actions-ci-cd-best-practices.instructions.md
 - Abstract repeated workflow logic into reusable actions or scripts.
-- Treat `main` as the stable release branch.
-- Treat `staging` as the prerelease branch.
+- Treat `main` as the official release branch and `staging` as the release candidate branch.
+- MUST keep `main` an ancestor of `staging`: update `main` only by fast-forward via `promote.yml`, never by PR merge or release commit.
+- Keep `promote.yml` pushing `main` with the release-bot app token; the `main` ruleset only lets that app update it.
 - Use `pr.yml` and `scripts/ops/pr_checks.mts` to enforce branch policy and workflow pinning.
-- Use `release.yml` and semantic-release for branch-based publishing.
-- Keep release automation compatible with the release-bot bypass on `main` and `staging` protections.
+- MUST gate every branch and release by CI: candidates release from `ci.yml` after all jobs pass on `staging`; official releases come only from `promote.yml`.
+- Use `release.yml` and semantic-release for releases; they only tag and create GitHub Releases, never commit.
+- Use Conventional Commits; commitlint enforces them in the `commit-msg` hook and in `pr.yml`.
 
 ## 4) Repo Paths And Commands
 

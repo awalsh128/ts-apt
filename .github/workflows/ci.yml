@@ -2,6 +2,10 @@ name: CI
 
 on:
   pull_request:
+  # Gates release candidates, and gives the promote workflow a result for staging's exact commit.
+  push:
+    branches:
+      - staging
   schedule:
     - cron: "30 5 * * *"
   workflow_dispatch:
@@ -101,3 +105,16 @@ jobs:
         if: always()
         shell: bash
         run: npm audit --audit-level=high --omit=dev
+
+  # Release candidates are only cut from staging commits that pass every CI job.
+  release-candidate:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/staging' }}
+    needs: [codeql, linters, testing]
+    permissions:
+      actions: read
+      contents: write
+      issues: write
+      pull-requests: write
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/release.yml

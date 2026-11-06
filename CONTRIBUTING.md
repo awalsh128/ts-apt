@@ -34,41 +34,73 @@ Primary CI is defined in [.github/workflows/ci.yml](.github/workflows/ci.yml).
 ### Pull Request Branch Policy
 
 - Branch policy is enforced by [.github/workflows/pr.yml](.github/workflows/pr.yml) and [scripts/ops/pr_checks.mts](scripts/ops/pr_checks.mts).
-- Feature branches should target `staging`.
-- `main` only accepts merges from `staging`.
-- A release-bot role has bypass permission for the `main` and `staging` branch protections.
+- Feature branches target `staging`.
+- The `staging` ruleset requires a pull request with passing `linters`, `testing`, `codeql` and
+  `check-branch` checks, and blocks force pushes and deletion.
+- Pull requests into `main` are rejected; `main` is only updated by [promotion](#promotion-and-branch-policy).
 
 Pull request policy checks are defined in [.github/workflows/pr.yml](.github/workflows/pr.yml).
 
 - Triggered on PR open/update/reopen/edited events.
 - Runs `npm run check:pr` to enforce branch policy and pinned action ref validation.
-- Pull requests into `main` must come from `staging`.
+- Runs commitlint on every commit in the PR, so each one must follow [Conventional Commits](#conventional-commits).
 - Treat short-lived task branches as disposable and prefer deleting them after merge.
 
-### Branch Sync and Merge Policy
+### Promotion and Branch Policy
 
-Branch ancestry enforcement is defined in [.github/workflows/branch-sync.yml](.github/workflows/branch-sync.yml).
+`main` is always an ancestor of `staging`: it only ever points at a commit that is already on
+`staging`, and never has commits of its own.
 
-- Triggered on pushes to `main`, on a daily schedule, and manually via `workflow_dispatch`.
-- Verifies that `staging` remains an ancestor of `main`.
-- `staging` into `main` should preserve ancestry with a merge commit; squash and rebase merges break this guardrail.
-- If `staging` ancestry is broken, repair it immediately with a merge-commit-based sync before taking further releases.
+- Promote with the "Promote staging to main" workflow ([.github/workflows/promote.yml](.github/workflows/promote.yml)),
+  run manually.
+- It requires a successful CI run on `staging`'s latest commit, fast-forwards `main` to that commit,
+  then starts the official release.
+- It fails rather than force-pushing if `main` has commits that `staging` doesn't.
+- The `main` ruleset blocks every update except from the release-bot GitHub App, whose token the
+  promote workflow uses (`RELEASE_BOT_APP_ID` variable and `RELEASE_BOT_PK` secret).
+- Rulesets can be downloaded with `npm run repo:rulesets:download` and updated with
+  `npm run repo:rulesets:upload`.
+- Never merge into `main` with a pull request: merge, squash and rebase merges all add a commit to
+  `main` that `staging` doesn't have.
 
 ### Release and Publishing
 
-Release automation is defined in [.github/workflows/release.yml](.github/workflows/release.yml) and uses semantic-release.
+Release automation is defined in [.github/workflows/release.yml](.github/workflows/release.yml) and
+uses semantic-release, following [Semantic Versioning](https://semver.org).
 
-- Triggers: push to `main` or `staging`, plus `workflow_dispatch`.
-- `staging` produces prereleases on the `next` channel with `rc` suffixes.
-- `main` produces stable releases and deploys API docs to GitHub Pages.
-- semantic-release updates package metadata as part of its own prepare/commit flow.
-- The release-bot GitHub App token is used so the release job can publish, tag, and push release commits back to the branch that triggered it.
+Every release is gated by CI on the exact commit being released.
+
+| Branch    | Releases                    | Example      | Started by                                                 |
+| --------- | --------------------------- | ------------ | ---------------------------------------------------------- |
+| `staging` | Release candidates (`next`) | `1.2.0-rc.1` | The last CI job on a `staging` push, after all others pass |
+| `main`    | Official (stable) releases  | `1.2.0`      | The promote workflow only                                  |
+
+- Manual runs of the release workflow first require a successful CI run for the commit.
+- Each release candidate increments the `rc` number until the version is promoted. The official
+  release is tagged on the same commit as the last candidate.
+- Releases create a `vX.Y.Z` git tag and a GitHub Release with the notes. They never commit, so
+  `package.json` keeps its placeholder version and there is no `CHANGELOG.md`.
+- ts-apt is not published to npm. Consumers such as cache-apt-pkgs-action install it from a git
+  commit SHA.
+- Official releases also deploy the API docs to GitHub Pages.
+- Run the release workflow manually with `dry-run: true` to preview the next version without tagging.
 
 Release configuration is in [release.config.ts](release.config.ts).
 
 ## Conventional Commits
 
 semantic-release determines version bump level from commit messages.
+
+| Type                                                                  | Release |
+| --------------------------------------------------------------------- | ------- |
+| `feat`                                                                | minor   |
+| `fix`, `perf`                                                         | patch   |
+| `!` after the type, or a `BREAKING CHANGE:` footer                    | major   |
+| `build`, `chore`, `ci`, `docs`, `refactor`, `revert`, `style`, `test` | none    |
+
+A husky `commit-msg` hook runs commitlint ([commitlint.config.js](commitlint.config.js)) and rejects
+commits without a type. `npm install` sets it up through the `prepare` script. CI runs the same
+check on pull requests, since `git commit --no-verify` skips the hook.
 
 Examples:
 

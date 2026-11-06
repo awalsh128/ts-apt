@@ -398,11 +398,15 @@ function runChecks(options: PrCheckOptions): string[] {
   const changedPaths = getProhibitedPathsChanges();
 
   if (baseRef.length > 0 && headRef.length > 0) {
-    if (baseRef === "main" && headRef !== "staging") {
+    // Merging a pull request adds a commit to main that staging doesn't have, so main only moves by
+    // fast-forward through the promote workflow.
+    if (baseRef === "main") {
       errors.push(
-        `Merge to 'main' is only allowed from 'staging'. Current source: '${headRef}'.`,
+        `Pull requests into 'main' are not allowed. Current source: '${headRef}'.`,
       );
-      errors.push("To fix this, rebase your feature branch onto 'staging'.");
+      errors.push(
+        "Target 'staging' instead; run the 'Promote staging to main' workflow to update 'main'.",
+      );
     }
 
     errors.push(...validateModifiedActionRefs(baseRef, headRef));
