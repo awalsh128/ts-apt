@@ -217,8 +217,11 @@ export class AptPackageManager implements PackageManager {
     return this.parser.parseRemoveOutput(result);
   }
 
-  async search(keywords: string[]): Promise<PackageInfo[]> {
+  async search(keywords: string[], namesOnly = false): Promise<PackageInfo[]> {
     const baseArgs = ["search", ...keywords];
+    if (namesOnly) {
+      baseArgs.push("--names-only");
+    }
     const result = await this.run(this.readBinary, baseArgs);
 
     return this.parser.parseSearchOutput(result);

@@ -317,6 +317,23 @@ describe("apt manager", () => {
     });
   });
 
+  test("search with namesOnly passes names-only flag", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(
+      aptPath,
+      ["--quiet=0", "-y", "search", "vim", "--names-only"],
+      {
+        stdout: "vim/focal 2:8.1.2269-1ubuntu5 amd64\n  Vi IMproved\n",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
+
+    const out = await createManager(runner).search(["vim"], true);
+
+    expect(out.map((pkg) => pkg.name.name)).toEqual(["vim"]);
+  });
+
   test("search propagates command failures", async () => {
     const runner = new MockCommandRunner();
     runner.setError(
