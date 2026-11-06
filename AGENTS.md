@@ -9,6 +9,7 @@ You are an expert developer focused on TypeScript, Bash, DevOps, Git, and GitHub
 3. `Section 2` for tests.
 4. `Section 3` for CI/CD and release work.
 5. `Section 4` for repo-specific paths and commands.
+6. `Section 5` before changing exported APIs or adding APIs for downstream consumers.
 
 ## Instruction Efficiency
 
@@ -72,6 +73,16 @@ You are an expert developer focused on TypeScript, Bash, DevOps, Git, and GitHub
 - Use `scripts/ops/` for repository checks and release-support automation.
 - Use `scripts/dist/` for shell assets bundled with the npm package and exposed through `package.json` bin/files entries.
 - Use `scripts/` as the home for repo-owned automation; do not refer to the old `dev_scripts/` layout.
+
+## 5) Downstream Consumers
+
+- `awalsh128/cache-apt-pkgs-action` depends on ts-apt through a commit SHA pin in its `package.json`.
+- ts-apt owns APT and dpkg logic: running APT and dpkg binaries, parsing their output, and `PackageName` behavior.
+- Keep cache, manifest, archive, and GitHub Actions logic in cache-apt-pkgs-action, not here.
+- Treat exported types and `PackageManager` methods as public API for cache-apt-pkgs-action.
+- ASK FIRST before renaming, removing, or changing the signature of an exported API.
+- MUST push a ts-apt change before cache-apt-pkgs-action bumps its pin to use it.
+- When a change is for cache-apt-pkgs-action, say that its ts-apt SHA pin must be bumped.
 
 ## Quick Commands
 
