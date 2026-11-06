@@ -1,0 +1,2 @@
+# Rejects commit messages without a Conventional Commits type, e.g. "feat: ...".
+npx --no -- commitlint --edit "$1"

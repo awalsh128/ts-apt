@@ -1,5 +1,8 @@
 name: Pull Requests
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
@@ -21,7 +24,13 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          npm run check:pr -- --base-ref "${{ github.base_ref }}" --head-ref "${{ github.head_ref }}" \
+          npm run check:pr -- --base-ref '${{ github.base_ref }}' --head-ref '${{ github.head_ref }}' \
            --allow-admin-bypass
 
-  
+      # The commit-msg hook can be skipped locally, so check every PR commit too.
+      - name: Lint commit messages
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: npx commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose

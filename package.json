@@ -52,7 +52,7 @@
     "build:lib": "npx tsc -p tsconfig.build.json",
     "build:scripts": "npx tsc -p tsconfig.scripts.json --noEmit",
     "build": "npm run -s runall -- build:lib build:scripts",
-    "prepare": "npm run -s build:lib",
+    "prepare": "husky && npm run -s build:lib",
     "clean": "rm -rf dist coverage",
     "script": "node --experimental-strip-types",
     "check:latest-action-pin": "npm run script -- ./scripts/ops/check_latest_action_pin.mts",
@@ -85,7 +85,8 @@
     "test:integration": "vitest run test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
     "test:integration:docker": "TS_APT_FORCE_DEVCONTAINER=true vitest run test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
     "test": "npm run -s test:unit && npm run -s test:integration",
-    "dev": "vitest"
+    "dev": "vitest",
+    "commitlint": "commitlint"
   },
   "dependencies": {
     "async-mutex": "^0.5.0",
@@ -93,6 +94,8 @@
     "zodline": "^0.3.2"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@devcontainers/cli": "^0.90.0",
     "@robingenz/zli": "^0.2.0",
     "@semantic-release/changelog": "^7.0.0",
@@ -107,6 +110,7 @@
     "@typescript-eslint/parser": "^8.72.1",
     "@vitest/coverage-v8": "^5.1.0",
     "eslint": "^10.14.0",
+    "husky": "^9.1.7",
     "internet-message": "^1.0.0",
     "npm-run-all": "^4.1.5",
     "rollup": "^4.67.5",
