@@ -120,12 +120,19 @@ export class AptPackageManager implements PackageManager {
     this.logger = logger;
     this.simulate = simulate;
 
-    this.mutatingBinary = aptFastEnabled ? Binary.AptFast : Binary.AptGet;
+    const mutatingBinary = aptFastEnabled ? Binary.AptFast : Binary.AptGet;
+    // Copy rather than mutate the shared Binary entry, so simulation stays
+    // scoped to this instance.
+    this.mutatingBinary = this.simulate
+      ? {
+          ...mutatingBinary,
+          defaultArgs: [...mutatingBinary.defaultArgs, "--simulate"],
+        }
+      : mutatingBinary;
     if (this.simulate) {
       this.logger.info(
         `Simulation mode enabled: mutating operations will not make actual changes`,
       );
-      this.mutatingBinary.defaultArgs.push("--simulate");
     }
 
     this.readBinary = aptFastEnabled ? Binary.AptFast : Binary.Apt;

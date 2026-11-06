@@ -200,6 +200,55 @@ describe("apt manager", () => {
     expect(files).toEqual(["/usr/bin/vim"]);
   });
 
+  test("install simulate enabled passes simulate flag", async () => {
+    const simulateArgs = ["--quiet=0", "-y", "--simulate", ...lockTimeoutArgs];
+    const runner = new MockCommandRunner();
+    runner.setResult(
+      aptPath,
+      [...simulateArgs, "install", "-f", "-qq", "vim"],
+      {
+        stdout: "",
+        stderr: "",
+        exitCode: 0,
+      },
+    );
+    const manager = new AptPackageManager(
+      true,
+      runner,
+      new AptOutputParser(logger),
+      logger,
+      true,
+    );
+
+    await manager.install([pkg("vim")]);
+
+    expect(runner.calls[0]?.args.slice(0, 3)).toEqual([
+      "--quiet=0",
+      "-y",
+      "--simulate",
+    ]);
+  });
+
+  test("install after simulate manager created omits simulate flag", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(
+      aptPath,
+      ["--quiet=0", "-y", ...lockTimeoutArgs, "install", "-f", "-qq", "vim"],
+      { stdout: "", stderr: "", exitCode: 0 },
+    );
+    new AptPackageManager(
+      true,
+      new MockCommandRunner(),
+      new AptOutputParser(logger),
+      logger,
+      true,
+    );
+
+    await createManager(runner).install([pkg("vim")]);
+
+    expect(runner.calls[0]?.args).not.toContain("--simulate");
+  });
+
   test("install default timeout runs without a process timeout", async () => {
     const runner = new MockCommandRunner();
     runner.setResult(
