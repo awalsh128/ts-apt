@@ -139,18 +139,21 @@ export class DefaultCommandRunner implements CommandRunner {
         }
       });
 
-      timeoutId = setTimeout(() => {
-        if (settled) return;
+      // A timeout of zero or less means the command can run indefinitely.
+      if (timeoutMs > 0) {
+        timeoutId = setTimeout(() => {
+          if (settled) return;
 
-        const message = `Command '${cmdLine}' timed out after ${timeoutMs}ms`;
-        this.appLogger.error(message);
+          const message = `Command '${cmdLine}' timed out after ${timeoutMs}ms`;
+          this.appLogger.error(message);
 
-        child.kill("SIGTERM");
+          child.kill("SIGTERM");
 
-        stderr ??= message;
-        // Standard timeout exit code
-        finalize("error", undefined, execError(124));
-      }, timeoutMs);
+          stderr ??= message;
+          // Standard timeout exit code
+          finalize("error", undefined, execError(124));
+        }, timeoutMs);
+      }
     });
   }
 }

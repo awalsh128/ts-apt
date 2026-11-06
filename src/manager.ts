@@ -179,7 +179,9 @@ export class AptPackageManager implements PackageManager {
   }
 
   async listInstalledFiles(pkg: PackageName): Promise<string[]> {
-    const result = await this.run(Binary.DpkgQuery, ["-L", pkg.serialize()]);
+    // dpkg-query only accepts name[:arch], not a version.
+    const specifier = pkg.arch ? `${pkg.name}:${pkg.arch}` : pkg.name;
+    const result = await this.run(Binary.DpkgQuery, ["-L", specifier]);
 
     return result.stdout
       .split(/\r?\n/)
@@ -283,6 +285,9 @@ export class AptPackageManager implements PackageManager {
     const args = [...binary.defaultArgs, ...lockArgs, ...baseArgs];
     return this.runner.run(binary.path, args, {
       env: [...aptEnv],
+      // Mutating commands (e.g. install) can take minutes, so they use the
+      // caller's timeout (-1 for none) instead of the runner default.
+      ...(mutationTimeoutMs === undefined ? {} : { timeoutMs: mutationTimeoutMs }),
     });
   }
 }

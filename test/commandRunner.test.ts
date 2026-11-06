@@ -64,6 +64,16 @@ describe("default command runner", () => {
     } as Partial<CommandExecutionError>);
   });
 
+  test("run non-positive timeout lets command finish", async () => {
+    const runner = await createDefaultCommandRunner();
+
+    const result = await runner.run("bash", ["-lc", "sleep 0.2; echo done"], {
+      timeoutMs: -1,
+    });
+
+    expect(result.stdout.trim()).toBe("done");
+  });
+
   test("propagates spawn errors for missing executables", async () => {
     const runner = await createDefaultCommandRunner();
 

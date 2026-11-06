@@ -162,6 +162,35 @@ describe("apt manager", () => {
     expect(files).toEqual(["/usr/bin/vim", "/usr/share/doc/vim"]);
   });
 
+  test("list installed files versioned package queries name and arch only", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(Binary.DpkgQuery.path, ["-L", "vim:amd64"], {
+      stdout: "/usr/bin/vim\n",
+      stderr: "",
+      exitCode: 0,
+    });
+
+    const files = await createManager(runner).listInstalledFiles(
+      pkg("vim:amd64=2:9.0"),
+    );
+
+    expect(runner.calls[0]?.args).toEqual(["-L", "vim:amd64"]);
+    expect(files).toEqual(["/usr/bin/vim"]);
+  });
+
+  test("install default timeout runs without a process timeout", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(
+      aptPath,
+      ["--quiet=0", "-y", ...lockTimeoutArgs, "install", "-f", "-qq", "vim"],
+      { stdout: "", stderr: "", exitCode: 0 },
+    );
+
+    await createManager(runner, true).install([pkg("vim")]);
+
+    expect(runner.calls[0]?.options.timeoutMs).toBe(-1);
+  });
+
   test("list upgradable parses apt output", async () => {
     const runner = new MockCommandRunner();
     runner.setResult(aptPath, ["--quiet=0", "-y", "list", "--upgradable"], {
