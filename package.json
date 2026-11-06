@@ -90,32 +90,35 @@
   "dependencies": {
     "async-mutex": "^0.5.0",
     "winston": "^3.19.0",
-    "zodline": "^0.3.0"
+    "zodline": "^0.3.2"
   },
   "devDependencies": {
-    "@devcontainers/cli": "^0.88.0",
+    "@devcontainers/cli": "^0.90.0",
     "@robingenz/zli": "^0.2.0",
     "@semantic-release/changelog": "^7.0.0",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^11.0.1",
-    "@semantic-release/github": "^12.0.9",
-    "@semantic-release/npm": "^13.1.5",
+    "@semantic-release/github": "^12.0.10",
+    "@semantic-release/npm": "^13.2.0",
     "@semantic-release/release-notes-generator": "^14.1.1",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.6.6",
     "@types/tar": "^7.0.87",
-    "@typescript-eslint/eslint-plugin": "^8.66.0",
-    "@typescript-eslint/parser": "^8.66.0",
-    "@vitest/coverage-v8": "^4.1.9",
-    "eslint": "^10.8.1",
+    "@typescript-eslint/eslint-plugin": "^8.72.1",
+    "@typescript-eslint/parser": "^8.72.1",
+    "@vitest/coverage-v8": "^5.1.0",
+    "eslint": "^10.14.0",
     "internet-message": "^1.0.0",
     "npm-run-all": "^4.1.5",
-    "rollup": "^4.62.4",
+    "rollup": "^4.67.5",
     "semantic-release": "^25.0.9",
-    "type-coverage": "^2.30.1",
-    "typedoc": "^0.28.19",
-    "typedoc-plugin-markdown": "^4.12.0",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.10",
-    "zod": "^4.4.3"
+    "type-coverage": "^2.31.2",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.14.1",
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.0",
+    "zod": "^4.6.7"
+  },
+  "overrides": {
+    "minimatch": "^11.0.5"
   }
 }

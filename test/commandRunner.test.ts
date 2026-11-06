@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { CommandRunner } from "../src/types.js";
-import { CommandExecutionError } from "../src/errors.js";
 import { createRealCommandRunner, nullLogger } from "./common.js";
 
 async function createDefaultCommandRunner(): Promise<CommandRunner> {
@@ -54,7 +53,7 @@ describe("default command runner", () => {
       name: "CommandExecutionError",
       exitCode: 7,
       command: "bash",
-    } as Partial<CommandExecutionError>);
+    });
   });
 
   test("throws timeout error when command exceeds timeout", async () => {
@@ -65,7 +64,7 @@ describe("default command runner", () => {
     ).rejects.toMatchObject({
       name: "CommandExecutionError",
       exitCode: 124,
-    } as Partial<CommandExecutionError>);
+    });
   });
 
   test("run timeout with command ignoring SIGTERM kills command", async () => {
@@ -76,7 +75,7 @@ describe("default command runner", () => {
     ).rejects.toMatchObject({
       name: "CommandExecutionError",
       exitCode: 124,
-    } as Partial<CommandExecutionError>);
+    });
   }, 10_000);
 
   test("run command killed by signal throws 128 plus signal number", async () => {
@@ -88,7 +87,7 @@ describe("default command runner", () => {
       name: "CommandExecutionError",
       exitCode: 143,
       signal: "SIGTERM",
-    } as Partial<CommandExecutionError>);
+    });
   });
 
   test("run non-positive timeout lets command finish", async () => {
@@ -117,7 +116,7 @@ describe("default command runner", () => {
     ).rejects.toMatchObject({
       name: "CommandExecutionError",
       exitCode: 3,
-    } as Partial<CommandExecutionError>);
+    });
   });
 
   test("propagates spawn errors for missing executables", async () => {
