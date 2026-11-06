@@ -31,6 +31,9 @@ class AptPackageName implements PackageName {
   readonly arch?: string;
 
   private constructor(name: string, version?: string, arch?: string) {
+    if (!name) {
+      throw new ValidationError("Package name must not be empty.");
+    }
     this.name = name;
     this.version = version;
     this.arch = arch;

@@ -4,6 +4,7 @@ import {
   deserializePackageName,
   packageNameFromJSON,
 } from "../src/package.js";
+import { ValidationError } from "../src/errors.js";
 
 const pkg = (input: { name: string; version?: string; arch?: string }) =>
   createPackageName(input.name, input.version, input.arch);
@@ -59,6 +60,14 @@ describe("packages", () => {
     ["vim:a:amd64=a=a", pkg({ name: "vim", version: "a=a", arch: "a:amd64" })],
   ])("deserializePackageName(%j) returns %j", (input, expected) => {
     expect(deserializePackageName(input)).toEqual(expected);
+  });
+
+  test("createPackageName empty name throws ValidationError", () => {
+    expect(() => createPackageName("")).toThrow(ValidationError);
+  });
+
+  test("packageNameFromJSON empty name throws ValidationError", () => {
+    expect(() => packageNameFromJSON({ name: "" })).toThrow(ValidationError);
   });
 
   test("deserializePackageName throws on empty package", () => {

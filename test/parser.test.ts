@@ -349,6 +349,17 @@ describe("apt output parser", () => {
     expect(parsed.map((pkg) => pkg.name)).toEqual([createPackageName("curl")]);
   });
 
+  test("parseCacheShowOutput stanza without package throws ValidationError", () => {
+    expect(() =>
+      parser.parseCacheShowOutput({
+        cmdLine: "apt-cache show curl",
+        exitCode: 0,
+        stdout: "Version: 8.5.0\nArchitecture: amd64\n",
+        stderr: "",
+      }),
+    ).toThrow(ValidationError);
+  });
+
   test("parseListInstalledOutput unrecognized line skips line", () => {
     const parsed = parser.parseListInstalledOutput({
       cmdLine: "dpkg-query -W",
