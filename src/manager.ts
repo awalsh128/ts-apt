@@ -27,11 +27,7 @@ export const aptFlags = {
 
 /** Available APT commands that can be used by the package manager implementation. */
 export type BinaryName =
-  | "apt"
-  | "apt-cache"
-  | "apt-fast"
-  | "apt-get"
-  | "dpkg-query";
+  "apt" | "apt-cache" | "apt-fast" | "apt-get" | "dpkg" | "dpkg-query";
 
 /** Metadata information for an APT binary defining its location and standard arguments. */
 interface BinaryMeta {
@@ -79,6 +75,11 @@ export const Binary = {
     name: "apt-get",
     path: "/usr/bin/apt-get",
     defaultArgs: ["--quiet=0", aptFlags.assumeYes],
+  },
+  Dpkg: {
+    name: "dpkg",
+    path: "/usr/bin/dpkg",
+    defaultArgs: [],
   },
   DpkgQuery: {
     name: "dpkg-query",
@@ -176,6 +177,11 @@ export class AptPackageManager implements PackageManager {
       "${binary:Package}:${Architecture}=${Version}\\n",
     ]);
     return this.parser.parseListInstalledOutput(result);
+  }
+
+  async getNativeArchitecture(): Promise<string> {
+    const result = await this.run(Binary.Dpkg, ["--print-architecture"]);
+    return result.stdout.trim();
   }
 
   async listInstalledFiles(pkg: PackageName): Promise<string[]> {
@@ -287,7 +293,9 @@ export class AptPackageManager implements PackageManager {
       env: [...aptEnv],
       // Mutating commands (e.g. install) can take minutes, so they use the
       // caller's timeout (-1 for none) instead of the runner default.
-      ...(mutationTimeoutMs === undefined ? {} : { timeoutMs: mutationTimeoutMs }),
+      ...(mutationTimeoutMs === undefined
+        ? {}
+        : { timeoutMs: mutationTimeoutMs }),
     });
   }
 }

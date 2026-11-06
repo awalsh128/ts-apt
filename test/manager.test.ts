@@ -162,6 +162,19 @@ describe("apt manager", () => {
     expect(files).toEqual(["/usr/bin/vim", "/usr/share/doc/vim"]);
   });
 
+  test("getNativeArchitecture dpkg output with newline returns trimmed arch", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(Binary.Dpkg.path, ["--print-architecture"], {
+      stdout: "amd64\n",
+      stderr: "",
+      exitCode: 0,
+    });
+
+    const arch = await createManager(runner).getNativeArchitecture();
+
+    expect(arch).toBe("amd64");
+  });
+
   test("list installed files versioned package queries name and arch only", async () => {
     const runner = new MockCommandRunner();
     runner.setResult(Binary.DpkgQuery.path, ["-L", "vim:amd64"], {

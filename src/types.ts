@@ -220,6 +220,21 @@ export interface PackageManager {
   listInstalledFiles(pkg: PackageName): Promise<string[]>;
 
   /**
+   * Gets the system's native package architecture via `dpkg --print-architecture`.
+   *
+   * Packages installed for this architecture may omit it from their name,
+   * while foreign-arch packages (e.g. `libc6:i386` on amd64) need it.
+   *
+   * Example output:
+   * ```text
+   * amd64
+   * ```
+   *
+   * @returns Debian architecture name (e.g. amd64, arm64).
+   */
+  getNativeArchitecture(): Promise<string>;
+
+  /**
    * Lists installed packages via `dpkg-query -W -f '${binary:Package}=${Version}\\n'`.
    *
    * Example output (parsed):
