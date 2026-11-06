@@ -364,7 +364,7 @@ const testLogFiles: TestLogEntry[] = [
     execCmdLine: buildDpkgQueryCmd([
       "-W",
       "-f",
-      "${binary:Package}=${Version}\\n",
+      "${Package}:${Architecture}=${Version}\\n",
     ]),
   },
   {

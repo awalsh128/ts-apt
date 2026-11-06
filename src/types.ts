@@ -235,12 +235,14 @@ export interface PackageManager {
   getNativeArchitecture(): Promise<string>;
 
   /**
-   * Lists installed packages via `dpkg-query -W -f '${binary:Package}=${Version}\\n'`.
+   * Lists installed packages via `dpkg-query -W -f '${Package}:${Architecture}=${Version}\\n'`.
+   *
+   * Each line uses the same `name:arch=version` form as {@link PackageName.serialize}.
    *
    * Example output (parsed):
    * ```text
-   * curl=8.5.0-2ubuntu10.6
-   * libc6=2.39-0ubuntu8.4
+   * curl:amd64=8.5.0-2ubuntu10.6
+   * libc6:amd64=2.39-0ubuntu8.4
    * ```
    *
    * @returns List of installed packages.

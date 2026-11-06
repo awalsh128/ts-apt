@@ -129,7 +129,7 @@ describe("apt manager", () => {
     const runner = new MockCommandRunner();
     runner.setResult(
       Binary.DpkgQuery.path,
-      ["-W", "-f", "${binary:Package}:${Architecture}=${Version}\\n"],
+      ["-W", "-f", "${Package}:${Architecture}=${Version}\\n"],
       {
         stdout: "vim:amd64=2:9.0\n",
         stderr: "",

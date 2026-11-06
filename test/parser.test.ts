@@ -201,6 +201,8 @@ describe("apt output parser", () => {
     expect(parsed.length).toBeGreaterThan(0);
     expect(parsed.every((pkg) => pkg.status === "installed")).toBe(true);
     expect(parsed.some((pkg) => pkg.name.name === "apt")).toBe(true);
+    expect(parsed.every((pkg) => pkg.name.arch)).toBe(true);
+    expect(parsed.some((pkg) => pkg.name.name.includes(":"))).toBe(false);
   });
 
   it.each([
@@ -359,6 +361,35 @@ describe("apt output parser", () => {
       }),
     ).toThrow(ValidationError);
   });
+
+  test.each([
+    [
+      "bind9-libs:amd64=1:9.18.30-0ubuntu0.20.04.2",
+      createPackageName("bind9-libs", "1:9.18.30-0ubuntu0.20.04.2", "amd64"),
+    ],
+    ["acl:amd64=2.2.53-6", createPackageName("acl", "2.2.53-6", "amd64")],
+    [
+      "libc6:i386=2.31-0ubuntu9.2",
+      createPackageName("libc6", "2.31-0ubuntu9.2", "i386"),
+    ],
+    [
+      "adduser:all=3.118ubuntu2",
+      createPackageName("adduser", "3.118ubuntu2", "all"),
+    ],
+  ])(
+    "parseListInstalledOutput %j returns serialized-form package",
+    (line, expected) => {
+      const parsed = parser.parseListInstalledOutput({
+        cmdLine: "dpkg-query -W",
+        exitCode: 0,
+        stdout: `${line}\n`,
+        stderr: "",
+      });
+
+      expect(parsed.map((pkg) => pkg.name)).toEqual([expected]);
+      expect(parsed[0]?.name.serialize()).toBe(line);
+    },
+  );
 
   test("parseListInstalledOutput unrecognized line skips line", () => {
     const parsed = parser.parseListInstalledOutput({

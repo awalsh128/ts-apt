@@ -2,9 +2,10 @@
 import {
   type CommandResult,
   type PackageInfo,
+  type PackageName,
   tsAptMetaKeys,
 } from "./types.js";
-import { createPackageName } from "./package.js";
+import { createPackageName, deserializePackageName } from "./package.js";
 import { ValidationError } from "./errors.js";
 import winston from "winston";
 import { parseMessage } from "./internetMessage.js";
@@ -41,13 +42,6 @@ const UPDATE_REGEX = /^Inst\s+([^\s:]+)(?::([^\s]+))?\s+\(([^)]+)\)/;
 /** Matches package installation/upgrade lines emitted during non-simulated runs. */
 const SETTING_UP_REGEX =
   /^Setting up\s+([^\s:]+)(?::([^\s]+))?\s+\(([^)]+)\)\s+\.\.\.$/;
-/**
- * Matches package lines emitted by dpkg-query in format
- * "${binary:Package}:${Architecture}=${Version}" format.
- */
-const DPKG_QUERY_LIST_INSTALLED_REGEX = /(.+):(.*)\=(.*)/;
-const DPKG_QUERY_LIST_INSTALLED_FALLBACK_REGEX =
-  /([^:=\s]+)(?::([^=\s]+))?=(.+)/;
 
 /**
  * Matches package lines emitted by apt list --upgradable in format
@@ -81,6 +75,23 @@ export class AptOutputParser {
     const message = `Failed to parse ${name} in line: '${line}'`;
     this.logger.error(message);
     throw new ValidationError(message);
+  }
+
+  /**
+   * Parses one `dpkg-query` line printed as `${Package}:${Architecture}=${Version}`, which is the
+   * same `name[:arch][=version]` form as {@link PackageName.serialize}.
+   *
+   * @returns The package name, or undefined for lines without a version separator.
+   * @throws ValidationError When the version is empty.
+   */
+  private parseDpkgQueryLine(line: string): PackageName | undefined {
+    const trimmed = line.trim();
+    if (!trimmed.includes("=")) {
+      return undefined;
+    }
+    const name = deserializePackageName(trimmed);
+    this.assertNotEmpty("version", name.version, line);
+    return name;
   }
 
   /**
@@ -230,7 +241,7 @@ export class AptOutputParser {
   }
 
   /**
-   * Parse output of `dpkg-query -W -f='${binary:Package}:${Architecture}=${Version}\n'`
+   * Parse output of `dpkg-query -W -f='${Package}:${Architecture}=${Version}\n'`
    * to extract installed package names and versions.
    *
    * Example output parsed:
@@ -247,25 +258,10 @@ export class AptOutputParser {
       .split("\n");
 
     for (const line of lines) {
-      if (!line.trim()) {
-        continue;
+      const name = this.parseDpkgQueryLine(line);
+      if (name) {
+        packages.push({ name, status: "installed" });
       }
-      const match = DPKG_QUERY_LIST_INSTALLED_REGEX.exec(line.trim());
-      const fallbackMatch =
-        match ?? DPKG_QUERY_LIST_INSTALLED_FALLBACK_REGEX.exec(line.trim());
-      if (!fallbackMatch) {
-        continue;
-      }
-
-      const [, name, arch, version] = fallbackMatch;
-
-      this.assertNotEmpty("name", name, line);
-      this.assertNotEmpty("version", version, line);
-
-      packages.push({
-        name: createPackageName(name!, version!, arch),
-        status: "installed",
-      });
     }
 
     return packages;
@@ -304,7 +300,7 @@ export class AptOutputParser {
   }
 
   /**
-   * Parse output of `dpkg-query -W -f='${binary:Package}:${Architecture}=${Version}\n'`
+   * Parse output of `dpkg-query -W -f='${Package}:${Architecture}=${Version}\n'`
    * to extract package information.
    *
    * Example output parsed:
@@ -321,19 +317,10 @@ export class AptOutputParser {
       .split("\n");
 
     for (const line of lines) {
-      const trimmedLine = line.trim();
-      const matched =
-        DPKG_QUERY_LIST_INSTALLED_REGEX.exec(trimmedLine) ??
-        DPKG_QUERY_LIST_INSTALLED_FALLBACK_REGEX.exec(trimmedLine);
-      if (!matched) {
-        continue;
+      const name = this.parseDpkgQueryLine(line);
+      if (name) {
+        packages.push({ name, status: "installed" });
       }
-      const [, name, arch, version] = matched;
-
-      packages.push({
-        name: createPackageName(name!, version!, arch),
-        status: "installed",
-      });
     }
 
     return packages;

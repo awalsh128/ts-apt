@@ -181,7 +181,10 @@ export class AptPackageManager implements PackageManager {
     const result = await this.run(Binary.DpkgQuery, [
       "-W",
       "-f",
-      "${binary:Package}:${Architecture}=${Version}\\n",
+      // ${Package} never has an arch qualifier, unlike ${binary:Package}, which already ends in
+      // ":arch" for Multi-Arch "same" and foreign packages. Lines then read name:arch=version,
+      // the same form as PackageName.serialize.
+      "${Package}:${Architecture}=${Version}\\n",
     ]);
     return this.parser.parseListInstalledOutput(result);
   }
