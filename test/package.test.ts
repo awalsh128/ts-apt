@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { createPackageName, deserializePackageName } from "../src/package.js";
+import {
+  createPackageName,
+  deserializePackageName,
+  packageNameFromJSON,
+} from "../src/package.js";
 
 const pkg = (input: { name: string; version?: string; arch?: string }) =>
   createPackageName(input.name, input.version, input.arch);
@@ -86,9 +90,19 @@ describe("packages", () => {
   ])(
     "packageNameFromJSON(%j) returns %j",
     (input: PackageNameJSON, expected) => {
-      expect(
-        createPackageName(input.name, input?.version, input?.arch),
-      ).toEqual(expected);
+      expect(packageNameFromJSON(input)).toEqual(expected);
     },
   );
+
+  test.each([
+    [null],
+    ["vim"],
+    [{}],
+    [{ name: 1 }],
+    [{ name: "vim", version: 2 }],
+  ])("packageNameFromJSON(%j) throws", (input) => {
+    expect(() => packageNameFromJSON(input)).toThrow(
+      "Invalid JSON for PackageName",
+    );
+  });
 });

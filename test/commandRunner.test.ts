@@ -79,6 +79,18 @@ describe("default command runner", () => {
     } as Partial<CommandExecutionError>);
   }, 10_000);
 
+  test("run command killed by signal throws 128 plus signal number", async () => {
+    const runner = await createDefaultCommandRunner();
+
+    await expect(
+      runner.run("bash", ["-c", "kill -TERM $$"]),
+    ).rejects.toMatchObject({
+      name: "CommandExecutionError",
+      exitCode: 143,
+      signal: "SIGTERM",
+    } as Partial<CommandExecutionError>);
+  });
+
   test("run non-positive timeout lets command finish", async () => {
     const runner = await createDefaultCommandRunner();
 

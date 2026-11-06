@@ -162,6 +162,15 @@ describe("apt manager", () => {
     expect(files).toEqual(["/usr/bin/vim", "/usr/share/doc/vim"]);
   });
 
+  test.each([
+    [true, Binary.AptFast.path],
+    [false, Binary.AptGet.path],
+  ])("aptPath aptFastEnabled %s returns %s", (aptFastEnabled, expected) => {
+    expect(createManager(new MockCommandRunner(), aptFastEnabled).aptPath).toBe(
+      expected,
+    );
+  });
+
   test("getNativeArchitecture dpkg output with newline returns trimmed arch", async () => {
     const runner = new MockCommandRunner();
     runner.setResult(Binary.Dpkg.path, ["--print-architecture"], {

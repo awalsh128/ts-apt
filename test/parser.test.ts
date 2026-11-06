@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import type { CommandResult, PackageInfo } from "../src/types.js";
 import { tsAptMetaKeys } from "../src/types.js";
 import { AptOutputParser } from "../src/parser.js";
+import { ValidationError } from "../src/errors.js";
 import { createPackageName } from "../src/package.js";
 import { deserializeCommandResult, nullLogger } from "./common.js";
 
@@ -335,6 +336,55 @@ describe("apt output parser", () => {
     expect(parsed[0]?.name.version).toBe("3.0.13-0ubuntu3.5");
     expect(parsed[0]?.name.arch).toBe("amd64");
     expect(parsed[0]?.status).toBe("installed");
+  });
+
+  test("parseCacheShowOutput stanza without version or architecture leaves them undefined", () => {
+    const parsed = parser.parseCacheShowOutput({
+      cmdLine: "apt-cache show curl",
+      exitCode: 0,
+      stdout: "Package: curl\nDescription: command line tool\n",
+      stderr: "",
+    });
+
+    expect(parsed.map((pkg) => pkg.name)).toEqual([createPackageName("curl")]);
+  });
+
+  test("parseListInstalledOutput unrecognized line skips line", () => {
+    const parsed = parser.parseListInstalledOutput({
+      cmdLine: "dpkg-query -W",
+      exitCode: 0,
+      stdout: "not a package line\nopenssl:amd64=3.0.13-0ubuntu3.5\n",
+      stderr: "",
+    });
+
+    expect(parsed.map((pkg) => pkg.name.name)).toEqual(["openssl"]);
+  });
+
+  test("parseListInstalledOutput empty version throws ValidationError", () => {
+    expect(() =>
+      parser.parseListInstalledOutput({
+        cmdLine: "dpkg-query -W",
+        exitCode: 0,
+        stdout: "openssl:amd64=\n",
+        stderr: "",
+      }),
+    ).toThrow(ValidationError);
+  });
+
+  test("parseUpgradeOutput Inst line without repositories parses package", () => {
+    const parsed = parser.parseUpgradeOutput({
+      cmdLine: "apt-get upgrade",
+      exitCode: 0,
+      stdout: "Inst vim:amd64 (2:8.1.2269-1ubuntu5.32)\n",
+      stderr: "",
+    });
+
+    expect(parsed).toEqual([
+      {
+        name: createPackageName("vim", "2:8.1.2269-1ubuntu5.32", "amd64"),
+        status: "installed",
+      },
+    ]);
   });
 
   test("parseInstallOutput captures architecture when present", () => {

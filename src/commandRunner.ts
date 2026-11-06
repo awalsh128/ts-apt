@@ -103,17 +103,16 @@ function waitForExit(child: ChildProcess, timeoutMs: number): Promise<Exit> {
         resolve({ exitCode: TIMEOUT_EXIT_CODE, timedOut });
       }
     });
+    // Node reports either an exit code or a terminating signal, never neither.
     child.on("close", (code: number | null, signal: NodeJS.Signals | null) => {
-      if (code !== null) {
-        resolve({ exitCode: code, timedOut });
-      } else if (signal !== null) {
+      if (signal !== null) {
         resolve({
           exitCode: 128 + constants.signals[signal],
           signal,
           timedOut,
         });
       } else {
-        resolve({ exitCode: 1, timedOut });
+        resolve({ exitCode: code ?? 1, timedOut });
       }
     });
   });
