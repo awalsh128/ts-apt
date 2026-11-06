@@ -1410,7 +1410,6 @@ xserver-xorg-video-intel=2:2.99.917+git20200226-1
 xterm=353-1ubuntu1.20.04.2
 xtrans-dev=1.4.0-1
 xvfb=2:1.20.13-1ubuntu1~20.04.20
-xxd=2:8.1.2269-1ubuntu5.32
 xz-utils=5.2.4-1ubuntu1.1
 yudit-common=2.9.6-8build1
 zenity=3.32.0-5

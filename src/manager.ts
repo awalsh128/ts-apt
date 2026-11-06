@@ -13,18 +13,19 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** Environment overrides for non-interactive APT commands. */
-export const APT_ENV = [
+export const aptEnv = [
   "DEBIAN_FRONTEND=noninteractive",
   "DEBCONF_NONINTERACTIVE_SEEN=true",
 ] as const;
 
 /** Common APT flags used across operations. */
-export const APT_FLAGS = {
+export const aptFlags = {
   assumeYes: "-y",
   fixBroken: "-f",
   autoRemove: "--autoremove",
 } as const;
 
+/** Available APT commands that can be used by the package manager implementation. */
 export type BinaryName =
   | "apt"
   | "apt-cache"
@@ -32,18 +33,19 @@ export type BinaryName =
   | "apt-get"
   | "dpkg-query";
 
+/** Metadata information for an APT binary defining its location and standard arguments. */
 interface BinaryMeta {
   name: BinaryName;
   path: string;
   defaultArgs: string[];
 }
 
-const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 
-function resolveBundledAptFastPath(): string {
+function resolveBundledPath(scriptName: BinaryName): string {
   const candidates = [
-    path.resolve(MODULE_DIR, "..", "scripts", "dist", "apt-fast.sh"),
-    path.resolve(MODULE_DIR, "..", "..", "scripts", "dist", "apt-fast.sh"),
+    path.resolve(moduleDir, "..", "scripts", "dist", `${scriptName}.sh`),
+    path.resolve(moduleDir, "..", "..", "scripts", "dist", `${scriptName}.sh`),
   ];
 
   for (const candidate of candidates) {
@@ -53,7 +55,7 @@ function resolveBundledAptFastPath(): string {
   }
 
   // Keep deterministic behavior even when the script is not present at startup.
-  return candidates[0] ?? path.resolve("scripts", "dist", "apt-fast.sh");
+  return candidates[0] ?? path.resolve("scripts", "dist", `${scriptName}.sh`);
 }
 
 /** Binary metadata for APT-related executables. */
@@ -70,13 +72,13 @@ export const Binary = {
   },
   AptFast: {
     name: "apt-fast",
-    path: resolveBundledAptFastPath(),
-    defaultArgs: ["--quiet=0", APT_FLAGS.assumeYes],
+    path: resolveBundledPath("apt-fast"),
+    defaultArgs: ["--quiet=0", aptFlags.assumeYes],
   },
   AptGet: {
     name: "apt-get",
     path: "/usr/bin/apt-get",
-    defaultArgs: ["--quiet=0", APT_FLAGS.assumeYes],
+    defaultArgs: ["--quiet=0", aptFlags.assumeYes],
   },
   DpkgQuery: {
     name: "dpkg-query",
@@ -158,7 +160,7 @@ export class AptPackageManager implements PackageManager {
       this.mutatingBinary,
       [
         "install",
-        APT_FLAGS.fixBroken,
+        aptFlags.fixBroken,
         "-qq", // Machine readable format
         ...pkgs.map((pkg) => pkg.serialize()),
       ],
@@ -171,7 +173,7 @@ export class AptPackageManager implements PackageManager {
     const result = await this.run(Binary.DpkgQuery, [
       "-W",
       "-f",
-      "${binary:Package}=${Version}\\n",
+      "${binary:Package}:${Architecture}=${Version}\\n",
     ]);
     return this.parser.parseListInstalledOutput(result);
   }
@@ -197,20 +199,18 @@ export class AptPackageManager implements PackageManager {
   ): Promise<PackageInfo[]> {
     const args = [
       "remove",
-      APT_FLAGS.fixBroken,
+      aptFlags.fixBroken,
       ...pkgs.map((pkg) => pkg.serialize()),
     ];
     if (autoremoveEnabled) {
-      args.push(APT_FLAGS.autoRemove);
+      args.push(aptFlags.autoRemove);
     }
     const result = await this.run(this.mutatingBinary, args, timeoutMs);
     return this.parser.parseRemoveOutput(result);
   }
 
-  async search(keywords: string[], namesOnly = false): Promise<PackageInfo[]> {
-    const baseArgs = namesOnly
-      ? ["search", ...keywords, "--names-only"]
-      : ["search", ...keywords];
+  async search(keywords: string[]): Promise<PackageInfo[]> {
+    const baseArgs = ["search", ...keywords];
     const result = await this.run(this.readBinary, baseArgs);
 
     return this.parser.parseSearchOutput(result);
@@ -282,7 +282,7 @@ export class AptPackageManager implements PackageManager {
       : [];
     const args = [...binary.defaultArgs, ...lockArgs, ...baseArgs];
     return this.runner.run(binary.path, args, {
-      env: [...APT_ENV],
+      env: [...aptEnv],
     });
   }
 }
@@ -307,7 +307,7 @@ async function isAptFastAvailable(
   logger: winston.Logger,
 ): Promise<boolean> {
   const result = await runner.run("dpkg-query", ["-W", "aria2"], {
-    env: [...APT_ENV],
+    env: [...aptEnv],
   });
   if (result.exitCode === 0) {
     return true;

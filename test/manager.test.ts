@@ -9,7 +9,7 @@ import {
 } from "../src/manager.js";
 import { AptOutputParser } from "../src/parser.js";
 import { DefaultCommandRunner } from "../src/commandRunner.js";
-import { PackageName } from "../src/types.js";
+import { PackageName, tsAptMetaKeys } from "../src/types.js";
 import winston from "winston";
 import { afterEach, vi } from "vitest";
 import { deserializePackageName } from "../src/package.ts";
@@ -26,6 +26,11 @@ const pkg = (serializedName: string): PackageName => {
   }
   return result;
 };
+
+const debianConfEnv = [
+  "DEBIAN_FRONTEND=noninteractive",
+  "DEBCONF_NONINTERACTIVE_SEEN=true",
+];
 
 function createManager(
   runner: MockCommandRunner,
@@ -54,7 +59,7 @@ describe("apt manager", () => {
       aptPath,
       ["--quiet=0", "-y", ...lockTimeoutArgs, "install", "-f", "-qq", "vim"],
       {
-        stdout: "Setting up vim (2:9.0) ...\n",
+        stdout: "Inst vim (2:9.0 Ubuntu:24.04/noble [amd64])\n",
         stderr: "",
         exitCode: 0,
       },
@@ -104,7 +109,7 @@ describe("apt manager", () => {
       aptPath,
       ["--quiet=0", "-y", ...lockTimeoutArgs, "autoremove"],
       {
-        stdout: "Removing vim (2:9.0) ...\n",
+        stdout: "Remv vim [2:9.0] [base-files:amd64 ]\n",
         stderr: "",
         exitCode: 0,
       },
@@ -124,7 +129,7 @@ describe("apt manager", () => {
     const runner = new MockCommandRunner();
     runner.setResult(
       Binary.DpkgQuery.path,
-      ["-W", "-f", "${binary:Package}=${Version}\\n"],
+      ["-W", "-f", "${binary:Package}:${Architecture}=${Version}\\n"],
       {
         stdout: "vim:amd64=2:9.0\n",
         stderr: "",
@@ -175,8 +180,10 @@ describe("apt manager", () => {
         arch: "amd64",
       }),
       status: "upgradeable",
+      metadata: {
+        [tsAptMetaKeys.listUpgradeableNewVersion]: "2:9.0",
+      },
     });
-    expect(out[0]?.metadata?.get("newVersion")).toBe("2:9.0");
   });
 
   test("remove includes --autoremove by default", async () => {
@@ -240,23 +247,32 @@ describe("apt manager", () => {
     const runner = new MockCommandRunner();
     runner.setResult(aptPath, ["--quiet=0", "-y", "search", "vim"], {
       stdout: [
-        "Sorting...",
-        "Full Text Search...",
-        "vim/stable 2:9.0 amd64",
-        "editor",
+        "Sorting... Done",
+        "Full Text Search... Done",
+        "vim-vimerl/focal 1.4.1+git20120509.89111c7-2 all",
+        "  Erlang plugin for Vim",
         "",
-        "foo/stable 1.0 amd64",
-        "foo",
+        "vim-vimerl-syntax/focal 1.4.1+git20120509.89111c7-2 all",
+        "  Erlang syntax for Vim",
+        "",
       ].join("\n"),
       stderr: "",
       exitCode: 0,
     });
     const out = await createManager(runner).search(["vim"]);
 
-    expect(out.find((p) => p.name.name === "vim")?.name.version).toBe("2:9.0");
-    expect(
-      out.find((p) => p.name.name === "foo")?.metadata?.get("description"),
-    ).toBe("foo");
+    expect(out).toContainEqual({
+      metadata: {
+        "tsapt-search-description": "Erlang plugin for Vim",
+        "tsapt-search-release-codename": "focal",
+      },
+      name: {
+        arch: "all",
+        name: "vim-vimerl",
+        version: "1.4.1+git20120509.89111c7-2",
+      },
+      status: "available",
+    });
   });
 
   test("search propagates command failures", async () => {
@@ -302,7 +318,7 @@ describe("apt manager", () => {
       aptPath,
       ["--quiet=0", "-y", ...lockTimeoutArgs, "install", "vim"],
       {
-        stdout: "Setting up vim (2:9.0) ...\n",
+        stdout: "Inst vim (2:9.0 Ubuntu:24.04/noble [amd64])\n",
         stderr: "",
         exitCode: 0,
       },
@@ -328,7 +344,7 @@ describe("apt manager", () => {
       aptPath,
       ["--quiet=0", "-y", ...lockTimeoutArgs, "upgrade"],
       {
-        stdout: "Setting up vim (2:9.0) ...\n",
+        stdout: "Inst vim [2:9.0] (2:9.1 Ubuntu:24.04/noble-updates [amd64])\n",
         stderr: "",
         exitCode: 0,
       },
@@ -417,10 +433,7 @@ describe("apt manager", () => {
       aptGetPath,
       ["--quiet=0", "-y", ...lockTimeoutArgs, "autoclean"],
       expect.objectContaining({
-        env: expect.arrayContaining([
-          "DEBIAN_FRONTEND=noninteractive",
-          "DEBCONF_NONINTERACTIVE_SEEN=true",
-        ]),
+        env: expect.arrayContaining(debianConfEnv),
       }),
     );
   });
@@ -462,10 +475,7 @@ describe("createPackageManager", () => {
     await manager.autoClean();
 
     expect(runSpy).toHaveBeenCalledWith("dpkg-query", ["-W", "aria2"], {
-      env: expect.arrayContaining([
-        "DEBIAN_FRONTEND=noninteractive",
-        "DEBCONF_NONINTERACTIVE_SEEN=true",
-      ]),
+      env: expect.arrayContaining(debianConfEnv),
     });
     const dpkgQueryCall = runSpy.mock.calls.find(
       ([command]) => command === "dpkg-query",
@@ -476,10 +486,7 @@ describe("createPackageManager", () => {
       aptPath,
       ["--quiet=0", "-y", ...lockTimeoutArgs, "autoclean"],
       expect.objectContaining({
-        env: expect.arrayContaining([
-          "DEBIAN_FRONTEND=noninteractive",
-          "DEBCONF_NONINTERACTIVE_SEEN=true",
-        ]),
+        env: expect.arrayContaining(debianConfEnv),
       }),
     );
   });
@@ -522,10 +529,7 @@ describe("createPackageManager", () => {
       aptGetPath,
       ["--quiet=0", "-y", ...lockTimeoutArgs, "autoclean"],
       expect.objectContaining({
-        env: expect.arrayContaining([
-          "DEBIAN_FRONTEND=noninteractive",
-          "DEBCONF_NONINTERACTIVE_SEEN=true",
-        ]),
+        env: expect.arrayContaining(debianConfEnv),
       }),
     );
   });
@@ -552,10 +556,7 @@ describe("createPackageManager", () => {
       aptGetPath,
       ["--quiet=0", "-y", ...lockTimeoutArgs, "autoclean"],
       expect.objectContaining({
-        env: expect.arrayContaining([
-          "DEBIAN_FRONTEND=noninteractive",
-          "DEBCONF_NONINTERACTIVE_SEEN=true",
-        ]),
+        env: expect.arrayContaining(debianConfEnv),
       }),
     );
   });

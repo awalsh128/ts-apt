@@ -2,7 +2,7 @@
 *** EXIT_CODE 0
 *** STDOUT
 Sorting... 0%Sorting... 0%Sorting... 0%Sorting... Done
-Full Text Search... 50%Full Text Search... 50%Full Text Search... Done
+Full Text Search... 50%Full Text Search... 50%Full Text Search... 92%Full Text Search... Done
 *** STDERR
 
 WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
