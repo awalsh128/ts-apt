@@ -7,6 +7,10 @@ async function createDefaultCommandRunner(): Promise<CommandRunner> {
   return createRealCommandRunner(nullLogger, nullLogger);
 }
 
+const INPUT_TEXT = "line one\0line two\n";
+// Larger than the pipe buffer, so writing fails once the reader exits.
+const LARGE_INPUT = "x".repeat(4 * 1024 * 1024);
+
 describe("default command runner", () => {
   test("captures stdout stderr and env", async () => {
     const runner = await createDefaultCommandRunner();
@@ -64,6 +68,17 @@ describe("default command runner", () => {
     } as Partial<CommandExecutionError>);
   });
 
+  test("run timeout with command ignoring SIGTERM kills command", async () => {
+    const runner = await createDefaultCommandRunner();
+
+    await expect(
+      runner.run("bash", ["-c", 'trap "" TERM; sleep 10'], { timeoutMs: 50 }),
+    ).rejects.toMatchObject({
+      name: "CommandExecutionError",
+      exitCode: 124,
+    } as Partial<CommandExecutionError>);
+  }, 10_000);
+
   test("run non-positive timeout lets command finish", async () => {
     const runner = await createDefaultCommandRunner();
 
@@ -72,6 +87,25 @@ describe("default command runner", () => {
     });
 
     expect(result.stdout.trim()).toBe("done");
+  });
+
+  test("run with input pipes data to standard input", async () => {
+    const runner = await createDefaultCommandRunner();
+
+    const result = await runner.run("cat", [], { input: INPUT_TEXT });
+
+    expect(result.stdout).toBe(INPUT_TEXT);
+  });
+
+  test("run with input and command exiting before reading throws exit code", async () => {
+    const runner = await createDefaultCommandRunner();
+
+    await expect(
+      runner.run("bash", ["-c", "exit 3"], { input: LARGE_INPUT }),
+    ).rejects.toMatchObject({
+      name: "CommandExecutionError",
+      exitCode: 3,
+    } as Partial<CommandExecutionError>);
   });
 
   test("propagates spawn errors for missing executables", async () => {

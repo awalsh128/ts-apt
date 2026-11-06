@@ -106,6 +106,13 @@ export interface CommandOptions {
   timeoutMs?: number;
   /** Additional KEY=VALUE environment variables applied to the process. */
   env?: string[];
+  /**
+   * Data written to the process's standard input, which is then closed.
+   *
+   * Use for input too large for arguments, e.g. `tar --files-from=-`.
+   * When omitted, standard input is left open and unused.
+   */
+  input?: string | Buffer;
 }
 
 /**
