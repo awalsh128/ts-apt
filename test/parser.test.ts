@@ -387,6 +387,44 @@ describe("apt output parser", () => {
     ]);
   });
 
+  test.each([
+    [
+      "Inst libc6:i386 (2.31-0ubuntu9.2 Ubuntu:20.04/focal-updates [i386])",
+      createPackageName("libc6", "2.31-0ubuntu9.2", "i386"),
+    ],
+    [
+      "Inst vim [2:8.1.2269-1ubuntu5.31] (2:8.1.2269-1ubuntu5.32 Ubuntu:20.04/focal-updates [amd64])",
+      createPackageName("vim", "2:8.1.2269-1ubuntu5.32", "amd64"),
+    ],
+    [
+      "Inst libc6:i386 [2.31-0ubuntu9.1] (2.31-0ubuntu9.2 Ubuntu:20.04/focal-updates [i386])",
+      createPackageName("libc6", "2.31-0ubuntu9.2", "i386"),
+    ],
+  ])("parseInstallOutput %j returns %j", (line, expected) => {
+    const parsed = parser.parseInstallOutput({
+      cmdLine: "apt-get install",
+      exitCode: 0,
+      stdout: `${line}\n`,
+      stderr: "",
+    });
+
+    expect(parsed.map((pkg) => pkg.name)).toEqual([expected]);
+  });
+
+  test("parseUpgradeOutput Inst line with old version returns new version", () => {
+    const parsed = parser.parseUpgradeOutput({
+      cmdLine: "apt-get upgrade",
+      exitCode: 0,
+      stdout:
+        "Inst vim [2:8.1.2269-1ubuntu5.31] (2:8.1.2269-1ubuntu5.32 Ubuntu:20.04/focal-updates [amd64])\n",
+      stderr: "",
+    });
+
+    expect(parsed.map((pkg) => pkg.name)).toEqual([
+      createPackageName("vim", "2:8.1.2269-1ubuntu5.32", "amd64"),
+    ]);
+  });
+
   test("parseInstallOutput captures architecture when present", () => {
     const parsed = parser.parseInstallOutput({
       cmdLine: "apt-get install -f libc6",

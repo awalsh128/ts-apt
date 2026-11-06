@@ -20,8 +20,22 @@ const CACHE_SHOW_STANZA_REGEX = /.+?((?:\r\n|\r|\n)\s*(?:\r\n|\r|\n))|.+$/gs;
 
 /** Matches package removal lines emitted by apt remove/autoremove. */
 const REMOVE_REGEX = /^Remv\s+(\S+)\s\[([^\]]+)\](?:\s\[([^\]]+)\])?$/;
-/** Matches package installation lines emitted by apt-get install. */
-const INSTALL_REGEX = /^Inst\s+(\S+)\s+\((\S+)\s+([^\]]+)\s\[([^\]]+)\]\)$/;
+/**
+ * Matches simulated package installation lines emitted by apt-get install or upgrade.
+ *
+ * Captures name, version, repositories and arch. The name's `:arch` suffix on
+ * foreign-arch packages and the `[old-version]` on upgrades are skipped, since
+ * the bracketed arch and new version inside the parentheses take precedence.
+ *
+ * Example lines:
+ * ```text
+ * Inst rolldice (1.16-1build1 Ubuntu:20.04/focal [amd64])
+ * Inst libc6:i386 (2.31-0ubuntu9.2 Ubuntu:20.04/focal-updates [i386])
+ * Inst vim [2:8.1.2269-1ubuntu5.31] (2:8.1.2269-1ubuntu5.32 Ubuntu:20.04/focal-updates [amd64])
+ * ```
+ */
+const INSTALL_REGEX =
+  /^Inst\s+([^\s:]+)(?::\S+)?(?:\s+\[[^\]]+\])?\s+\((\S+)\s+([^\]]+)\s\[([^\]]+)\]\)$/;
 /** Matches package lines emitted by apt-get upgrade. */
 const UPDATE_REGEX = /^Inst\s+([^\s:]+)(?::([^\s]+))?\s+\(([^)]+)\)/;
 /** Matches package installation/upgrade lines emitted during non-simulated runs. */
