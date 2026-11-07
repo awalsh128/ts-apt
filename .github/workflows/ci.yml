@@ -2,9 +2,11 @@ name: CI
 
 on:
   pull_request:
-  # Gates release candidates, and gives the promote workflow a result for staging's exact commit.
+  # staging: gates release candidates, and gives the promote workflow a result for staging's exact
+  # commit. main: reports the status of each promotion (README badge and main coverage).
   push:
     branches:
+      - main
       - staging
   schedule:
     - cron: "30 5 * * *"
