@@ -24,16 +24,16 @@ import {
 
 type IdeSettings = Record<string, unknown>;
 
-type AuditCounts = {
+interface AuditCounts {
   critical: number;
   high: number;
-};
+}
 
 type SupportedIde = "vscode" | "cursor" | "windsurf" | "zed" | "jetbrains";
 
-type SetupDevEnvOptions = {
+interface SetupDevEnvOptions {
   ide: SupportedIde;
-};
+}
 
 const SUPPORTED_IDES: SupportedIde[] = [
   "vscode",
@@ -66,6 +66,7 @@ const AGENTS_MD_SUPPORTED_IDES: ReadonlySet<SupportedIde> = new Set([
 ]);
 
 type JsonPrimitive = null | boolean | number | string;
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface JsonArray extends Array<JsonLike> {}
 interface JsonRecord {
   [key: string]: JsonLike;
@@ -248,7 +249,7 @@ function ensureAptDependencies(): void {
     fail("apt-get is required for system dependency installation.");
   }
 
-  const aptPackages: Array<[string, string]> = [
+  const aptPackages: [string, string][] = [
     ["curl", "curl"],
     ["gh", "gh"],
     ["git", "git"],
@@ -307,33 +308,25 @@ function warnIfDockerMissing(): void {
   );
 }
 
-function parseAuditJson(outputText: string): {
-  metadata?: { vulnerabilities?: Record<string, unknown> };
-} {
-  if (!outputText || outputText.trim().length === 0) {
-    fail("npm audit produced empty output.");
-  }
-
-  try {
-    return JSON.parse(outputText);
-  } catch {
-    const firstBraceIndex = outputText.indexOf("{");
-    const lastBraceIndex = outputText.lastIndexOf("}");
-    if (firstBraceIndex >= 0 && lastBraceIndex > firstBraceIndex) {
-      return JSON.parse(outputText.slice(firstBraceIndex, lastBraceIndex + 1));
-    }
-    fail("Unable to parse npm audit JSON output.");
-    throw new Error("unreachable");
-  }
-}
-
 function getAuditCounts(): AuditCounts {
   const audit = tryRun("npm", ["audit", "--json"], {
     cwd: ROOT_DIR,
     stdio: "pipe",
   });
 
-  const report = parseAuditJson(String(audit.stdout ?? ""));
+  const outputText = String(audit.stdout ?? "").trim();
+  if (!outputText) {
+    fail("npm audit produced empty output.");
+  }
+
+  let report: { metadata?: { vulnerabilities?: Record<string, unknown> } };
+  try {
+    report = JSON.parse(outputText) as typeof report;
+  } catch {
+    fail("Unable to parse npm audit JSON output.");
+    throw new Error("unreachable");
+  }
+
   const vulnerabilities = report?.metadata?.vulnerabilities ?? {};
 
   return {
@@ -399,7 +392,7 @@ function ensureAuditRemediation(): void {
   logSuccess("High/critical npm vulnerabilities remediated.");
 }
 
-async function main(options: SetupDevEnvOptions): Promise<void> {
+function main(options: SetupDevEnvOptions): void {
   const nodeVersionMajor = readNodeMajorVersion();
 
   logInfo(`Applying IDE template for '${options.ide}'...`);
@@ -429,15 +422,16 @@ const setupDevenvCommand = defineCommand({
     z.object({
       ide: z
         .enum(SUPPORTED_IDES as [SupportedIde, ...SupportedIde[]])
-        .default("vscode")
-        .describe("IDE template to apply before dependency setup"),
+        .describe(
+          `IDE template to apply before dependency setup: ${SUPPORTED_IDES.join(", ")}`,
+        ),
     }),
     {
       i: "ide",
     },
   ),
-  action: async (options: SetupDevEnvOptions) => {
-    await main(options);
+  action: (options: SetupDevEnvOptions) => {
+    main(options);
   },
 });
 

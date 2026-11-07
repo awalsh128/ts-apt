@@ -1,20 +1,19 @@
-*** CMD_LINE apt-get remove -y xdot
+*** CMD_LINE /usr/bin/apt-get --quiet=0 -y --simulate -o DPkg::Lock::Timeout=-1 remove -f xdot --autoremove
 *** EXIT_CODE 0
 *** STDOUT
-Reading package lists...
-Building dependency tree...
-Reading state information...
-The following packages were automatically installed and are no longer required:
-  gir1.2-freedesktop gir1.2-gdkpixbuf-2.0 gir1.2-gtk-3.0 gir1.2-pango-1.0
-  libpangoxft-1.0-0 python3-cairo python3-gi-cairo
-Use 'sudo apt autoremove' to remove them.
+Reading package lists... 0%Reading package lists... 100%Reading package lists... Done
+Building dependency tree... 0%Building dependency tree... 0%Building dependency tree... 50%Building dependency tree... 50%Building dependency tree       
+Reading state information... 0%Reading state information... 0%Reading state information... Done
 The following packages will be REMOVED:
-  xdot
-0 upgraded, 0 newly installed, 1 to remove and 0 not upgraded.
-After this operation, 157 kB disk space will be freed.
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 198108 files and directories currently installed.)
-Removing xdot (1.1-2) ...
-Processing triggers for mime-support (3.64ubuntu1) ...
-Processing triggers for man-db (2.9.1-1) ...
-Processing triggers for desktop-file-utils (0.24-1ubuntu3) ...
+  gir1.2-freedesktop gir1.2-gdkpixbuf-2.0 gir1.2-gtk-3.0 gir1.2-pango-1.0
+  libpangoxft-1.0-0 python3-cairo python3-gi-cairo xdot
+0 upgraded, 0 newly installed, 8 to remove and 0 not upgraded.
+Remv xdot [1.1-2]
+Remv gir1.2-gtk-3.0 [3.24.20-0ubuntu1.2]
+Remv gir1.2-pango-1.0 [1.44.7-2ubuntu4]
+Remv gir1.2-freedesktop [1.64.1-1~ubuntu20.04.1]
+Remv gir1.2-gdkpixbuf-2.0 [2.40.0+dfsg-3ubuntu0.5]
+Remv libpangoxft-1.0-0 [1.44.7-2ubuntu4]
+Remv python3-gi-cairo [3.36.0-1]
+Remv python3-cairo [1.16.2-2ubuntu2]
 *** STDERR

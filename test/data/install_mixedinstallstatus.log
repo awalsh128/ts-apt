@@ -1,19 +1,13 @@
-*** CMD_LINE apt-get install -y rolldice xdot
+*** CMD_LINE /usr/bin/apt-get --quiet=0 -y --simulate -o DPkg::Lock::Timeout=-1 install -f rolldice xdot
 *** EXIT_CODE 0
 *** STDOUT
-Reading package lists...
-Building dependency tree...
-Reading state information...
+Reading package lists... 0%Reading package lists... 100%Reading package lists... Done
+Building dependency tree... 0%Building dependency tree... 0%Building dependency tree... 50%Building dependency tree... 50%Building dependency tree       
+Reading state information... 0%Reading state information... 0%Reading state information... Done
 xdot is already the newest version (1.1-2).
 The following NEW packages will be installed:
   rolldice
 0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
-Need to get 0 B/9628 B of archives.
-After this operation, 31.7 kB of additional disk space will be used.
-Selecting previously unselected package rolldice.
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 198109 files and directories currently installed.)
-Preparing to unpack .../rolldice_1.16-1build1_amd64.deb ...
-Unpacking rolldice (1.16-1build1) ...
-Setting up rolldice (1.16-1build1) ...
-Processing triggers for man-db (2.9.1-1) ...
+Inst rolldice (1.16-1build1 Ubuntu:20.04/focal [amd64])
+Conf rolldice (1.16-1build1 Ubuntu:20.04/focal [amd64])
 *** STDERR

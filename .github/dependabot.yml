@@ -1,0 +1,14 @@
+# Dependabot security updates only (version updates are off), with Conventional
+# Commits messages so they pass commitlint and semantic-release can read them.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    commit-message:
+      # Runtime dependency fixes ship as a patch release; dev dependency fixes don't release.
+      prefix: fix
+      prefix-development: chore
+      include: scope

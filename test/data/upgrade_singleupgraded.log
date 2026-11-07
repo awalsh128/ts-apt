@@ -1,10 +1,9 @@
-*** CMD_LINE apt-get upgrade xdot
+*** CMD_LINE /usr/bin/apt-get --quiet=0 -y --simulate -o DPkg::Lock::Timeout=-1 upgrade
 *** EXIT_CODE 0
 *** STDOUT
-Reading package lists...
-Building dependency tree...
-Reading state information...
-xdot is already the newest version (1.1-2).
-Calculating upgrade...
+Reading package lists... 0%Reading package lists... 100%Reading package lists... Done
+Building dependency tree... 0%Building dependency tree... 0%Building dependency tree... 50%Building dependency tree... 50%Building dependency tree       
+Reading state information... 0%Reading state information... 0%Reading state information... Done
+Calculating upgrade... 0%Calculating upgrade... 50%Calculating upgrade... Done
 0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
 *** STDERR

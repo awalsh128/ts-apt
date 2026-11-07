@@ -1,12 +1,5 @@
-*** CMD_LINE apt-cache showpkg --quiet=0 libvips
-*** EXIT_CODE 0
+*** CMD_LINE /usr/bin/apt-cache --quiet=0 --no-all-versions showpkg libvips
+*** EXIT_CODE 100
 *** STDOUT
-Package: libvips
-Versions: 
-
-Reverse Depends: 
-Dependencies: 
-Provides: 
-Reverse Provides: 
-libvips42 8.9.1-2 (= )
 *** STDERR
+E: Command line option --no-all-versions is not understood in combination with the other options

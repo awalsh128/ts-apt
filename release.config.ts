@@ -21,34 +21,26 @@ export default {
   ],
 
   // Actions to perform during a release.
+  //
+  // Releases only create a git tag and a GitHub Release; they never commit. A release commit on 'main'
+  // would put 'main' ahead of 'staging', and 'main' must only ever fast-forward to commits already on
+  // 'staging' (see .github/workflows/promote.yml). So package.json keeps its placeholder version and
+  // there is no CHANGELOG.md: the tags and GitHub Releases are the version history, and consumers such
+  // as cache-apt-pkgs-action install ts-apt from a git commit SHA rather than from npm.
   plugins: [
     // Analyzes commit messages (Conventional Commits) to determine if the next version should be a major,
     // minor, or patch bump.
-    "@semantic-release/commit-analyzer",
+    // The 'conventionalcommits' preset matches commitlint and, unlike the default 'angular' preset,
+    // treats 'feat!:' as a breaking change.
+    ["@semantic-release/commit-analyzer", { preset: "conventionalcommits" }],
 
     // Generates the release notes (changelog content) based on the commit history.
-    "@semantic-release/release-notes-generator",
-
-    // Updates the 'CHANGELOG.md' file with the new release notes.
-    ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],
-
-    // Updates 'package.json' with the new version and publishes the package to npm.
-    // 'npmPublish: true' enables publishing; 'pkgRoot' sets the directory.
-    ["@semantic-release/npm", { npmPublish: true, pkgRoot: "." }],
-
-    // Commits the updated 'CHANGELOG.md', 'package.json', and 'package-lock.json' back to the repository with
-    // a standardized commit message.
     [
-      "@semantic-release/git",
-      {
-        assets: ["CHANGELOG.md", "package.json", "package-lock.json"],
-        message:
-          "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
-      },
+      "@semantic-release/release-notes-generator",
+      { preset: "conventionalcommits" },
     ],
 
-    // Creates a GitHub Release with the generated notes and uploads assets.
-    // Default behavior posts automatic comments on resolved issues/PRs.
+    // Creates a GitHub Release with the generated notes and posts comments on resolved issues/PRs.
     "@semantic-release/github",
   ],
 };

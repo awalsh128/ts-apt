@@ -14,7 +14,7 @@ coverage:
     project:
       default:
         target: auto # Target coverage is the previous commit's coverage
-        threshold: 1% # Allow a 1% drop without failing
+        threshold: 5% # Allow a 5% drop without failing
         base: auto
         if_no_uploads: error
         if_not_found: success

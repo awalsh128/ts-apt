@@ -9,6 +9,7 @@ You are an expert developer focused on TypeScript, Bash, DevOps, Git, and GitHub
 3. `Section 2` for tests.
 4. `Section 3` for CI/CD and release work.
 5. `Section 4` for repo-specific paths and commands.
+6. `Section 5` before changing exported APIs or adding APIs for downstream consumers.
 
 ## Instruction Efficiency
 
@@ -43,6 +44,7 @@ You are an expert developer focused on TypeScript, Bash, DevOps, Git, and GitHub
 - Follow Microsoft TypeScript style guidance.
 - For Bash, require `shellcheck`-clean scripts and `set -euo pipefail`.
 - Document exported types and functions.
+- Documentation may be omitted for non-exported implementations of types and interfaces.
 - Add context where behavior is not obvious from the signature.
 - Prefer patterns already used in the repo, especially `semantic-release`, `vitest`, and typed helpers.
 
@@ -59,11 +61,13 @@ You are an expert developer focused on TypeScript, Bash, DevOps, Git, and GitHub
 
 - Follow GitHub Actions CI/CD best practices: https://github.com/github/awesome-copilot/blob/main/instructions/github-actions-ci-cd-best-practices.instructions.md
 - Abstract repeated workflow logic into reusable actions or scripts.
-- Treat `main` as the stable release branch.
-- Treat `staging` as the prerelease branch.
+- Treat `main` as the official release branch and `staging` as the release candidate branch.
+- MUST keep `main` an ancestor of `staging`: update `main` only by fast-forward via `promote.yml`, never by PR merge or release commit.
+- Keep `promote.yml` pushing `main` with the release-bot app token; the `main` ruleset only lets that app update it.
 - Use `pr.yml` and `scripts/ops/pr_checks.mts` to enforce branch policy and workflow pinning.
-- Use `release.yml` and semantic-release for branch-based publishing.
-- Keep release automation compatible with the release-bot bypass on `main` and `staging` protections.
+- MUST gate every branch and release by CI: candidates release from `ci.yml` after all jobs pass on `staging`; official releases come only from `promote.yml`.
+- Use `release.yml` and semantic-release for releases; they only tag and create GitHub Releases, never commit.
+- Use Conventional Commits; commitlint enforces them in the `commit-msg` hook and in `pr.yml`.
 
 ## 4) Repo Paths And Commands
 
@@ -71,6 +75,16 @@ You are an expert developer focused on TypeScript, Bash, DevOps, Git, and GitHub
 - Use `scripts/ops/` for repository checks and release-support automation.
 - Use `scripts/dist/` for shell assets bundled with the npm package and exposed through `package.json` bin/files entries.
 - Use `scripts/` as the home for repo-owned automation; do not refer to the old `dev_scripts/` layout.
+
+## 5) Downstream Consumers
+
+- `awalsh128/cache-apt-pkgs-action` depends on ts-apt through a commit SHA pin in its `package.json`.
+- ts-apt owns APT and dpkg logic: running APT and dpkg binaries, parsing their output, and `PackageName` behavior.
+- Keep cache, manifest, archive, and GitHub Actions logic in cache-apt-pkgs-action, not here.
+- Treat exported types and `PackageManager` methods as public API for cache-apt-pkgs-action.
+- ASK FIRST before renaming, removing, or changing the signature of an exported API.
+- MUST push a ts-apt change before cache-apt-pkgs-action bumps its pin to use it.
+- When a change is for cache-apt-pkgs-action, say that its ts-apt SHA pin must be bumped.
 
 ## Quick Commands
 

@@ -1,7 +1,10 @@
-*** CMD_LINE apt-get autoclean
+*** CMD_LINE /usr/bin/apt-get --quiet=0 -y --simulate -o DPkg::Lock::Timeout=-1 autoclean
 *** EXIT_CODE 0
 *** STDOUT
-Reading package lists...
-Building dependency tree...
-Reading state information...
+Reading package lists... 0%Reading package lists... 100%Reading package lists... Done
+Building dependency tree... 0%Building dependency tree... 0%Building dependency tree... 50%Building dependency tree... 50%Building dependency tree       
+Reading state information... 0%Reading state information... 0%Reading state information... Done
+Del ubuntu-pro-client 37.1ubuntu0~20.04 [237 kB]
+Del ubuntu-pro-client-l10n 37.1ubuntu0~20.04 [18.8 kB]
+Del ubuntu-advantage-tools 37.1ubuntu0~20.04 [11.0 kB]
 *** STDERR

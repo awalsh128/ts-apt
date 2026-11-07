@@ -1,6 +1,7 @@
-*** CMD_LINE apt-cache show --quiet=0 libvips
+*** CMD_LINE /usr/bin/apt-cache --quiet=0 --no-all-versions show libvips
 *** EXIT_CODE 0
 *** STDOUT
 *** STDERR
+N: Can't select candidate version from package libvips as it has no candidate
 N: Can't select versions from package 'libvips' as it is purely virtual
 N: No packages found

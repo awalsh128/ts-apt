@@ -1,4 +1,5 @@
 #!/usr/bin/env -S node --experimental-strip-types
+/* eslint-disable @typescript-eslint/consistent-type-definitions */
 
 import process from "node:process";
 import { runCaptureOutput, tryRun } from "../devopslib.mts";
@@ -106,7 +107,7 @@ export function loadActionRepoData(
 
     const [sha, ref] = line.split(/\s+/);
     const prefix = "refs/tags/";
-    if (!sha || !ref || !ref.startsWith(prefix)) {
+    if (!sha || !ref?.startsWith(prefix)) {
       continue;
     }
 

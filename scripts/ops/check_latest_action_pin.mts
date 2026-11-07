@@ -1,4 +1,6 @@
 #!/usr/bin/env -S node --experimental-strip-types
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 
 import fs from "node:fs";
 import path from "node:path";
@@ -23,28 +25,27 @@ import {
   logWarn,
   runCli,
   runMain,
-  runCaptureOutput,
 } from "../devopslib.mts";
 
-type ActionPin = {
+interface ActionPin {
   filePath: string;
   lineNumber: number;
   actionPath: string;
   currentRef: string;
-};
+}
 
-type GitHubRelease = {
+interface GitHubRelease {
   tag_name: string;
   html_url?: string;
-};
+}
 
-type RepoData = {
+interface RepoData {
   tagMap: Map<string, string>;
   latestRelease: GitHubRelease | null;
   releases: GitHubRelease[];
-};
+}
 
-type ActionAnalysis = {
+interface ActionAnalysis {
   actionPath: string;
   repoSlug: string;
   currentRef: string;
@@ -54,12 +55,6 @@ type ActionAnalysis = {
   latestSha: string | null;
   notPinned: boolean;
   isCurrent: boolean;
-};
-
-function git(args: string[]): string {
-  return runCaptureOutput("git", args, {
-    cwd: process.cwd(),
-  });
 }
 
 async function fetchJson(url: string): Promise<unknown | null> {

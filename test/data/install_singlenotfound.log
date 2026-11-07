@@ -1,8 +1,8 @@
-*** CMD_LINE apt-get install -y nonexistentpackage
+*** CMD_LINE /usr/bin/apt-get --quiet=0 -y --simulate -o DPkg::Lock::Timeout=-1 install -f nonexistentpackage
 *** EXIT_CODE 100
 *** STDOUT
-Reading package lists...
-Building dependency tree...
-Reading state information...
+Reading package lists... 0%Reading package lists... 100%Reading package lists... Done
+Building dependency tree... 0%Building dependency tree... 0%Building dependency tree... 50%Building dependency tree... 50%Building dependency tree       
+Reading state information... 0%Reading state information... 0%Reading state information... Done
 *** STDERR
 E: Unable to locate package nonexistentpackage

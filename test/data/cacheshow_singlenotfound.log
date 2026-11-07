@@ -1,5 +1,7 @@
-*** CMD_LINE apt-cache show nonexistentpackage
+*** CMD_LINE /usr/bin/apt-cache --quiet=0 --no-all-versions show nonexistentpackage
 *** EXIT_CODE 100
 *** STDOUT
 *** STDERR
+N: Unable to locate package nonexistentpackage
+N: Unable to locate package nonexistentpackage
 E: No packages found

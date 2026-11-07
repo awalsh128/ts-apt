@@ -1,49 +1,117 @@
 import { describe, expect, test } from "vitest";
-import { deserializePackageName, validatePackageName } from "../src/package.js";
+import {
+  createPackageName,
+  deserializePackageName,
+  packageNameFromJSON,
+} from "../src/package.js";
 import { ValidationError } from "../src/errors.js";
 
-describe("package helpers", () => {
-  test("deserializes simple package names", () => {
-    const pkg = deserializePackageName("vim");
-    expect(pkg).not.toBeNull();
-    expect(pkg?.name).toBe("vim");
-    expect(pkg?.serialize()).toBe("vim");
+const pkg = (input: { name: string; version?: string; arch?: string }) =>
+  createPackageName(input.name, input.version, input.arch);
+
+describe("packages", () => {
+  describe("PackageName", () => {
+    test.each([
+      [
+        pkg({ name: "vim", version: "2:9.0", arch: "amd64" }),
+        "vim:amd64=2:9.0",
+      ],
+      [pkg({ name: "vim" }), "vim"],
+      [pkg({ name: "vim", arch: "amd64" }), "vim:amd64"],
+      [pkg({ name: "vim", version: "2:9.0" }), "vim=2:9.0"],
+    ])("serializes %j to %s", (input, expected) => {
+      expect(input.serialize()).toBe(expected);
+    });
+
+    test("compares multiple packages in stable order", () => {
+      const pkg1 = deserializePackageName("vim:amd64=2:9.0");
+      const pkg2 = deserializePackageName("vim:arm64=2:9.0");
+      const pkg3 = deserializePackageName("curl:amd64=8.5.0-2ubuntu10.6");
+      const pkg4 = deserializePackageName("curl:arm64=8.5.0-2ubuntu10.6");
+
+      expect([pkg1, pkg2, pkg3, pkg4].sort((a, b) => a.compareTo(b))).toEqual(
+        [pkg4, pkg3, pkg1, pkg2].sort((a, b) => a.compareTo(b)),
+      );
+    });
   });
 
-  test("deserializes names with distro and version", () => {
-    const withDistro = deserializePackageName("vim/focal");
-    const withVersion = deserializePackageName("vim=2:9.0");
-    const withBoth = deserializePackageName("vim/focal=2:9.0");
-
-    expect(withDistro?.serialize()).toBe("vim/focal");
-    expect(withVersion?.serialize()).toBe("vim=2:9.0");
-    expect(withBoth?.serialize()).toBe("vim/focal=2:9.0");
+  test.each([
+    [pkg({ name: "vim", version: "2:9.0", arch: "amd64" })],
+    [pkg({ name: "vim", version: undefined, arch: undefined })],
+    [pkg({ name: "vim", version: undefined, arch: "amd64" })],
+    [pkg({ name: "vim", version: "2:9.0", arch: undefined })],
+  ])("createPackageName creates expected PackageName", (pkgInstance) => {
+    expect(
+      createPackageName(
+        pkgInstance.name,
+        pkgInstance.version,
+        pkgInstance.arch,
+      ),
+    ).toEqual(pkgInstance);
   });
 
-  test("returns null for invalid package names", () => {
-    expect(deserializePackageName("")).toBeNull();
-    expect(deserializePackageName("bad package")).toBeNull();
+  test.each([
+    ["vim", pkg({ name: "vim", version: undefined, arch: undefined })],
+    ["vim:amd64", pkg({ name: "vim", version: undefined, arch: "amd64" })],
+    ["vim=2:9.0", pkg({ name: "vim", version: "2:9.0", arch: undefined })],
+    ["vim:amd64=2:9.0", pkg({ name: "vim", version: "2:9.0", arch: "amd64" })],
+    // Invalid APT package names but still parsed by our naive split function
+    ["vim=a=a", pkg({ name: "vim", version: "a=a", arch: undefined })],
+    ["vim:a:amd64=a=a", pkg({ name: "vim", version: "a=a", arch: "a:amd64" })],
+  ])("deserializePackageName(%j) returns %j", (input, expected) => {
+    expect(deserializePackageName(input)).toEqual(expected);
   });
 
-  test("accepts valid package name strings", () => {
-    expect(() => validatePackageName("vim")).not.toThrow();
-    expect(() => validatePackageName("libc6=2.39-0ubuntu8.4")).not.toThrow();
+  test("createPackageName empty name throws ValidationError", () => {
+    expect(() => createPackageName("")).toThrow(ValidationError);
   });
 
-  test("rejects empty package names", () => {
-    expect(() => validatePackageName("")).toThrow(ValidationError);
+  test("packageNameFromJSON empty name throws ValidationError", () => {
+    expect(() => packageNameFromJSON({ name: "" })).toThrow(ValidationError);
   });
 
-  test("rejects non-apt package patterns", () => {
-    expect(() => validatePackageName("bad package")).toThrow(ValidationError);
+  test("deserializePackageName throws on empty package", () => {
+    expect(() => deserializePackageName("")).toThrow();
   });
 
-  test("rejects package names longer than 255 chars", () => {
-    const longName = `a${"b".repeat(255)}`;
-    expect(() => validatePackageName(longName)).toThrow(ValidationError);
-  });
+  interface PackageNameJSON {
+    name: string;
+    version?: string;
+    arch?: string;
+  }
+  test.each([
+    [
+      { name: "vim", version: "2:9.0", arch: "amd64" },
+      pkg({ name: "vim", version: "2:9.0", arch: "amd64" }),
+    ],
+    [
+      { name: "vim" },
+      pkg({ name: "vim", version: undefined, arch: undefined }),
+    ],
+    [
+      { name: "vim", arch: "amd64" },
+      pkg({ name: "vim", version: undefined, arch: "amd64" }),
+    ],
+    [
+      { name: "vim", version: "2:9.0" },
+      pkg({ name: "vim", version: "2:9.0", arch: undefined }),
+    ],
+  ])(
+    "packageNameFromJSON(%j) returns %j",
+    (input: PackageNameJSON, expected) => {
+      expect(packageNameFromJSON(input)).toEqual(expected);
+    },
+  );
 
-  test("rejects unsafe characters when distro path is present", () => {
-    expect(() => validatePackageName("vim/focal")).toThrow(ValidationError);
+  test.each([
+    [null],
+    ["vim"],
+    [{}],
+    [{ name: 1 }],
+    [{ name: "vim", version: 2 }],
+  ])("packageNameFromJSON(%j) throws", (input) => {
+    expect(() => packageNameFromJSON(input)).toThrow(
+      "Invalid JSON for PackageName",
+    );
   });
 });

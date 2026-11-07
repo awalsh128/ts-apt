@@ -1,8 +1,8 @@
-*** CMD_LINE apt search vim
+*** CMD_LINE /usr/bin/apt --quiet=0 search vim
 *** EXIT_CODE 0
 *** STDOUT
-Sorting...
-Full Text Search...
+Sorting... 0%Sorting... 0%Sorting... 0%Sorting... Done
+Full Text Search... 50%Full Text Search... 50%Full Text Search... Done
 acr/focal 1.7.2-1 all
   autoconf like tool
 

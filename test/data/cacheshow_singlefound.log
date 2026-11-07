@@ -1,4 +1,4 @@
-*** CMD_LINE apt-cache show python3
+*** CMD_LINE /usr/bin/apt-cache --quiet=0 --no-all-versions show python3
 *** EXIT_CODE 0
 *** STDOUT
 Package: python3

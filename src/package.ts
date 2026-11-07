@@ -1,72 +1,93 @@
 import { PackageName } from "./types.js";
+import { z } from "zod";
 import { ValidationError } from "./errors.js";
 
-const PACKAGE_NAME_REGEX =
-  /^([a-z0-9][a-z0-9+.-]*)(?:\/([a-zA-Z0-9_-]+))?(?:=([a-zA-Z0-9.+:~-]+))?$/;
-const LEGAL_CHARS_REGEX = /[^\w.+:~=-]/;
-
-class AptPackageName implements PackageName {
+/** Naive split of input name into not yet validated components. */
+function splitInputName(input: string): {
   name: string;
   version?: string;
-  distro?: string;
+  arch?: string;
+} {
+  if (!input) {
+    throw new ValidationError("Package name must not be empty.");
+  }
 
-  constructor(name: string, version?: string, distro?: string) {
+  const splitOnce = (text: string, separator: string): [string, string?] => {
+    const index = text.indexOf(separator);
+    if (index === -1) {
+      return [text];
+    }
+    return [text.slice(0, index), text.slice(index + separator.length)];
+  };
+
+  const [identity, version] = splitOnce(input, "=");
+  const [name, arch] = splitOnce(identity, ":");
+  return { name, version, arch };
+}
+
+class AptPackageName implements PackageName {
+  readonly name: string;
+  readonly version?: string;
+  readonly arch?: string;
+
+  private constructor(name: string, version?: string, arch?: string) {
+    if (!name) {
+      throw new ValidationError("Package name must not be empty.");
+    }
     this.name = name;
     this.version = version;
-    this.distro = distro;
+    this.arch = arch;
+  }
+
+  compareTo(other: PackageName): number {
+    return this.serialize().localeCompare(other.serialize());
+  }
+
+  static create(name: string, version?: string, arch?: string): PackageName {
+    return new AptPackageName(name, version, arch);
+  }
+
+  static fromJSON(json: unknown): PackageName {
+    const schema = z.object({
+      name: z.string(),
+      version: z.string().optional(),
+      arch: z.string().optional(),
+    });
+    const parsed = schema.safeParse(json);
+    if (!parsed.success) {
+      throw new Error(`Invalid JSON for PackageName: ${JSON.stringify(json)}`);
+    }
+    const { name, version, arch } = parsed.data;
+    return AptPackageName.create(name, version, arch);
+  }
+
+  static deserialize(text: string): PackageName {
+    const { name, version, arch } = splitInputName(text);
+    return new AptPackageName(name, version, arch);
   }
 
   serialize(): string {
-    const prefix = this.distro ? `${this.name}/${this.distro}` : `${this.name}`;
-    return this.version ? `${prefix}=${this.version}` : `${prefix}`;
+    const archPart = this.arch ? `:${this.arch}` : "";
+    const versionPart = this.version ? `=${this.version}` : "";
+    return `${this.name}${archPart}${versionPart}`;
   }
 }
 
+/** Create a [PackageName] with validated values. */
 export function createPackageName(
   name: string,
   version?: string,
-  distro?: string,
+  arch?: string,
 ): PackageName {
-  const item = new AptPackageName(name, version, distro);
-  validatePackageName(item.serialize());
-  return item;
+  return AptPackageName.create(name, version, arch);
 }
 
-export function deserializePackageName(text: string): PackageName | null {
-  const [_, name, distro, version] = text.match(PACKAGE_NAME_REGEX) || [];
-  if (!name) {
-    return null;
-  }
-  return new AptPackageName(name, version, distro);
+/** Deserialize a JSON object to a [PackageName]. */
+export function packageNameFromJSON(json: unknown): PackageName {
+  return AptPackageName.fromJSON(json);
 }
 
-/**
- * Validates a single package name or keyword token.
- *
- * @param name Package name or keyword token.
- * @throws ValidationError When the value is empty, too long, or unsafe.
- */
-export function validatePackageName(serializedName: string): void {
-  if (!serializedName) {
-    throw new ValidationError(
-      `Invalid package name: "${serializedName}". Must not be empty.`,
-    );
-  }
-  const [_, name, _distro, _version] =
-    serializedName.match(PACKAGE_NAME_REGEX) || [];
-  if (!name) {
-    throw new ValidationError(
-      `Invalid package name: "${serializedName}". Must be a valid APT package name or keyword.`,
-    );
-  }
-  if (serializedName.length > 255) {
-    throw new ValidationError(
-      `Invalid package name: "${serializedName}". Must be 255 characters or less.`,
-    );
-  }
-  if (/[^\w.+:~=-]/.test(serializedName)) {
-    throw new ValidationError(
-      `Invalid package name: "${serializedName}". Must not contain unsafe characters.`,
-    );
-  }
+/** Parses the APT text syntax (name[:arch][=version]) to a [PackageName]. */
+export function deserializePackageName(text: string): PackageName {
+  return AptPackageName.deserialize(text);
 }

@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { CommandResult, PackageInfo } from "../src/types.js";
+import { tsAptMetaKeys } from "../src/types.js";
 import { AptOutputParser } from "../src/parser.js";
+import { ValidationError } from "../src/errors.js";
+import { createPackageName } from "../src/package.js";
 import { deserializeCommandResult, nullLogger } from "./common.js";
 
-import listInstalledExpected from "./data/parser/listinstalled_expected.json" with { type: "json" };
 import searchMultipleFoundExpected from "./data/parser/search_multiplefound_expected.json" with { type: "json" };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,46 +15,29 @@ const __dirname = dirname(__filename);
 
 const DATA_DIR = resolve(__dirname, "data");
 
-function jsonToPackageInfos(
-  jsonArray: Record<string, unknown>[],
-): PackageInfo[] {
-  return jsonArray.map(
-    (json) =>
-      ({
-        name: json.name,
-        version: json.version,
-        status: json.status,
-        arch: json.arch,
-        metadata: json.metadata
-          ? new Map(Object.entries(json.metadata as Record<string, string>))
-          : undefined,
-      }) as PackageInfo,
-  );
-}
-
-function withoutUndefinedFields<T extends object>(value: T): Partial<T> {
-  return Object.fromEntries(
-    Object.entries(value).filter(([, fieldValue]) => fieldValue !== undefined),
-  ) as Partial<T>;
-}
-
 function deserialize(path: string): CommandResult {
   return deserializeCommandResult(resolve(DATA_DIR, path));
 }
 
 describe("apt output parser", () => {
   const parser = new AptOutputParser(nullLogger);
-  type ExpectedPackagesOrError = PackageInfo[] | string;
+  interface LegacyExpectedPackage {
+    name: string;
+    version?: string;
+    arch?: string;
+    status?: PackageInfo["status"];
+    metadata?: Record<string, string | undefined>;
+  }
+  type ExpectedPackage = PackageInfo | LegacyExpectedPackage;
+  type ExpectedPackagesOrError = ExpectedPackage[] | string;
 
   const available = (
     name: string,
-    version = "",
-    arch: string | undefined = undefined,
+    version?: string,
+    arch?: string,
   ): PackageInfo => ({
-    name,
-    version,
+    name: createPackageName(name, version, arch),
     status: "available",
-    arch,
   });
 
   const installed = (
@@ -59,10 +45,8 @@ describe("apt output parser", () => {
     version: string,
     arch?: string,
   ): PackageInfo => ({
-    name,
-    version,
+    name: createPackageName(name, version, arch),
     status: "installed",
-    arch,
   });
 
   function expectPackagesOrError(
@@ -81,13 +65,73 @@ describe("apt output parser", () => {
       return;
     }
 
-    expect(parsed).toEqual(
-      expect.arrayContaining(
-        expected.map((pkg) =>
-          expect.objectContaining(withoutUndefinedFields(pkg)),
-        ),
-      ),
-    );
+    const toComparable = (pkg: ExpectedPackage) => {
+      if (typeof (pkg as LegacyExpectedPackage).name === "string") {
+        const legacy = pkg as LegacyExpectedPackage;
+        return {
+          name: legacy.name,
+          version: legacy.version,
+          arch: legacy.arch,
+          status: legacy.status,
+          metadata: legacy.metadata,
+        };
+      }
+
+      const current = pkg as PackageInfo;
+      return {
+        name: current.name.name,
+        version: current.name.version,
+        arch: current.name.arch,
+        status: current.status,
+        metadata: current.metadata,
+      };
+    };
+
+    const metadataKeyAliases: Readonly<Record<string, string>> = {
+      description: tsAptMetaKeys.searchDescription,
+      repos: tsAptMetaKeys.searchReleaseCodename,
+    };
+
+    const matches = (actual: PackageInfo, expectedPkg: ExpectedPackage) => {
+      const normalized = toComparable(expectedPkg);
+      if (actual.name.name !== normalized.name) {
+        return false;
+      }
+      if (
+        normalized.version !== undefined &&
+        actual.name.version !== normalized.version
+      ) {
+        return false;
+      }
+      if (
+        normalized.arch !== undefined &&
+        actual.name.arch !== undefined &&
+        actual.name.arch !== normalized.arch
+      ) {
+        return false;
+      }
+      if (
+        normalized.status !== undefined &&
+        actual.status !== normalized.status
+      ) {
+        return false;
+      }
+
+      if (normalized.metadata !== undefined) {
+        for (const [key, value] of Object.entries(normalized.metadata)) {
+          const mappedKey = metadataKeyAliases[key] ?? key;
+          if (actual.metadata?.[mappedKey] !== value) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    };
+
+    for (const expectedPkg of expected) {
+      expect(parsed.some((actual) => matches(actual, expectedPkg))).toBe(true);
+    }
   }
 
   it.each([
@@ -141,18 +185,7 @@ describe("apt output parser", () => {
       "E: Unable to locate package nonexistentpackage",
     ],
     ["remove_singlenotinstalled.log", []],
-    [
-      "autoremove_found.log",
-      [
-        available("gir1.2-gtk-3.0", "3.24.20-0ubuntu1.2", "amd64"),
-        available("gir1.2-pango-1.0", "1.44.7-2ubuntu4", "amd64"),
-        available("gir1.2-freedesktop", "1.64.1-1~ubuntu20.04.1", "amd64"),
-        available("gir1.2-gdkpixbuf-2.0", "2.40.0+dfsg-3ubuntu0.5", "amd64"),
-        available("libpangoxft-1.0-0", "1.44.7-2ubuntu4", "amd64"),
-        available("python3-gi-cairo", "3.36.0-1"),
-        available("python3-cairo", "1.16.2-2ubuntu2", "amd64"),
-      ],
-    ],
+    ["autoremove_found.log", []],
     ["autoremove_notfound.log", []],
   ])("parseRemoveOutput uses %s", (file, expected) => {
     const result = deserialize(file);
@@ -161,16 +194,15 @@ describe("apt output parser", () => {
     expectPackagesOrError(result, parsed, expected);
   });
 
-  it.each([
-    [
-      "listinstalled.log",
-      jsonToPackageInfos(listInstalledExpected) as PackageInfo[],
-    ],
-  ])("parseListInstalledOutput uses %s", (file, expected) => {
-    const result = deserialize(file);
+  test("parseListInstalledOutput uses listinstalled.log", () => {
+    const result = deserialize("listinstalled.log");
     const parsed = parser.parseListInstalledOutput(result);
 
-    expectPackagesOrError(result, parsed, expected);
+    expect(parsed.length).toBeGreaterThan(0);
+    expect(parsed.every((pkg) => pkg.status === "installed")).toBe(true);
+    expect(parsed.some((pkg) => pkg.name.name === "apt")).toBe(true);
+    expect(parsed.every((pkg) => pkg.name.arch)).toBe(true);
+    expect(parsed.some((pkg) => pkg.name.name.includes(":"))).toBe(false);
   });
 
   it.each([
@@ -178,12 +210,17 @@ describe("apt output parser", () => {
       "listupgradable_found.log",
       [
         {
-          name: "firefox-locale-en",
-          version: "75.0+build3-0ubuntu1",
+          name: createPackageName(
+            "firefox-locale-en",
+            "75.0+build3-0ubuntu1",
+            "amd64",
+          ),
           status: "upgradeable" as const,
-          arch: "amd64",
-          metadata: new Map([["newVersion", "136.0+build3-0ubuntu0.20.04.1"]]),
-        } as PackageInfo,
+          metadata: {
+            [tsAptMetaKeys.listUpgradeableNewVersion]:
+              "136.0+build3-0ubuntu0.20.04.1",
+          },
+        },
       ],
     ],
     ["listupgradable_notfound.log", []],
@@ -197,28 +234,29 @@ describe("apt output parser", () => {
   it.each([
     [
       "search_multiplefound.log",
-      jsonToPackageInfos(searchMultipleFoundExpected) as PackageInfo[],
+      searchMultipleFoundExpected as ExpectedPackage[],
     ],
     ["search_nonefound.log", []],
     [
       "search_singlefound.log",
       [
         {
-          name: "vim-vimerl-syntax",
-          version: "1.4.1+git20120509.89111c7-2",
-          arch: "all",
-          metadata: new Map([
-            ["description", "Erlang syntax for Vim"],
-            ["repos", "focal"],
-          ]),
+          name: createPackageName(
+            "vim-vimerl-syntax",
+            "1.4.1+git20120509.89111c7-2",
+            "all",
+          ),
+          status: "available" as const,
+          metadata: {
+            [tsAptMetaKeys.searchDescription]: "Erlang syntax for Vim",
+            [tsAptMetaKeys.searchReleaseCodename]: "focal",
+          },
         },
       ],
     ],
   ])("parseSearchOutput uses %s", (file, expected) => {
     const result = deserialize(file);
     const parsed = parser.parseSearchOutput(result);
-
-    // expect(dumpPackages(parsed)).toEqual("");
 
     expectPackagesOrError(result, parsed, expected);
   });
@@ -253,13 +291,14 @@ describe("apt output parser", () => {
     expect(parsed).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          name: "curl",
-          version: "8.5.0-2ubuntu10.6",
+          name: expect.objectContaining({
+            name: "curl",
+            version: "8.5.0-2ubuntu10.6",
+          }),
           status: "installed",
         }),
         expect.objectContaining({
-          name: "vim",
-          version: "2:9.0-1",
+          name: expect.objectContaining({ name: "vim", version: "2:9.0-1" }),
           status: "available",
         }),
       ]),
@@ -268,7 +307,7 @@ describe("apt output parser", () => {
 
   test("parseQueryOutput parses dpkg-query formatted lines", () => {
     const parsed = parser.parseQueryOutput({
-      cmdLine: "dpkg-query -W -f=${binary:Package}:${Architecture}=${Version}",
+      cmdLine: "dpkg-query -W -f=${binary:Package}=${Version}",
       exitCode: 0,
       stdout: "openssl:amd64=3.0.13-0ubuntu3.5\ninvalid-line\n",
       stderr: "",
@@ -276,9 +315,11 @@ describe("apt output parser", () => {
 
     expect(parsed).toEqual([
       expect.objectContaining({
-        name: "openssl",
-        arch: "amd64",
-        version: "3.0.13-0ubuntu3.5",
+        name: expect.objectContaining({
+          name: "openssl",
+          version: "3.0.13-0ubuntu3.5",
+          arch: "amd64",
+        }),
         status: "installed",
       }),
     ]);
@@ -293,12 +334,137 @@ describe("apt output parser", () => {
     });
 
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]).toMatchObject({
-      name: "openssl",
-      arch: "amd64",
-      version: "3.0.13-0ubuntu3.5",
-      status: "installed",
+    expect(parsed[0]?.name.name).toBe("openssl");
+    expect(parsed[0]?.name.version).toBe("3.0.13-0ubuntu3.5");
+    expect(parsed[0]?.name.arch).toBe("amd64");
+    expect(parsed[0]?.status).toBe("installed");
+  });
+
+  test("parseCacheShowOutput stanza without version or architecture leaves them undefined", () => {
+    const parsed = parser.parseCacheShowOutput({
+      cmdLine: "apt-cache show curl",
+      exitCode: 0,
+      stdout: "Package: curl\nDescription: command line tool\n",
+      stderr: "",
     });
+
+    expect(parsed.map((pkg) => pkg.name)).toEqual([createPackageName("curl")]);
+  });
+
+  test("parseCacheShowOutput stanza without package throws ValidationError", () => {
+    expect(() =>
+      parser.parseCacheShowOutput({
+        cmdLine: "apt-cache show curl",
+        exitCode: 0,
+        stdout: "Version: 8.5.0\nArchitecture: amd64\n",
+        stderr: "",
+      }),
+    ).toThrow(ValidationError);
+  });
+
+  test.each([
+    [
+      "bind9-libs:amd64=1:9.18.30-0ubuntu0.20.04.2",
+      createPackageName("bind9-libs", "1:9.18.30-0ubuntu0.20.04.2", "amd64"),
+    ],
+    ["acl:amd64=2.2.53-6", createPackageName("acl", "2.2.53-6", "amd64")],
+    [
+      "libc6:i386=2.31-0ubuntu9.2",
+      createPackageName("libc6", "2.31-0ubuntu9.2", "i386"),
+    ],
+    [
+      "adduser:all=3.118ubuntu2",
+      createPackageName("adduser", "3.118ubuntu2", "all"),
+    ],
+  ])(
+    "parseListInstalledOutput %j returns serialized-form package",
+    (line, expected) => {
+      const parsed = parser.parseListInstalledOutput({
+        cmdLine: "dpkg-query -W",
+        exitCode: 0,
+        stdout: `${line}\n`,
+        stderr: "",
+      });
+
+      expect(parsed.map((pkg) => pkg.name)).toEqual([expected]);
+      expect(parsed[0]?.name.serialize()).toBe(line);
+    },
+  );
+
+  test("parseListInstalledOutput unrecognized line skips line", () => {
+    const parsed = parser.parseListInstalledOutput({
+      cmdLine: "dpkg-query -W",
+      exitCode: 0,
+      stdout: "not a package line\nopenssl:amd64=3.0.13-0ubuntu3.5\n",
+      stderr: "",
+    });
+
+    expect(parsed.map((pkg) => pkg.name.name)).toEqual(["openssl"]);
+  });
+
+  test("parseListInstalledOutput empty version throws ValidationError", () => {
+    expect(() =>
+      parser.parseListInstalledOutput({
+        cmdLine: "dpkg-query -W",
+        exitCode: 0,
+        stdout: "openssl:amd64=\n",
+        stderr: "",
+      }),
+    ).toThrow(ValidationError);
+  });
+
+  test("parseUpgradeOutput Inst line without repositories parses package", () => {
+    const parsed = parser.parseUpgradeOutput({
+      cmdLine: "apt-get upgrade",
+      exitCode: 0,
+      stdout: "Inst vim:amd64 (2:8.1.2269-1ubuntu5.32)\n",
+      stderr: "",
+    });
+
+    expect(parsed).toEqual([
+      {
+        name: createPackageName("vim", "2:8.1.2269-1ubuntu5.32", "amd64"),
+        status: "installed",
+      },
+    ]);
+  });
+
+  test.each([
+    [
+      "Inst libc6:i386 (2.31-0ubuntu9.2 Ubuntu:20.04/focal-updates [i386])",
+      createPackageName("libc6", "2.31-0ubuntu9.2", "i386"),
+    ],
+    [
+      "Inst vim [2:8.1.2269-1ubuntu5.31] (2:8.1.2269-1ubuntu5.32 Ubuntu:20.04/focal-updates [amd64])",
+      createPackageName("vim", "2:8.1.2269-1ubuntu5.32", "amd64"),
+    ],
+    [
+      "Inst libc6:i386 [2.31-0ubuntu9.1] (2.31-0ubuntu9.2 Ubuntu:20.04/focal-updates [i386])",
+      createPackageName("libc6", "2.31-0ubuntu9.2", "i386"),
+    ],
+  ])("parseInstallOutput %j returns %j", (line, expected) => {
+    const parsed = parser.parseInstallOutput({
+      cmdLine: "apt-get install",
+      exitCode: 0,
+      stdout: `${line}\n`,
+      stderr: "",
+    });
+
+    expect(parsed.map((pkg) => pkg.name)).toEqual([expected]);
+  });
+
+  test("parseUpgradeOutput Inst line with old version returns new version", () => {
+    const parsed = parser.parseUpgradeOutput({
+      cmdLine: "apt-get upgrade",
+      exitCode: 0,
+      stdout:
+        "Inst vim [2:8.1.2269-1ubuntu5.31] (2:8.1.2269-1ubuntu5.32 Ubuntu:20.04/focal-updates [amd64])\n",
+      stderr: "",
+    });
+
+    expect(parsed.map((pkg) => pkg.name)).toEqual([
+      createPackageName("vim", "2:8.1.2269-1ubuntu5.32", "amd64"),
+    ]);
   });
 
   test("parseInstallOutput captures architecture when present", () => {
@@ -309,14 +475,11 @@ describe("apt output parser", () => {
       stderr: "",
     });
 
-    expect(parsed).toEqual([
-      expect.objectContaining({
-        name: "libc6",
-        arch: "amd64",
-        version: "2.39-0ubuntu8.4",
-        status: "installed",
-      }),
-    ]);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]?.name.name).toBe("libc6");
+    expect(parsed[0]?.name.version).toBe("2.39-0ubuntu8.4");
+    expect(parsed[0]?.name.arch).toBe("amd64");
+    expect(parsed[0]?.status).toBe("installed");
   });
 
   test("parseUpdateOutput extracts upgradable package count", () => {

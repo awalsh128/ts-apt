@@ -1,4 +1,4 @@
-*** CMD_LINE dpkg-query -L nonexistentpackage
+*** CMD_LINE /usr/bin/dpkg-query -L nonexistentpackage
 *** EXIT_CODE 1
 *** STDOUT
 *** STDERR
