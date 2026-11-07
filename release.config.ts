@@ -2,21 +2,15 @@
  * @type {import('semantic-release').GlobalConfig}
  */
 export default {
-  // The 'branches' array defines the release workflow and versioning strategy.
-  // Order matters: list branches from least stable to most stable.
+  // Versions follow semantic-release's defaults: the first release is 1.0.0, tags are 'v<version>',
+  // and the commit analyzer's default release rules apply (feat: minor; fix and perf: patch; a
+  // breaking change: major).
   branches: [
-    // Development branch is assumed to be from local development and may contain breaking changes.
+    // Release candidates: 'prerelease: "rc"' versions them as the next release plus '-rc.<n>'
+    // (e.g. v1.1.0-rc.1, v1.1.0-rc.2) and marks their GitHub Releases as prereleases.
+    { name: "staging", prerelease: "rc" },
 
-    // Pre-release candidate, feature complete, but may contain known bugs.
-    //
-    //   'staging' is for release candidates.
-    //   'channel: "next"' publishes to the '@next' tag on npm.
-    //   'prerelease: "rc"' adds the '-rc.x' suffix (e.g., v1.1.0-rc.1).
-    { name: "staging", channel: "next", prerelease: "rc" },
-
-    // Final and stable release.
-    //
-    // No prerelease tag and are published to the 'latest' dist-tag on npm.
+    // Official releases (e.g. v1.1.0), cut when promote.yml fast-forwards main to staging.
     "main",
   ],
 

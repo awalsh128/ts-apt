@@ -70,10 +70,10 @@ uses semantic-release, following [Semantic Versioning](https://semver.org).
 
 Every release is gated by CI on the exact commit being released.
 
-| Branch    | Releases                    | Example      | Started by                                                 |
-| --------- | --------------------------- | ------------ | ---------------------------------------------------------- |
-| `staging` | Release candidates (`next`) | `1.2.0-rc.1` | The last CI job on a `staging` push, after all others pass |
-| `main`    | Official (stable) releases  | `1.2.0`      | The promote workflow only                                  |
+| Branch    | Releases                   | Example      | Started by                                                 |
+| --------- | -------------------------- | ------------ | ---------------------------------------------------------- |
+| `staging` | Release candidates         | `1.2.0-rc.1` | The last CI job on a `staging` push, after all others pass |
+| `main`    | Official (stable) releases | `1.2.0`      | The promote workflow only                                  |
 
 - Manual runs of the release workflow first require a successful CI run for the commit.
 - Each release candidate increments the `rc` number until the version is promoted. The official
