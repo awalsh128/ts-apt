@@ -78,6 +78,10 @@ Every release is gated by CI on the exact commit being released.
 - Manual runs of the release workflow first require a successful CI run for the commit.
 - Each release candidate increments the `rc` number until the version is promoted. The official
   release is tagged on the same commit as the last candidate.
+- Immutable releases are on, so a version tag that a release has used is reserved forever, even after
+  the release is deleted. Pushing it fails with `GH013 ... Cannot create ref due to creations being
+restricted`. `v1.0.0-rc.1` and `v1.0.0` are reserved this way, so the initial commit carries a
+  `v1.0.1` tag with no release as the version baseline. Don't delete it.
 - Releases create a `vX.Y.Z` git tag and a GitHub Release with the notes. They never commit, so
   `package.json` keeps its placeholder version and there is no `CHANGELOG.md`.
 - ts-apt is not published to npm. Consumers such as cache-apt-pkgs-action install it from a git
