@@ -1,9 +1,10 @@
 <img src="logo.png" alt="Description" height="40" align="center" style="padding-right: 1em;"> <span style="font-size: 2em; font-weight: bold;">Typescript APT Library</span>
 
-[![npm version](https://img.shields.io/npm/v/ts-apt)](https://www.npmjs.com/package/ts-apt)
+[![Release](https://img.shields.io/github/v/release/awalsh128/ts-apt?label=release)](https://github.com/awalsh128/ts-apt/releases/latest)
+[![Release candidate](https://img.shields.io/github/v/release/awalsh128/ts-apt?include_prereleases&label=candidate)](https://github.com/awalsh128/ts-apt/releases)
 [![License: Apache2](https://shields.io/badge/license-apache2-blue.svg)](https://github.com/awalsh128/ts-apt/blob/main/LICENSE)
-![Main CI](https://img.shields.io/github/actions/workflow/status/awalsh128/cache-apt-pkgs-action/ci.yml?label=CI%20Main&branch=main)
-![Staging CI](https://img.shields.io/github/actions/workflow/status/awalsh128/cache-apt-pkgs-action/ci.yml?label=CI%20Staging&branch=staging)
+[![Main CI](https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=CI%20Main&branch=main)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Amain)
+[![Staging CI](https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=CI%20Staging&branch=staging)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Astaging)
 [![codecov](https://codecov.io/gh/awalsh128/ts-apt/branch/main/graph/badge.svg)](https://codecov.io/gh/awalsh128/ts-apt)
 
 TypeScript library for APT package operations on Debian-based Linux systems. It supports both standard APT binaries and the [apt-fast](https://github.com/ilikenwf/apt-fast) bundled wrapper.
