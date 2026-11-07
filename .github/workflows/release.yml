@@ -7,6 +7,10 @@ name: Publish Release
 # - Manual runs first require a successful CI run for the commit.
 on:
   workflow_call:
+    secrets:
+      RELEASE_BOT_PK:
+        description: "Private key of the release-bot app, which pushes release tags"
+        required: true
   workflow_dispatch:
     inputs:
       dry-run:
@@ -45,10 +49,24 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # GitHub rejects tag creation by GITHUB_TOKEN here ("creations being restricted"), so the tag is
+      # pushed with the release-bot app token, which promote.yml also uses to update main.
+      - name: Create release-bot token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ vars.RELEASE_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PK }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+
       - name: Publish with semantic-release
         shell: bash
         run: npm run release -- ${{ inputs.dry-run == 'true' && '--dry-run' || '' }}
         env:
+          # semantic-release pushes the tag with GIT_CREDENTIALS and calls the GitHub API with
+          # GITHUB_TOKEN.
+          GIT_CREDENTIALS: x-access-token:${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate API docs
