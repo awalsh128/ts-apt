@@ -38,17 +38,20 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Resolve staging commit
+        id: staging
         shell: bash
-        run: echo "STAGING_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       # CI on a staging push also releases the candidate, so success means it was released too.
       - name: Require CI success on staging
         uses: ./.github/actions/require-ci-success
         with:
-          sha: ${{ env.STAGING_SHA }}
+          sha: ${{ steps.staging.outputs.sha }}
           token: ${{ github.token }}
 
       - name: Fast-forward main to staging
+        env:
+          STAGING_SHA: ${{ steps.staging.outputs.sha }}
         shell: bash
         run: |
           set -euo pipefail
