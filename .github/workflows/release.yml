@@ -29,7 +29,7 @@ jobs:
       actions: read # For checking CI results on manual runs
       contents: write # For tags
       pages: write # For GitHub Pages deployment
-      id-token: write # For OIDC verification (required for Pages)
+      id-token: write # For OIDC: Pages deployment and npm trusted publishing
       issues: write # For semantic-release comments
       pull-requests: write # For semantic-release comments
     steps:
@@ -65,7 +65,7 @@ jobs:
         run: npm run release -- ${{ inputs.dry-run == 'true' && '--dry-run' || '' }}
         env:
           # semantic-release pushes the tag with GIT_CREDENTIALS and calls the GitHub API with
-          # GITHUB_TOKEN.
+          # GITHUB_TOKEN. npm publishing on main uses trusted publishing (OIDC), so no npm token.
           GIT_CREDENTIALS: x-access-token:${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

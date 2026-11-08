@@ -16,11 +16,11 @@ export default {
 
   // Actions to perform during a release.
   //
-  // Releases only create a git tag and a GitHub Release; they never commit. A release commit on 'main'
-  // would put 'main' ahead of 'staging', and 'main' must only ever fast-forward to commits already on
-  // 'staging' (see .github/workflows/promote.yml). So package.json keeps its placeholder version and
-  // there is no CHANGELOG.md: the tags and GitHub Releases are the version history, and consumers such
-  // as cache-apt-pkgs-action install ts-apt from a git commit SHA rather than from npm.
+  // Releases create a git tag, a GitHub Release, and (official releases only) an npm package; they
+  // never commit. A release commit on 'main' would put 'main' ahead of 'staging', and 'main' must only
+  // ever fast-forward to commits already on 'staging' (see .github/workflows/promote.yml). So the
+  // committed package.json keeps its placeholder version and there is no CHANGELOG.md: the tags and
+  // GitHub Releases are the version history.
   plugins: [
     // Analyzes commit messages (Conventional Commits) to determine if the next version should be a major,
     // minor, or patch bump.
@@ -32,6 +32,17 @@ export default {
     [
       "@semantic-release/release-notes-generator",
       { preset: "conventionalcommits" },
+    ],
+
+    // Writes the release version into package.json in the CI workspace (not committed), so the
+    // published package and the API docs carry it, then publishes to npm.
+    // Only 'main' publishes. npm trusted publishing (OIDC) matches the top-level workflow file, and
+    // official releases run from a release.yml dispatch while candidates run release.yml through a
+    // ci.yml workflow_call, so npm trusts release.yml alone. Candidates still get a tag and a GitHub
+    // prerelease.
+    [
+      "@semantic-release/npm",
+      { npmPublish: process.env.GITHUB_REF === "refs/heads/main" },
     ],
 
     // Creates a GitHub Release with the generated notes and posts comments on resolved issues/PRs.

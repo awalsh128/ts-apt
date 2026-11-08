@@ -83,9 +83,11 @@ Every release is gated by CI on the exact commit being released.
 restricted`. `v1.0.0-rc.1` and `v1.0.0` are reserved this way, so the initial commit carries a
   `v1.0.1` tag with no release as the version baseline. Don't delete it.
 - Releases create a `vX.Y.Z` git tag and a GitHub Release with the notes. They never commit, so
-  `package.json` keeps its placeholder version and there is no `CHANGELOG.md`.
-- ts-apt is not published to npm. Consumers such as cache-apt-pkgs-action install it from a git
-  commit SHA.
+  the committed `package.json` keeps its placeholder version and there is no `CHANGELOG.md`.
+  semantic-release writes the real version into `package.json` in the CI workspace only.
+- Official releases publish to npm through trusted publishing (OIDC), with provenance. npm trusts
+  only `release.yml`, so release candidates are not published to npm. cache-apt-pkgs-action still
+  installs ts-apt from a git commit SHA.
 - Official releases also deploy the API docs to GitHub Pages.
 - Run the release workflow manually with `dry-run: true` to preview the next version without tagging.
 

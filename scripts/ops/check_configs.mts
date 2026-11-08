@@ -193,7 +193,17 @@ function validateTypedocJson(json: JsonRecord): string[] {
   const { errors, add } = createErrorCollector("typedoc.json");
 
   expectFieldType(json, "entryPoints", "array", add);
-  expectFieldType(json, "out", "string", add);
+  expectFieldType(json, "outputs", "array", add);
+
+  // 'out' overrides 'outputs', and typedoc-plugin-markdown makes 'out' emit Markdown, which leaves
+  // GitHub Pages without an index.html.
+  if ("out" in json) {
+    add("field 'out' must not be set; it overrides 'outputs'");
+  }
+  const outputs = Array.isArray(json.outputs) ? (json.outputs as JsonRecord[]) : [];
+  if (!outputs.some((output) => output.name === "html")) {
+    add("field 'outputs' must include an 'html' output for GitHub Pages");
+  }
 
   return errors;
 }
