@@ -14,7 +14,7 @@ on:
 
 jobs:
   setup-and-cache:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     strategy:
@@ -30,7 +30,7 @@ jobs:
   codeql:
     # Fork PRs do not have permission to upload security events.
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: setup-and-cache
     permissions:
       actions: read
@@ -52,7 +52,7 @@ jobs:
         uses: github/codeql-action/analyze@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4
 
   linters:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: setup-and-cache
     permissions:
       contents: read
@@ -73,7 +73,7 @@ jobs:
         run: npm run typecheck
 
   testing:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: setup-and-cache
     permissions:
       contents: read
