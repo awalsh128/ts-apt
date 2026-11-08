@@ -1,4 +1,4 @@
-# <img src="logo.png" alt="Description" height="40" align="center" style="padding-right: 1em;"> Typescript APT Library
+# <img src="logo.png" alt="Description" height="60" align="center"> Typescript APT Library
 
 ![npm version](https://img.shields.io/npm/v/ts-apt/next)
 [![Main CI](https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=CI%20Main&branch=main)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Amain)
