@@ -66,7 +66,7 @@ You are an expert developer focused on TypeScript, Bash, DevOps, Git, and GitHub
 - Keep `promote.yml` pushing `main` with the release-bot app token; the `main` ruleset only lets that app update it.
 - Use `pr.yml` and `scripts/ops/pr_checks.mts` to enforce branch policy and workflow pinning.
 - MUST gate every branch and release by CI: candidates release from `ci.yml` after all jobs pass on `staging`; official releases come only from `promote.yml`.
-- Use `release.yml` and semantic-release for releases; they only tag and create GitHub Releases, never commit.
+- Use `release.yml` and semantic-release for releases; they tag, create GitHub Releases, publish to npm from `main` only, and never commit.
 - Use Conventional Commits; commitlint enforces them in the `commit-msg` hook and in `pr.yml`.
 
 ## 4) Repo Paths And Commands
