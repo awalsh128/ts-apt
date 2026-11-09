@@ -58,6 +58,12 @@ Pull request policy checks are defined in [.github/workflows/pr.yml](.github/wor
 - It fails rather than force-pushing if `main` has commits that `staging` doesn't.
 - The `main` ruleset blocks every update except from the release-bot GitHub App, whose token the
   promote workflow uses (`RELEASE_BOT_APP_ID` variable and `RELEASE_BOT_PK` secret).
+- Release credentials are in environments, not repository secrets, so a workflow edited on another
+  branch can't reach them. `promote` (staging only) holds the release-bot app for `promote.yml`.
+  `release` (main and staging) holds the app that pushes tags for `release.yml`, and npm trusted
+  publishing is bound to it.
+- The release job installs dependencies with `--ignore-scripts`, because it can mint npm and GitHub
+  tokens.
 - Rulesets can be downloaded with `npm run repo:rulesets:download` and updated with
   `npm run repo:rulesets:upload`.
 - Never merge into `main` with a pull request: merge, squash and rebase merges all add a commit to
