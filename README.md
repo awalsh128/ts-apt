@@ -1,6 +1,6 @@
 # <img src="logo.png" alt="Description" height="60" align="center"> Typescript APT Library
 
-![npm version](https://img.shields.io/npm/v/ts-apt/next)
+![npm version](https://img.shields.io/npm/v/ts-apt)
 [![Main CI](https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=CI%20Main&branch=main)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Amain)
 [![Staging CI](https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=CI%20Staging&branch=staging)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Astaging)
 [![codecov](https://codecov.io/gh/awalsh128/ts-apt/branch/main/graph/badge.svg)](https://codecov.io/gh/awalsh128/ts-apt)
