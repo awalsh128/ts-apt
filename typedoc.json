@@ -4,17 +4,10 @@
     "src/index.ts",
     "src/types.ts"
   ],
-  "plugin": [
-    "typedoc-plugin-markdown"
-  ],
   "outputs": [
     {
       "name": "html",
       "path": "./docs/api"
-    },
-    {
-      "name": "markdown",
-      "path": "./docs/api-md"
     }
   ],
   "exclude": [

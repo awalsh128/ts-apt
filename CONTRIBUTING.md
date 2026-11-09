@@ -121,7 +121,6 @@ git commit -m "feat!: remove deprecated API"
 Repository scripts are grouped under [scripts/dev](scripts/dev) and [scripts/ops](scripts/ops).
 
 - [check_latest_action_pin.mts](scripts/ops/check_latest_action_pin.mts): checks whether pinned GitHub Action refs are up to date against upstream releases.
-- [check_release_tag.mts](scripts/ops/check_release_tag.mts): validates release tag format and consistency with `package.json` version.
 - [create_testcase_logs.mts](scripts/dev/create_testcase_logs.mts): regenerates command execution logs used by integration/parser fixtures.
 - [hotfix_pr.mts](scripts/dev/hotfix_pr.mts): automates hotfix branch creation and PR creation/update flow.
 - [gh_sync.mts](scripts/dev/gh_sync.mts): synchronizes repository settings, rulesets, variables, and tags JSON. **These are not for source control** since they leak information.

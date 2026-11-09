@@ -20,7 +20,7 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { defineCommand, defineOptions } from "@robingenz/zli";
+import { defineCommand, defineOptions } from "zodline";
 import { z } from "zod";
 import {
   REPO_NAME,
