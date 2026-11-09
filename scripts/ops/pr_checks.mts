@@ -341,7 +341,7 @@ function validateModifiedActionRefs(
   return errors;
 }
 
-const PROHIBITED_PATHS = ["docs/api", "docs/api-md"];
+const PROHIBITED_PATHS = ["docs/api"];
 
 function getProhibitedPathsChanges(): string[] {
   const prohibitedPaths = PROHIBITED_PATHS;
