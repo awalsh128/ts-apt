@@ -34,46 +34,6 @@ export function getWorkspaceFilepath(workspaceFilepath: string): string {
   );
 }
 
-/**
- * In-memory runner for deterministic unit tests.
- */
-export class FakeCommandRunner implements CommandRunner {
-  private readonly cmdLineToResult: Map<string, CommandResult>;
-
-  constructor(cmdLineToResult: Map<string, CommandResult>) {
-    this.cmdLineToResult = cmdLineToResult;
-  }
-
-  /**
-   * Executes a mocked command and records the call.
-   *
-   * @param command Executable name.
-   * @param args Command argument list.
-   * @param options Runner options.
-   * @returns Mocked command result.
-   */
-  async run(
-    command: string,
-    args: string[] = [],
-    options: CommandOptions = {},
-  ): Promise<CommandResult> {
-    const cmdLine = `${command} ${args.join(" ")}`.trim();
-    const result = this.cmdLineToResult.get(cmdLine);
-
-    if (!result) {
-      throw new CommandExecutionError({
-        command,
-        args,
-        exitCode: 1,
-        stderr: `no mock for command line: ${cmdLine}`,
-        stdout: "",
-      });
-    }
-
-    return result;
-  }
-}
-
 interface CommandCall {
   command: string;
   args: string[];
@@ -174,16 +134,6 @@ export function deserializeCommandResult(filepath: string): CommandResult {
     stdout: stdout,
     stderr: stderr,
   };
-}
-
-export function createFakeCommandRunner(filename: string): CommandRunner {
-  return new FakeCommandRunner(
-    new Map(
-      Object.entries(
-        JSON.parse(getFileText(filename)) as Record<string, CommandResult>,
-      ),
-    ),
-  );
 }
 
 export async function createRealCommandRunner(

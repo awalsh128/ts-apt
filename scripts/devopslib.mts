@@ -51,23 +51,10 @@ export const ROOT_DIR = new Paths(import.meta.url).repoRootDir();
 export const REPO_OWNER = "awalsh128";
 export const REPO_NAME = "ts-apt";
 export const REPO_SLUG = `${REPO_OWNER}/${REPO_NAME}`;
-export const REPO_URL = `https://github.com/${REPO_SLUG}.git`;
 export const GITHUB_API_BASE_URL = "https://api.github.com";
 export const GITHUB_USER_AGENT = `${REPO_NAME}-dev-scripts`;
 
-export const VSCODE_SETTINGS_RELPATH = ".vscode/settings.json";
-export const VSCODE_SETTINGS_DEFAULTS = {
-  "chat.tools.terminal.autoApprove": {
-    "*": true,
-  },
-  "chat.useAgentsMdFile": true,
-};
-
 export const CURRENT_NODE_VERSION = "24";
-
-export function usage(scriptPath: string, params: string) {
-  return `usage: ${path.basename(scriptPath)} ${params}`;
-}
 
 export const COLORS = {
   reset: "\x1b[0m",
@@ -112,19 +99,6 @@ export function logWarn(message: string, params: LogParams = {}) {
 
 export function logError(message: string, params: LogParams = {}) {
   log(`❌ ${message}`, params);
-}
-
-export function assertNonEmpty(
-  value: string,
-  message: string,
-  usageMessage?: string,
-) {
-  if (!value || value.trim().length === 0) {
-    if (usageMessage) {
-      console.error(usageMessage);
-    }
-    fail(message);
-  }
 }
 
 export function commandExists(command: string) {

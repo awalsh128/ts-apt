@@ -16,10 +16,7 @@ export const forceDevcontainer =
   process.env.TS_APT_FORCE_DEVCONTAINER === "true";
 
 export const packageName = "xdot";
-export const secondaryPackageName = "python3";
 export const missingPackageName = "nonexistentpackage";
-export const virtualPackageName = "libvips";
-export const multiSearchKeyword = "vim";
 export const aptFastPath = getWorkspaceFilepath("scripts/dist/apt-fast.sh");
 export const integrationAptTimeoutMs = 120_000;
 
