@@ -88,7 +88,9 @@ restricted`. `v1.0.0-rc.1` and `v1.0.0` are reserved this way, so the initial co
 - Official releases publish to npm through trusted publishing (OIDC), with provenance. npm trusts
   only `release.yml`, so release candidates are not published to npm. cache-apt-pkgs-action still
   installs ts-apt from a git commit SHA.
-- Official releases also deploy the API docs to GitHub Pages.
+- Every release builds the API docs in semantic-release's `prepare` step (via `@semantic-release/exec`), so a docs
+  failure stops the release before it is tagged. Only official releases deploy them to GitHub Pages;
+  runs that release nothing leave the site unchanged.
 - Run the release workflow manually with `dry-run: true` to preview the next version without tagging.
 
 Release configuration is in [release.config.ts](release.config.ts).

@@ -35,7 +35,7 @@ export default {
     ],
 
     // Writes the release version into package.json in the CI workspace (not committed), so the
-    // published package and the API docs carry it, then publishes to npm.
+    // published package and the API docs (built below) carry it, then publishes to npm.
     // Only 'main' publishes. npm trusted publishing (OIDC) matches the top-level workflow file, and
     // official releases run from a release.yml dispatch while candidates run release.yml through a
     // ci.yml workflow_call, so npm trusts release.yml alone. Candidates still get a tag and a GitHub
@@ -43,6 +43,22 @@ export default {
     [
       "@semantic-release/npm",
       { npmPublish: process.env.GITHUB_REF === "refs/heads/main" },
+    ],
+
+    // Builds the API docs for the release, then reports the released version to the workflow.
+    // Runs after @semantic-release/npm so the docs show the version it wrote into package.json, and
+    // in 'prepare' so a docs build failure stops the release before it is tagged. Source links point
+    // at the release tag. On 'main', release.yml deploys docs/api to GitHub Pages only when the
+    // 'version' step output is set, so runs that release nothing (or dry runs) never deploy.
+    // Commands are lodash templates: '${...}' is a semantic-release value, so shell variables are
+    // written as '$NAME'.
+    [
+      "@semantic-release/exec",
+      {
+        prepareCmd: "npm run -s docs:api -- --gitRevision v${nextRelease.version}",
+        successCmd:
+          'if [ -n "$GITHUB_OUTPUT" ]; then echo "version=${nextRelease.version}" >> "$GITHUB_OUTPUT"; fi',
+      },
     ],
 
     // Creates a GitHub Release with the generated notes and posts comments on resolved issues/PRs.
