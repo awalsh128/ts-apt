@@ -28,8 +28,8 @@ jobs:
     permissions:
       actions: read # For checking CI results on manual runs
       contents: write # For tags
-      pages: write # For GitHub Pages deployment
-      id-token: write # For OIDC: Pages deployment and npm trusted publishing
+      pages: read # For configure-pages to read the Pages site settings
+      id-token: write # For OIDC: npm trusted publishing
       issues: write # For semantic-release comments
       pull-requests: write # For semantic-release comments
     steps:
@@ -69,6 +69,8 @@ jobs:
           GIT_CREDENTIALS: x-access-token:${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # The API docs are built here, after semantic-release writes the release version into
+      # package.json, so the docs show that version. deploy-pages publishes them.
       - name: Generate API docs
         if: ${{ github.ref == 'refs/heads/main' }}
         run: npm run docs:api
@@ -83,8 +85,22 @@ jobs:
         with:
           path: docs/api
 
+  # Deploys in its own job so it can use the github-pages environment, which records each deployment
+  # and only allows main. The release job can't use it because it also runs on staging.
+  deploy-pages:
+    needs: release
+    if: ${{ github.ref == 'refs/heads/main' && inputs.dry-run != 'true' }}
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    permissions:
+      pages: write # For GitHub Pages deployment
+      id-token: write # For OIDC verification of the Pages deployment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
-        if: ${{ github.ref == 'refs/heads/main' && inputs.dry-run != 'true' }}
+        id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
