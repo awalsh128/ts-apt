@@ -5,22 +5,28 @@ name: Publish Release
 # - main: promote.yml starts this after fast-forwarding main to a CI-passed staging commit,
 #   releasing an official version (e.g. 1.2.0).
 # - Manual runs first require a successful CI run for the commit.
+#
+# Credentials come from the 'release' environment, which only main and staging can use, so a
+# workflow edited on another branch can't reach them:
+# - RELEASE_BOT_PK (secret) and RELEASE_BOT_APP_ID (variable): the app that pushes release tags.
+# - npm trusted publishing is bound to this workflow file and the 'release' environment.
 on:
   workflow_call:
-    secrets:
-      RELEASE_BOT_PK:
-        description: "Private key of the release-bot app, which pushes release tags"
-        required: true
   workflow_dispatch:
     inputs:
       dry-run:
         description: "Run the release process without publishing anything or pushing tags"
+        type: boolean
         required: false
-        default: "false"
+        default: false
+
+permissions: {}
 
 jobs:
   release:
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: release
     outputs:
       version: ${{ steps.semantic-release.outputs.version }} # Empty when nothing was released
     # One release per branch at a time; never cancel one that is tagging.
@@ -36,7 +42,7 @@ jobs:
       pull-requests: write # For semantic-release comments
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # Crucial for semantic-release to analyze history
           persist-credentials: false
@@ -48,8 +54,12 @@ jobs:
           sha: ${{ github.sha }}
           token: ${{ github.token }}
 
+      # This job can mint npm publish (OIDC) and GitHub tokens, so dependencies' install scripts
+      # don't run. dist/ is built by the package's prepare script when npm publishes.
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          ignore-scripts: true
 
       # GitHub rejects tag creation by GITHUB_TOKEN here ("creations being restricted"), so the tag is
       # pushed with the release-bot app token, which promote.yml also uses to update main.
@@ -67,22 +77,22 @@ jobs:
       - name: Publish with semantic-release
         id: semantic-release
         shell: bash
-        run: npm run release -- ${{ inputs.dry-run == 'true' && '--dry-run' || '' }}
+        run: npm run release -- ${{ inputs.dry-run && '--dry-run' || '' }}
         env:
           # semantic-release pushes the tag with GIT_CREDENTIALS and calls the GitHub API with
           # GITHUB_TOKEN. npm publishing on main uses trusted publishing (OIDC), so no npm token.
           GIT_CREDENTIALS: x-access-token:${{ steps.app-token.outputs.token }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
       # Only official releases update the docs site. Dry runs and runs that release nothing leave
       # the 'version' output empty.
       - name: Setup Pages
         if: ${{ github.ref == 'refs/heads/main' && steps.semantic-release.outputs.version != '' }}
-        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       - name: Upload Pages artifact
         if: ${{ github.ref == 'refs/heads/main' && steps.semantic-release.outputs.version != '' }}
-        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: docs/api
 
@@ -92,6 +102,7 @@ jobs:
     needs: release
     if: ${{ github.ref == 'refs/heads/main' && needs.release.outputs.version != '' }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     concurrency:
       group: pages
       cancel-in-progress: false
@@ -104,4 +115,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

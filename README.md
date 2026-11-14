@@ -62,6 +62,9 @@ Integration tests run against real APT tooling and are slower than unit tests.
 
 ## API Documentation
 
+The published API reference is at [awalsh128.com/ts-apt](https://awalsh128.com/ts-apt/). See all of my published APIs at
+[awalsh128.com/api](https://awalsh128.com/api/).
+
 Generate API docs:
 
 ```bash
