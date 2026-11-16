@@ -63,7 +63,7 @@ You are an expert developer focused on TypeScript, Bash, DevOps, Git, and GitHub
 - Abstract repeated workflow logic into reusable actions or scripts.
 - Treat `main` as the official release branch and `staging` as the release candidate branch.
 - MUST keep `main` an ancestor of `staging`: update `main` only by fast-forward via `promote.yml`, never by PR merge or release commit.
-- Keep `promote.yml` pushing `main` with the release-bot app token; the `main` ruleset only lets that app update it.
+- Keep `promote.yml` pushing `main` with the Octo STS token; the `main` ruleset only lets the Octo STS app update it.
 - Use `pr.yml` and `scripts/ops/pr_checks.mts` to enforce branch policy and workflow pinning.
 - MUST gate every branch and release by CI: candidates release from `ci.yml` after all jobs pass on `staging`; official releases come only from `promote.yml`.
 - Use `release.yml` and semantic-release for releases; they tag, create GitHub Releases, publish to npm from `main` only, and never commit.
