@@ -70,17 +70,20 @@ jobs:
           scope: ${{ github.repository }}
           identity: release
 
-      # Also builds the API docs (see release.config.ts) and sets the 'version' output when it
-      # releases.
-      - name: Publish with semantic-release
+      # Checks the release preconditions, then runs semantic-release with the action's config: tag, GitHub
+      # Release, and (main only) npm publish by trusted publishing (OIDC), so no npm token. It also builds
+      # the API docs and sets the 'version' output when it releases.
+      # baseline-commit is the root commit, which predates Conventional Commits and every release tag, so
+      # it never affected versioning; it only keeps the commit-messages check from failing on it.
+      - name: Publish with npm-publish-strict
         id: semantic-release
-        shell: bash
-        run: npm run release -- ${{ inputs.dry-run && '--dry-run' || '' }}
-        env:
-          # semantic-release pushes the tag with GIT_CREDENTIALS and calls the GitHub API with
-          # GITHUB_TOKEN. npm publishing on main uses trusted publishing (OIDC), so no npm token.
-          GIT_CREDENTIALS: x-access-token:${{ steps.octo-sts.outputs.token }}
-          GITHUB_TOKEN: ${{ github.token }}
+        uses: awalsh128/npm-publish-strict@6b3ccbe846675e5594d81d48fc5c9f0a461a080e # v1.0.0
+        with:
+          dry-run: ${{ inputs.dry-run || 'false' }}
+          baseline-commit: fd56d3acb56b4ec34d8944716943d15a3fb4784d
+          # The tag is pushed with the Octo STS token; releases and comments use the job's token.
+          git-credentials: x-access-token:${{ steps.octo-sts.outputs.token }}
+          github-token: ${{ github.token }}
 
       # Only official releases update the docs site. Dry runs and runs that release nothing leave
       # the 'version' output empty.
