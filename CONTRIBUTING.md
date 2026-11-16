@@ -56,12 +56,13 @@ Pull request policy checks are defined in [.github/workflows/pr.yml](.github/wor
 - It requires a successful CI run on `staging`'s latest commit, fast-forwards `main` to that commit,
   then starts the official release.
 - It fails rather than force-pushing if `main` has commits that `staging` doesn't.
-- The `main` ruleset blocks every update except from the release-bot GitHub App, whose token the
-  promote workflow uses (`RELEASE_BOT_APP_ID` variable and `RELEASE_BOT_PK` secret).
-- Release credentials are in environments, not repository secrets, so a workflow edited on another
-  branch can't reach them. `promote` (staging only) holds the release-bot app for `promote.yml`.
-  `release` (main and staging) holds the app that pushes tags for `release.yml`, and npm trusted
-  publishing is bound to it.
+- The `main` ruleset blocks every update except from the Octo STS GitHub App. `promote.yml` gets its
+  token under [promote.sts.yaml](.github/chainguard/promote.sts.yaml), which only that workflow on
+  `staging` matches. No secrets are stored.
+- `release.yml` gets its tag token under [release.sts.yaml](.github/chainguard/release.sts.yaml),
+  which only that workflow on `main` or `staging` matches. npm trusted publishing is bound to the
+  `release` environment (main and staging). Octo STS reads policies from the default branch
+  (`staging`), so a policy change takes effect when it merges.
 - The release job installs dependencies with `--ignore-scripts`, because it can mint npm and GitHub
   tokens.
 - Rulesets can be downloaded with `npm run repo:rulesets:download` and updated with
