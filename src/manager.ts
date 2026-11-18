@@ -106,6 +106,8 @@ export class AptPackageManager implements PackageManager {
   protected readonly cacheBinary: BinaryMeta;
   /** Whether to simulate mutating operations without making actual changes. */
   protected readonly simulate: boolean;
+  /** Whether this process is root, so apt-get can lock APT's directories without sudo. */
+  protected readonly isRoot: boolean;
 
   constructor(
     aptFastEnabled: boolean,
@@ -113,8 +115,10 @@ export class AptPackageManager implements PackageManager {
     parser: AptOutputParser,
     logger: winston.Logger,
     simulate = false,
+    isRoot: boolean = process.getuid?.() === 0,
   ) {
     this.aptFastEnabled = aptFastEnabled;
+    this.isRoot = isRoot;
     this.runner = runner;
     this.parser = parser;
     this.logger = logger;
@@ -280,6 +284,8 @@ export class AptPackageManager implements PackageManager {
    * Effective invocation:
    * `binary.path ...binary.defaultArgs [-o DPkg::Lock::Timeout=${mutationTimeoutMs}] ...baseArgs`
    *
+   * apt-get commands run as `sudo -n env ...aptEnv binary.path ...` when the process is not root.
+   *
    * Example composed commands:
    * ```text
    * /usr/bin/apt-get --quiet=0 --force-yes -o DPkg::Lock::Timeout=-1 install --fix-broken curl
@@ -302,6 +308,22 @@ export class AptPackageManager implements PackageManager {
       ? ["-o", `DPkg::Lock::Timeout=${mutationTimeoutMs}`]
       : [];
     const args = [...binary.defaultArgs, ...lockArgs, ...baseArgs];
+    // apt-fast elevates itself and the read-only binaries need no lock, but apt-get mutates APT's
+    // directories. Without root it fails with "Could not open lock file ... Permission denied", so run it
+    // through sudo. -n fails at once instead of waiting on a password prompt, and env carries the
+    // non-interactive settings across sudo's environment reset.
+    if (binary.name === "apt-get" && !this.isRoot) {
+      return this.runner.run(
+        "sudo",
+        ["-n", "env", ...aptEnv, binary.path, ...args],
+        {
+          env: [...aptEnv],
+          ...(mutationTimeoutMs === undefined
+            ? {}
+            : { timeoutMs: mutationTimeoutMs }),
+        },
+      );
+    }
     return this.runner.run(binary.path, args, {
       env: [...aptEnv],
       // Mutating commands (e.g. install) can take minutes, so they use the
