@@ -543,6 +543,8 @@ describe("apt manager", () => {
       new DefaultCommandRunner(logger, logger),
       new AptOutputParser(logger),
       logger,
+      false,
+      true,
     );
     await manager.autoClean();
 
@@ -553,6 +555,82 @@ describe("apt manager", () => {
         env: expect.arrayContaining(debianConfEnv),
       }),
     );
+  });
+});
+
+describe("apt-get privileges", () => {
+  const aptEnvAssignments = debianConfEnv;
+
+  test("apt-get as non-root runs through sudo without prompting", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(
+      "sudo",
+      [
+        "-n",
+        "env",
+        ...aptEnvAssignments,
+        aptGetPath,
+        "--quiet=0",
+        "-y",
+        ...lockTimeoutArgs,
+        "update",
+      ],
+      { stdout: "Reading package lists...", stderr: "", exitCode: 0 },
+    );
+    const manager = new AptPackageManager(
+      false,
+      runner,
+      new AptOutputParser(logger),
+      logger,
+      false,
+      false,
+    );
+
+    await manager.update();
+
+    expect(runner.calls[0]?.command).toBe("sudo");
+  });
+
+  test("apt-get as root runs without sudo", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(
+      aptGetPath,
+      ["--quiet=0", "-y", ...lockTimeoutArgs, "update"],
+      { stdout: "Reading package lists...", stderr: "", exitCode: 0 },
+    );
+    const manager = new AptPackageManager(
+      false,
+      runner,
+      new AptOutputParser(logger),
+      logger,
+      false,
+      true,
+    );
+
+    await manager.update();
+
+    expect(runner.calls[0]?.command).toBe(aptGetPath);
+  });
+
+  test("apt-fast as non-root runs without sudo since it elevates itself", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(
+      aptPath,
+      ["--quiet=0", "-y", ...lockTimeoutArgs, "update"],
+      { stdout: "Reading package lists...", stderr: "", exitCode: 0 },
+    );
+    const manager = new AptPackageManager(
+      true,
+      runner,
+      new AptOutputParser(logger),
+      logger,
+      false,
+      false,
+    );
+
+    await manager.update();
+
+    expect(runner.calls[0]?.command).toBe(aptPath);
   });
 });
 
@@ -609,6 +687,7 @@ describe("createPackageManager", () => {
   });
 
   test("falls back to apt-get when aria2 is unavailable", async () => {
+    vi.spyOn(process, "getuid").mockReturnValue(0);
     const warnSpy = vi.spyOn(logger, "warn");
     const runSpy = vi
       .spyOn(DefaultCommandRunner.prototype, "run")
@@ -666,6 +745,7 @@ describe("createPackageManager", () => {
         };
       });
 
+    vi.spyOn(process, "getuid").mockReturnValue(0);
     const manager = await createPackageManager(false);
     await manager.autoClean();
 
