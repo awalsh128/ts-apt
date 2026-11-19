@@ -80,8 +80,8 @@
     "typecheck": "npm run -s runall -- typecheck:lib typecheck:scripts",
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run --exclude test/ubuntu.integration.test.ts --exclude test/ubuntu.mutating.integration.test.ts --coverage",
-    "test:integration": "vitest run test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
-    "test:integration:docker": "TS_APT_FORCE_DEVCONTAINER=true vitest run test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
+    "test:integration": "vitest run --no-file-parallelism test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
+    "test:integration:docker": "TS_APT_FORCE_DEVCONTAINER=true vitest run --no-file-parallelism test/ubuntu.integration.test.ts test/ubuntu.mutating.integration.test.ts",
     "test": "npm run -s test:unit && npm run -s test:integration",
     "dev": "vitest",
     "commitlint": "commitlint"

@@ -5,7 +5,9 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["test/**/*.test.ts"],
-    testTimeout: 120000,
+    // Integration tests install real packages, which can be slow on a loaded mirror.
+    testTimeout: 300000,
+    hookTimeout: 300000,
     coverage: {
       provider: "v8",
       reporter: ["lcov", "json"], // Required for Codecov + Annotations

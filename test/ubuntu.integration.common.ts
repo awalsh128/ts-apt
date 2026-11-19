@@ -18,9 +18,8 @@ export const forceDevcontainer =
 export const packageName = "xdot";
 export const missingPackageName = "nonexistentpackage";
 export const aptFastPath = getWorkspaceFilepath("scripts/dist/apt-fast.sh");
-export const integrationAptTimeoutMs = 120_000;
+export const integrationAptTimeoutMs = 300_000;
 
-const managerLockPath = "/tmp/tsapt-integration-tests.lock";
 const devcontainerSupport = getDevcontainerSupport();
 const runLock = new Mutex();
 
@@ -77,10 +76,10 @@ export async function runScript(
   args: string[] = [],
 ): Promise<void> {
   await runLock.runExclusive(async () => {
-    const shellArgs = forceDevcontainer
+    const [command, ...commandArgs] = forceDevcontainer
       ? ["bash", filepath, ...args]
       : ["sudo", "bash", filepath, ...args];
-    await runner.run("flock", ["-w", "120", managerLockPath, ...shellArgs], {
+    await runner.run(command, commandArgs, {
       timeoutMs: integrationAptTimeoutMs,
     });
   });
