@@ -558,6 +558,26 @@ describe("apt manager", () => {
   });
 });
 
+describe("empty package lists", () => {
+  test("install with no packages runs no command and returns an empty list", async () => {
+    const runner = new MockCommandRunner();
+
+    const out = await createManager(runner, false).install([]);
+
+    expect(out).toEqual([]);
+    expect(runner.calls).toEqual([]);
+  });
+
+  test("remove with no packages runs no command and returns an empty list", async () => {
+    const runner = new MockCommandRunner();
+
+    const out = await createManager(runner, false).remove([]);
+
+    expect(out).toEqual([]);
+    expect(runner.calls).toEqual([]);
+  });
+});
+
 describe("apt-get privileges", () => {
   const aptEnvAssignments = debianConfEnv;
 

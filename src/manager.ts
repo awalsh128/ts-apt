@@ -168,6 +168,11 @@ export class AptPackageManager implements PackageManager {
     pkgs: readonly PackageName[],
     timeoutMs = -1,
   ): Promise<PackageInfo[]> {
+    if (pkgs.length === 0) {
+      // apt-get install -f with no packages still runs apt (and its fix-broken pass), so do nothing.
+      this.logger.info("No packages to install, skipping apt");
+      return [];
+    }
     const result = await this.run(
       this.mutatingBinary,
       [
@@ -219,6 +224,12 @@ export class AptPackageManager implements PackageManager {
     autoremoveEnabled = true,
     timeoutMs = -1,
   ): Promise<PackageInfo[]> {
+    if (pkgs.length === 0) {
+      // With --autoremove, apt-get remove with no packages would remove every orphaned package.
+      // Use autoRemove() for that on purpose.
+      this.logger.info("No packages to remove, skipping apt");
+      return [];
+    }
     const args = [
       "remove",
       aptFlags.fixBroken,

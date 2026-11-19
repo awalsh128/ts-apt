@@ -160,7 +160,7 @@ export interface PackageManager {
    * Setting up ca-certificates (20240203) ...
    * ```
    *
-   * @param pkgs Package names.
+   * @param pkgs Package names. An empty list runs nothing and returns an empty list.
    * @param timeoutMs Command timeout in milliseconds, default is -1 for no timeout.
    * @returns List of installed packages.
    */
@@ -178,7 +178,8 @@ export interface PackageManager {
    * Removing libcurl4:amd64 (8.5.0-2ubuntu10.6) ...
    * ```
    *
-   * @param pkgs Package names.
+   * @param pkgs Package names. An empty list runs nothing and returns an empty list (call `autoRemove` to
+   *   remove orphaned packages on purpose).
    * @param autoremoveEnabled Whether to also remove orphaned dependencies. Defaults to true.
    * @param timeoutMs Command timeout in milliseconds, default is -1 for no timeout.
    * @returns List of removed packages.
