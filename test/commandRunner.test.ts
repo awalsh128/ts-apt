@@ -44,6 +44,34 @@ describe("default command runner", () => {
     expect(result.stdout).toBe("C.UTF-8");
   });
 
+  test.each(["false", "FALSE", "0", ""])(
+    "run with DEBUG=%j in env hides DEBUG from the child",
+    async (debug) => {
+      const runner = await createDefaultCommandRunner();
+      const result = await runner.run(
+        "bash",
+        ["-lc", 'echo "${DEBUG-unset}"'],
+        { env: [`DEBUG=${debug}`] },
+      );
+
+      expect(result.stdout.trim()).toBe("unset");
+    },
+  );
+
+  test.each(["true", "1", "apt*"])(
+    "run with DEBUG=%j in env passes DEBUG to the child",
+    async (debug) => {
+      const runner = await createDefaultCommandRunner();
+      const result = await runner.run(
+        "bash",
+        ["-lc", 'echo "${DEBUG-unset}"'],
+        { env: [`DEBUG=${debug}`] },
+      );
+
+      expect(result.stdout.trim()).toBe(debug);
+    },
+  );
+
   test("throws CommandExecutionError on non-zero exit", async () => {
     const runner = await createDefaultCommandRunner();
 
