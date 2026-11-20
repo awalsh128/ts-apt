@@ -1,6 +1,7 @@
-# <img src="logo.png" alt="TypeScript APT" height="60" align="center"> TypeScript APT
+# <img src="logo.png" alt="ts-apt" height="60" align="center"> ts-apt
 
 [![npm version](https://img.shields.io/npm/v/ts-apt)](https://www.npmjs.com/package/ts-apt)
+[![GitHub release](https://img.shields.io/github/v/release/awalsh128/ts-apt?label=release)](https://github.com/awalsh128/ts-apt/releases)
 [![main CI](https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=main&branch=main)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Amain)
 [![staging CI](https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=staging&branch=staging)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Astaging)
 [![codecov](https://codecov.io/gh/awalsh128/ts-apt/branch/main/graph/badge.svg)](https://codecov.io/gh/awalsh128/ts-apt)
