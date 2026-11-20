@@ -24,6 +24,16 @@ interface Exit {
   timedOut: boolean;
 }
 
+/** Values of `DEBUG` that mean debugging is off. */
+const DEBUG_OFF_VALUES = new Set(["", "0", "false"]);
+
+/**
+ * Builds the environment for a child process.
+ *
+ * A `DEBUG` set to a false-like value is removed. GitHub Actions workflows
+ * often export `DEBUG: false`, and scripts such as apt-fast.sh turn on shell
+ * tracing for any non-empty `DEBUG`, which floods the log with trace lines.
+ */
 function getEnv(options: CommandOptions) {
   const env = { ...process.env };
   for (const pair of options.env ?? []) {
@@ -37,6 +47,12 @@ function getEnv(options: CommandOptions) {
   }
 
   env.LC_ALL ??= "C";
+  if (
+    env.DEBUG !== undefined &&
+    DEBUG_OFF_VALUES.has(env.DEBUG.toLowerCase())
+  ) {
+    delete env.DEBUG;
+  }
   return env;
 }
 
