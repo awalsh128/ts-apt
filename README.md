@@ -1,11 +1,21 @@
-# <img src="logo.png" alt="ts-apt" height="60" align="center"> ts-apt
+<p align="center">
+  <img src="logo.png" alt="ts-apt logo" width="128" height="128">
+</p>
 
-[![npm version](https://img.shields.io/npm/v/ts-apt)](https://www.npmjs.com/package/ts-apt)
-[![GitHub release](https://img.shields.io/github/v/release/awalsh128/ts-apt?label=release)](https://github.com/awalsh128/ts-apt/releases)
-[![main CI](https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=main&branch=main)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Amain)
-[![staging CI](https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=staging&branch=staging)](https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Astaging)
-[![codecov](https://codecov.io/gh/awalsh128/ts-apt/branch/main/graph/badge.svg)](https://codecov.io/gh/awalsh128/ts-apt)
-[![License](https://img.shields.io/github/license/awalsh128/ts-apt)](https://github.com/awalsh128/ts-apt/blob/main/LICENSE)
+<h1 align="center">ts-apt</h1>
+
+<p align="center">
+  TypeScript library for APT and <a href="https://github.com/ilikenwf/apt-fast">apt-fast</a> package operations on Debian-based Linux systems.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/ts-apt"><img src="https://img.shields.io/npm/v/ts-apt" alt="npm version"></a>
+  <a href="https://github.com/awalsh128/ts-apt/releases"><img src="https://img.shields.io/github/v/release/awalsh128/ts-apt?label=release" alt="GitHub release"></a>
+  <a href="https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=main&branch=main" alt="main CI"></a>
+  <a href="https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Astaging"><img src="https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=staging&branch=staging" alt="staging CI"></a>
+  <a href="https://codecov.io/gh/awalsh128/ts-apt"><img src="https://codecov.io/gh/awalsh128/ts-apt/branch/main/graph/badge.svg" alt="codecov"></a>
+  <a href="https://github.com/awalsh128/ts-apt/blob/main/LICENSE"><img src="https://img.shields.io/github/license/awalsh128/ts-apt" alt="License"></a>
+</p>
 
 TypeScript library for APT package operations on Debian-based Linux systems. It supports both standard APT binaries and the [apt-fast](https://github.com/ilikenwf/apt-fast) bundled wrapper.
 
@@ -15,7 +25,9 @@ TypeScript library for APT package operations on Debian-based Linux systems. It 
 - 🧱 Typed errors for validation, availability and command failures
 - 🔒 Safe locking for mutating operations, with parallelism for read-only ones
 
-[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/awalsh128)
+<p align="center">
+  <a href="https://github.com/sponsors/awalsh128"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor"></a>
+</p>
 
 If you find this project useful, please consider [sponsoring it](https://github.com/sponsors/awalsh128) and
 show some ❤️ for open source maintainers.
