@@ -1,37 +1,14 @@
 ## Summary
 
-Describe what changed and why.
+<!-- What changed and why. The PR title must be a Conventional Commit. -->
 
-## Semantic-release intent
+## Related issues
 
-Choose the commit/release type this PR should produce.
+<!-- "Closes #123", "Refs #123", or "None". -->
 
-- [ ] `fix`: patch release
-- [ ] `feat`: minor release
-- [ ] `docs`: documentation-only
-- [ ] `refactor`: internal code restructuring
-- [ ] `perf`: performance improvement
-- [ ] `test`: tests only
-- [ ] `build`: build or dependency tooling change
-- [ ] `ci`: CI or workflow change
-- [ ] `chore`: maintenance with no user-facing behavior change
-- [ ] Breaking change (`!` or `BREAKING CHANGE:` footer)
+## Downstream impact
 
-Suggested PR title prefix: `fix:`, `feat:`, `docs:`, `refactor:`, `perf:`, `test:`, `build:`, `ci:`, or `chore:`
+<!-- Exported types and PackageManager methods are public API for cache-apt-pkgs-action. -->
 
-## Type of change
-
-- [ ] Bug fix
-- [ ] Feature
-- [ ] Documentation
-- [ ] Refactor
-- [ ] CI/CD or workflow update
-- [ ] Breaking change
-
-## Related issue(s)
-
-Closes #
-
-## Implementation notes
-
-Call out important design choices, tradeoffs, or migration details.
+- [ ] No exported API, Node range, or `winston` range change.
+- [ ] Changed. cache-apt-pkgs-action must bump its ts-apt pin to: <!-- version or SHA -->
