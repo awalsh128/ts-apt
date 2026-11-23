@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="logo.png" alt="ts-apt logo" width="128" height="128">
+  <img src="logo.png" alt="TypeScript APT logo" width="128" height="128">
 </p>
 
-<h1 align="center">ts-apt</h1>
+<h1 align="center">TypeScript APT</h1>
 
 <p align="center">
   TypeScript library for APT and <a href="https://github.com/ilikenwf/apt-fast">apt-fast</a> package operations on Debian-based Linux systems.
