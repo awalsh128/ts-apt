@@ -1,5 +1,6 @@
 import { DefaultCommandRunner } from "./commandRunner.js";
 import type {
+  Alternative,
   CommandResult,
   CommandRunner,
   PackageInfo,
@@ -27,7 +28,13 @@ export const aptFlags = {
 
 /** Available APT commands that can be used by the package manager implementation. */
 export type BinaryName =
-  "apt" | "apt-cache" | "apt-fast" | "apt-get" | "dpkg" | "dpkg-query";
+  | "apt"
+  | "apt-cache"
+  | "apt-fast"
+  | "apt-get"
+  | "dpkg"
+  | "dpkg-query"
+  | "update-alternatives";
 
 /** Metadata information for an APT binary defining its location and standard arguments. */
 interface BinaryMeta {
@@ -84,6 +91,11 @@ export const Binary = {
   DpkgQuery: {
     name: "dpkg-query",
     path: "/usr/bin/dpkg-query",
+    defaultArgs: [],
+  },
+  UpdateAlternatives: {
+    name: "update-alternatives",
+    path: "/usr/bin/update-alternatives",
     defaultArgs: [],
   },
 } as const satisfies Record<string, BinaryMeta>;
@@ -214,6 +226,43 @@ export class AptPackageManager implements PackageManager {
       .filter((line) => line.length > 0);
   }
 
+  async listAlternatives(): Promise<Alternative[]> {
+    const names = this.parser.parseAlternativeNamesOutput(
+      await this.run(Binary.UpdateAlternatives, ["--get-selections"]),
+    );
+    const alternatives: Alternative[] = [];
+    // One query per group, in order, so the result order is stable.
+    for (const name of names) {
+      const result = await this.run(Binary.UpdateAlternatives, [
+        "--query",
+        name,
+      ]);
+      alternatives.push(...this.parser.parseAlternativesQueryOutput(result));
+    }
+    return alternatives;
+  }
+
+  async installAlternatives(
+    alternatives: readonly Alternative[],
+  ): Promise<void> {
+    for (const alternative of alternatives) {
+      await this.run(Binary.UpdateAlternatives, [
+        "--quiet",
+        "--install",
+        alternative.link,
+        alternative.name,
+        alternative.path,
+        String(alternative.priority),
+        ...alternative.slaves.flatMap((slave) => [
+          "--slave",
+          slave.link,
+          slave.name,
+          slave.path,
+        ]),
+      ]);
+    }
+  }
+
   async listUpgradable(): Promise<PackageInfo[]> {
     const result = await this.run(this.readBinary, ["list", "--upgradable"]);
     return this.parser.parseListUpgradableOutput(result);
@@ -323,7 +372,12 @@ export class AptPackageManager implements PackageManager {
     // directories. Without root it fails with "Could not open lock file ... Permission denied", so run it
     // through sudo. -n fails at once instead of waiting on a password prompt, and env carries the
     // non-interactive settings across sudo's environment reset.
-    if (binary.name === "apt-get" && !this.isRoot) {
+    // update-alternatives is read-only only for --get-selections and --query; --install writes /etc and
+    // /var/lib/dpkg, so it needs the same elevation.
+    const needsRoot =
+      binary.name === "apt-get" ||
+      (binary.name === "update-alternatives" && args.includes("--install"));
+    if (needsRoot && !this.isRoot) {
       return this.runner.run(
         "sudo",
         ["-n", "env", ...aptEnv, binary.path, ...args],

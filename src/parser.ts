@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import {
+  type Alternative,
+  type AlternativeSlave,
   type CommandResult,
   type PackageInfo,
   type PackageName,
@@ -265,6 +267,105 @@ export class AptOutputParser {
     }
 
     return packages;
+  }
+
+  /**
+   * Parse output of `update-alternatives --get-selections` to extract the group names.
+   *
+   * Example output parsed:
+   * ```text
+   * editor                         auto     /bin/nano
+   * libblas.so.3-x86_64-linux-gnu  auto     /usr/lib/x86_64-linux-gnu/blas/libblas.so.3
+   * ```
+   */
+  parseAlternativeNamesOutput(result: CommandResult): string[] {
+    return normText(result.stdout)
+      .split("\n")
+      .map((line) => line.trim().split(/\s+/)[0] ?? "")
+      .filter((name) => name.length > 0);
+  }
+
+  /**
+   * Parse output of `update-alternatives --query <name>` into one entry per registered alternative.
+   *
+   * The group header holds the name, link and the slave names with their links. Each alternative stanza that
+   * follows holds its path, priority and the slave paths it provides. Slave links come from the header.
+   *
+   * Example output parsed:
+   * ```text
+   * Name: editor
+   * Link: /usr/bin/editor
+   * Slaves:
+   *  editor.1.gz /usr/share/man/man1/editor.1.gz
+   * Status: auto
+   * Best: /bin/nano
+   * Value: /bin/nano
+   *
+   * Alternative: /bin/nano
+   * Priority: 40
+   * Slaves:
+   *  editor.1.gz /usr/share/man/man1/nano.1.gz
+   * ```
+   *
+   * @throws ValidationError When the header has no name or link, or an alternative has no valid priority.
+   */
+  parseAlternativesQueryOutput(result: CommandResult): Alternative[] {
+    const stanzas = normText(result.stdout)
+      .split(/\n\s*\n/)
+      .map((stanza) =>
+        stanza.split("\n").filter((line) => line.trim().length > 0),
+      )
+      .filter((lines) => lines.length > 0);
+
+    const readStanza = (lines: string[]) => {
+      const fields = new Map<string, string>();
+      const slaves: { name: string; target: string }[] = [];
+      let inSlaves = false;
+      for (const line of lines) {
+        if (/^\s/.test(line)) {
+          const [name, target] = line.trim().split(/\s+/);
+          if (inSlaves && name && target) {
+            slaves.push({ name, target });
+          }
+          continue;
+        }
+        const separator = line.indexOf(":");
+        const key = separator < 0 ? line : line.slice(0, separator);
+        fields.set(key, separator < 0 ? "" : line.slice(separator + 1).trim());
+        inSlaves = key === "Slaves";
+      }
+      return { fields, slaves };
+    };
+
+    const [headerLines = [], ...alternativeStanzas] = stanzas;
+    const header = readStanza(headerLines);
+    const name = header.fields.get("Name");
+    const link = header.fields.get("Link");
+    if (!name || !link) {
+      throw new ValidationError(
+        "update-alternatives --query output has no Name or Link",
+      );
+    }
+    const slaveLinks = new Map(
+      header.slaves.map((slave) => [slave.name, slave.target]),
+    );
+
+    return alternativeStanzas.map((lines) => {
+      const stanza = readStanza(lines);
+      const path = stanza.fields.get("Alternative");
+      const priority = Number.parseInt(stanza.fields.get("Priority") ?? "", 10);
+      if (!path || Number.isNaN(priority)) {
+        throw new ValidationError(
+          `update-alternatives --query output for ${name} has an alternative without a path or priority`,
+        );
+      }
+      const slaves: AlternativeSlave[] = stanza.slaves.map((slave) => ({
+        name: slave.name,
+        link: slaveLinks.get(slave.name) ?? "",
+        path: slave.target,
+      }));
+      return { name, link, path, priority, slaves };
+    });
   }
 
   /**

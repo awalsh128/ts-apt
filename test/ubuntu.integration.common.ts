@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+import { spawnSync } from "node:child_process";
 import { Mutex } from "async-mutex";
 import { expect } from "vitest";
 import { AptPackageManager } from "../src/manager.js";
@@ -23,8 +24,15 @@ export const integrationAptTimeoutMs = 300_000;
 const devcontainerSupport = getDevcontainerSupport();
 const runLock = new Mutex();
 
-export const canRunIntegration =
-  !forceDevcontainer || devcontainerSupport.supported;
+/**
+ * Whether sudo works without a password prompt. Host runs install packages through `sudo`, which fails
+ * with "A terminal is required to authenticate" on a machine that needs a password, so the suite skips.
+ */
+const hasPasswordlessSudo = spawnSync("sudo", ["-n", "true"]).status === 0;
+
+export const canRunIntegration = forceDevcontainer
+  ? devcontainerSupport.supported
+  : hasPasswordlessSudo;
 export const canRunMutatingIntegration =
   forceDevcontainer && devcontainerSupport.supported;
 
