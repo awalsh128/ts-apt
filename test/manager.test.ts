@@ -568,6 +568,21 @@ describe("apt manager", () => {
     });
   });
 
+  test("getPackageInfo stderr warning present ignores warning", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(aptPath, ["--quiet=0", "-y", "show", "vim"], {
+      stdout: "Package: vim\nVersion: 2:9.0\nArchitecture: amd64\n\n",
+      stderr:
+        "W: Unable to read /etc/apt/apt.conf.d/99github-actions - open (13: Permission denied)\n",
+      exitCode: 0,
+    });
+
+    const out = await createManager(runner).getPackageInfo([pkg("vim")]);
+
+    expect(out).toHaveLength(1);
+    expect(out[0]?.name).toMatchObject({ name: "vim", version: "2:9.0" });
+  });
+
   test("passes DPkg::Lock::Timeout for mutating commands", async () => {
     const runSpy = vi
       .spyOn(DefaultCommandRunner.prototype, "run")
