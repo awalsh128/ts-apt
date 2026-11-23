@@ -88,3 +88,58 @@ export class CommandExecutionError extends TsAptError {
     this.signal = params.signal;
   }
 }
+
+/** Why apt cannot install a requested package. */
+export type NotInstallableReason = "not-found" | "no-installation-candidate";
+
+/** A requested package apt cannot install, as reported by `apt-get install`. */
+export interface NotInstallablePackage {
+  /** Package name as apt printed it. */
+  readonly name: string;
+  /** Why apt cannot install it. */
+  readonly reason: NotInstallableReason;
+  /**
+   * Packages apt offers instead: the ones that replace an obsolete package, or the providers of a virtual
+   * package. Empty when apt names none.
+   */
+  readonly alternatives: readonly string[];
+}
+
+/**
+ * Error raised when `apt-get install` fails because a requested package cannot be installed (it doesn't
+ * exist, or it is virtual or obsolete with no installation candidate).
+ *
+ * It extends {@link CommandExecutionError}, so callers that catch the general failure still see it.
+ */
+export class PackageNotInstallableError extends CommandExecutionError {
+  /** The requested packages apt cannot install. */
+  public readonly packages: readonly NotInstallablePackage[];
+
+  /**
+   * Creates a not-installable failure from the failed command and the packages parsed from its output.
+   *
+   * @param params The failed command's details, as for {@link CommandExecutionError}.
+   * @param packages The requested packages apt cannot install.
+   */
+  constructor(
+    params: ConstructorParameters<typeof CommandExecutionError>[0],
+    packages: readonly NotInstallablePackage[],
+  ) {
+    super(params);
+    this.name = "PackageNotInstallableError";
+    this.packages = packages;
+    this.message = `Cannot install ${packages
+      .map((entry) => {
+        const reason =
+          entry.reason === "not-found"
+            ? "not found"
+            : "no installation candidate";
+        const instead =
+          entry.alternatives.length > 0
+            ? `; apt offers: ${entry.alternatives.join(", ")}`
+            : "";
+        return `${entry.name} (${reason}${instead})`;
+      })
+      .join(", ")}\n${this.message}`;
+  }
+}

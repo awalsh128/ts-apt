@@ -8,7 +8,7 @@ import {
   tsAptMetaKeys,
 } from "./types.js";
 import { createPackageName, deserializePackageName } from "./package.js";
-import { ValidationError } from "./errors.js";
+import { type NotInstallablePackage, ValidationError } from "./errors.js";
 import winston from "winston";
 import { parseMessage } from "./internetMessage.js";
 
@@ -20,6 +20,20 @@ const SEARCH_REGEX =
   /^([^ \n\/]+)\/([^\s]+)\s+([^\s]+)\s+(\w+)\n\s*(.+?)(\s+\[installed\])?(?=\n\n|\n[^ \n]|$)/gm;
 /** Matches the prefix of a stanza in apt-cache show output in order to separate stanzas for parsing. */
 const CACHE_SHOW_STANZA_REGEX = /.+?((?:\r\n|\r|\n)\s*(?:\r\n|\r|\n))|.+$/gs;
+
+/** Matches the apt-get notice for a package that exists only as a reference from another package. */
+const NOT_AVAILABLE_REGEX =
+  /^Package (\S+) is not available, but is referred to by another package\./;
+/** The apt-get notice that introduces the packages replacing an obsolete one. */
+const REPLACE_HEADER = "However the following packages replace it:";
+/** Matches the apt-get notice that introduces the providers of a virtual package. */
+const VIRTUAL_PROVIDED_REGEX =
+  /^Package (\S+) is a virtual package provided by:/;
+/** Matches the apt-get error for a package name apt doesn't know. */
+const UNABLE_TO_LOCATE_REGEX = /^E: Unable to locate package (\S+)/;
+/** Matches the apt-get error for a known package that cannot be installed. */
+const NO_CANDIDATE_REGEX =
+  /^E: Package '([^']+)' has no installation candidate/;
 
 /** Matches package removal lines emitted by apt remove/autoremove. */
 const REMOVE_REGEX = /^Remv\s+(\S+)\s\[([^\]]+)\](?:\s\[([^\]]+)\])?$/;
@@ -203,6 +217,77 @@ export class AptOutputParser {
         name: createPackageName(name!, version!, arch),
         status: "installed",
       });
+    }
+
+    return packages;
+  }
+
+  /**
+   * Parse the output of a failed `apt-get install <package...>` for the requested packages apt cannot
+   * install.
+   *
+   * Example output parsed (stdout, then stderr):
+   * ```text
+   * Package python is not available, but is referred to by another package.
+   * This may mean that the package is missing, has been obsoleted, or
+   * is only available from another source
+   * However the following packages replace it:
+   *   2to3 python2-minimal python2 dh-python python-is-python3
+   * E: Package 'python' has no installation candidate
+   * E: Unable to locate package nonexistentpackage
+   * ```
+   *
+   * @returns The packages apt cannot install, in output order. Empty when the output names none.
+   */
+  parseInstallFailure(
+    result: Pick<CommandResult, "stdout" | "stderr">,
+  ): NotInstallablePackage[] {
+    const lines = normText(`${result.stdout}\n${result.stderr}`).split("\n");
+    const alternatives = new Map<string, string[]>();
+    const packages: NotInstallablePackage[] = [];
+
+    for (const [index, line] of lines.entries()) {
+      const replaced = NOT_AVAILABLE_REGEX.exec(line);
+      const provided = VIRTUAL_PROVIDED_REGEX.exec(line);
+      if (replaced) {
+        // The replacements follow on one indented line after "However the following packages replace it:".
+        const header = lines.findIndex(
+          (candidate, at) => at > index && candidate.startsWith(REPLACE_HEADER),
+        );
+        const names = header === -1 ? "" : (lines[header + 1] ?? "");
+        alternatives.set(
+          replaced[1]!,
+          names.trim().split(/\s+/).filter(Boolean),
+        );
+      } else if (provided) {
+        // Each provider is an indented "<name> <version>" line.
+        const providers: string[] = [];
+        for (const next of lines.slice(index + 1)) {
+          const provider = /^\s+(\S+)/.exec(next);
+          if (!provider) {
+            break;
+          }
+          providers.push(provider[1]!);
+        }
+        alternatives.set(provided[1]!, providers);
+      }
+
+      const notFound = UNABLE_TO_LOCATE_REGEX.exec(line);
+      if (notFound) {
+        packages.push({
+          name: notFound[1]!,
+          reason: "not-found",
+          alternatives: [],
+        });
+      }
+      const noCandidate = NO_CANDIDATE_REGEX.exec(line);
+      if (noCandidate) {
+        packages.push({
+          name: noCandidate[1]!,
+          reason: "no-installation-candidate",
+          alternatives: alternatives.get(noCandidate[1]!) ?? [],
+        });
+      }
     }
 
     return packages;

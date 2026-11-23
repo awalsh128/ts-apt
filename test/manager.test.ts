@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { CommandExecutionError } from "../src/errors.js";
+import {
+  CommandExecutionError,
+  PackageNotInstallableError,
+} from "../src/errors.js";
 import { MockCommandRunner } from "./common.js";
 import {
   AptPackageManager,
@@ -198,6 +201,57 @@ describe("apt manager", () => {
 
     expect(runner.calls[0]?.args).toEqual(["-L", "vim:amd64"]);
     expect(files).toEqual(["/usr/bin/vim"]);
+  });
+
+  test("install of an uninstallable package throws PackageNotInstallableError naming it", async () => {
+    const runner = new MockCommandRunner();
+    runner.setError(
+      aptPath,
+      ["--quiet=0", "-y", ...lockTimeoutArgs, "install", "-f", "-qq", "python"],
+      new CommandExecutionError({
+        command: aptPath,
+        args: [],
+        exitCode: 100,
+        stdout:
+          "Package python is not available, but is referred to by another package.\nHowever the following packages replace it:\n  python2 python-is-python3\n",
+        stderr: "E: Package 'python' has no installation candidate\n",
+      }),
+    );
+
+    const failure = createManager(runner, true).install([pkg("python")]);
+
+    await expect(failure).rejects.toMatchObject({
+      name: "PackageNotInstallableError",
+      exitCode: 100,
+      packages: [
+        {
+          name: "python",
+          reason: "no-installation-candidate",
+          alternatives: ["python2", "python-is-python3"],
+        },
+      ],
+    });
+    await expect(failure).rejects.toBeInstanceOf(PackageNotInstallableError);
+  });
+
+  test("install failing for another reason rethrows the original error", async () => {
+    const runner = new MockCommandRunner();
+    const original = new CommandExecutionError({
+      command: aptPath,
+      args: [],
+      exitCode: 100,
+      stdout: "",
+      stderr: "E: Could not get lock /var/lib/dpkg/lock-frontend\n",
+    });
+    runner.setError(
+      aptPath,
+      ["--quiet=0", "-y", ...lockTimeoutArgs, "install", "-f", "-qq", "vim"],
+      original,
+    );
+
+    const failure = createManager(runner, true).install([pkg("vim")]);
+
+    await expect(failure).rejects.toBe(original);
   });
 
   test("install simulate enabled passes simulate flag", async () => {

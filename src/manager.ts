@@ -7,6 +7,7 @@ import type {
   PackageManager,
   PackageName,
 } from "./types.js";
+import { CommandExecutionError, PackageNotInstallableError } from "./errors.js";
 import { AptOutputParser } from "./parser.js";
 import winston from "winston";
 import { existsSync } from "node:fs";
@@ -185,16 +186,28 @@ export class AptPackageManager implements PackageManager {
       this.logger.info("No packages to install, skipping apt");
       return [];
     }
-    const result = await this.run(
-      this.mutatingBinary,
-      [
-        "install",
-        aptFlags.fixBroken,
-        "-qq", // Machine readable format
-        ...pkgs.map((pkg) => pkg.serialize()),
-      ],
-      timeoutMs,
-    );
+    let result: CommandResult;
+    try {
+      result = await this.run(
+        this.mutatingBinary,
+        [
+          "install",
+          aptFlags.fixBroken,
+          "-qq", // Machine readable format
+          ...pkgs.map((pkg) => pkg.serialize()),
+        ],
+        timeoutMs,
+      );
+    } catch (error) {
+      if (!(error instanceof CommandExecutionError)) {
+        throw error;
+      }
+      const notInstallable = this.parser.parseInstallFailure(error);
+      if (notInstallable.length === 0) {
+        throw error;
+      }
+      throw new PackageNotInstallableError(error, notInstallable);
+    }
     return this.parser.parseInstallOutput(result);
   }
 
