@@ -25,12 +25,17 @@ TypeScript library for APT package operations on Debian-based Linux systems. It 
 - 🧱 Typed errors for validation, availability and command failures
 - 🔒 Safe locking for mutating operations, with parallelism for read-only ones
 
+<!-- prettier-ignore -->
 <p align="center">
-  <a href="https://github.com/sponsors/awalsh128"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor"></a>
+  <a href="https://github.com/sponsors/awalsh128"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor awalsh128"></a>
 </p>
 
-If you find this project useful, please consider [sponsoring it](https://github.com/sponsors/awalsh128) and
-show some ❤️ for open source maintainers.
+<p align="center">
+  Free and open source, and kept up by one person.<br />
+  If it saves you time, <a href="https://github.com/sponsors/awalsh128">sponsor it monthly</a> or
+  <a href="https://github.com/sponsors/awalsh128?frequency=one-time">leave a small one-time tip</a>. Every bit
+  helps.
+</p>
 
 > [!IMPORTANT]
 > `sudo` is required for mutating operations. If the running user does not have sudo privilege the calls will
