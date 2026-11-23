@@ -14,7 +14,6 @@
   <a href="https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=main&branch=main" alt="main CI"></a>
   <a href="https://github.com/awalsh128/ts-apt/actions/workflows/ci.yml?query=branch%3Astaging"><img src="https://img.shields.io/github/actions/workflow/status/awalsh128/ts-apt/ci.yml?label=staging&branch=staging" alt="staging CI"></a>
   <a href="https://codecov.io/gh/awalsh128/ts-apt"><img src="https://codecov.io/gh/awalsh128/ts-apt/branch/main/graph/badge.svg" alt="codecov"></a>
-  <a href="https://github.com/awalsh128/ts-apt/blob/main/LICENSE"><img src="https://img.shields.io/github/license/awalsh128/ts-apt" alt="License"></a>
 </p>
 
 TypeScript library for APT package operations on Debian-based Linux systems. It supports both standard APT binaries and the [apt-fast](https://github.com/ilikenwf/apt-fast) bundled wrapper.
@@ -62,7 +61,7 @@ console.log(searchResults.length, installed.length);
 
 ## API Documentation
 
-The API reference is at [awalsh128.com/ts-apt](https://awalsh128.com/ts-apt/). Generate it locally with
+The API reference is at [awalsh128.com/ts-apt](https://www.awalsh128.com/ts-apt/). Generate it locally with
 `npm run docs:api` (output goes to the uncommitted `docs/api`).
 
 ## Testing
