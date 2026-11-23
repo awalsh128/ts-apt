@@ -194,6 +194,44 @@ describe("apt output parser", () => {
     expectPackagesOrError(result, parsed, expected);
   });
 
+  it.each([
+    [
+      "install_singlenotfound.log",
+      [{ name: "nonexistentpackage", reason: "not-found", alternatives: [] }],
+    ],
+    [
+      "install_nocandidate_replaced.log",
+      [
+        {
+          name: "python",
+          reason: "no-installation-candidate",
+          alternatives: [
+            "2to3",
+            "python2-minimal",
+            "python2",
+            "dh-python",
+            "python-is-python3",
+          ],
+        },
+      ],
+    ],
+    [
+      "install_virtual_providers.log",
+      [
+        {
+          name: "libvips",
+          reason: "no-installation-candidate",
+          alternatives: ["libvips42", "libvips42t64"],
+        },
+      ],
+    ],
+    ["install_singleinstalled.log", []],
+  ])("parseInstallFailure uses %s", (file, expected) => {
+    const parsed = parser.parseInstallFailure(deserialize(file));
+
+    expect(parsed).toEqual(expected);
+  });
+
   test("parseListInstalledOutput uses listinstalled.log", () => {
     const result = deserialize("listinstalled.log");
     const parsed = parser.parseListInstalledOutput(result);

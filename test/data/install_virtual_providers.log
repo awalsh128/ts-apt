@@ -1,0 +1,10 @@
+*** CMD_LINE /usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f -qq libvips
+*** EXIT_CODE 100
+*** STDOUT
+Package libvips is a virtual package provided by:
+  libvips42 8.12.1-1build1
+  libvips42t64 8.15.1-7ubuntu1
+You should explicitly select one to install.
+
+*** STDERR
+E: Package 'libvips' has no installation candidate

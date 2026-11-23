@@ -1,0 +1,11 @@
+*** CMD_LINE /usr/bin/apt-get --quiet=0 -y -o DPkg::Lock::Timeout=-1 install -f -qq python
+*** EXIT_CODE 100
+*** STDOUT
+Package python is not available, but is referred to by another package.
+This may mean that the package is missing, has been obsoleted, or
+is only available from another source
+However the following packages replace it:
+  2to3 python2-minimal python2 dh-python python-is-python3
+
+*** STDERR
+E: Package 'python' has no installation candidate
