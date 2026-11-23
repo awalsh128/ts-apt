@@ -147,6 +147,33 @@ export interface CommandRunner {
   ): Promise<CommandResult>;
 }
 
+/** A secondary link that follows an {@link Alternative} when that alternative is selected. */
+export interface AlternativeSlave {
+  /** Name of the slave within its alternatives group (e.g. `editor.1.gz`). */
+  name: string;
+  /** Path of the link `update-alternatives` manages (e.g. `/usr/share/man/man1/editor.1.gz`). */
+  link: string;
+  /** File the link points to when the owning alternative is selected. */
+  path: string;
+}
+
+/**
+ * One alternative registered with `update-alternatives`, as created by
+ * `update-alternatives --install <link> <name> <path> <priority> [--slave <link> <name> <path>]...`.
+ */
+export interface Alternative {
+  /** Name of the alternatives group (e.g. `editor`). Several alternatives share a group. */
+  name: string;
+  /** Generic link the group manages (e.g. `/usr/bin/editor`). */
+  link: string;
+  /** File this alternative points the link to (e.g. `/usr/bin/vim.tiny`). */
+  path: string;
+  /** Priority used to pick the best alternative when the group is in automatic mode. */
+  priority: number;
+  /** Slave links this alternative provides. Empty when it has none. */
+  slaves: AlternativeSlave[];
+}
+
 /**
  * Package manager contract implemented by APT and APT-fast managers.
  */
@@ -324,6 +351,44 @@ export interface PackageManager {
    * @param pkgs Package names.
    */
   getPackageInfo(pkgs: readonly PackageName[]): Promise<PackageInfo[]>;
+
+  /**
+   * Lists every alternative registered on the system via `update-alternatives --get-selections` followed by
+   * `update-alternatives --query <name>` for each group.
+   *
+   * `dpkg-query -L` does not list the links `update-alternatives` creates, since a package's `postinst` makes
+   * them. To find the alternatives a package created, keep the ones whose `path` is in
+   * {@link PackageManager.listInstalledFiles} for that package.
+   *
+   * Example output (`update-alternatives --query editor`, parsed):
+   * ```text
+   * Name: editor
+   * Link: /usr/bin/editor
+   * Slaves:
+   *  editor.1.gz /usr/share/man/man1/editor.1.gz
+   * Status: auto
+   *
+   * Alternative: /usr/bin/vim.tiny
+   * Priority: 15
+   * Slaves:
+   *  editor.1.gz /usr/share/man/man1/vim.1.gz
+   * ```
+   *
+   * @returns One entry per registered alternative, in group then registration order.
+   */
+  listAlternatives(): Promise<Alternative[]>;
+
+  /**
+   * Registers alternatives via one `update-alternatives --install` per entry, running through `sudo -n` when
+   * the process is not root.
+   *
+   * Registering an alternative that already exists refreshes it, so replaying is safe. A group in manual mode
+   * keeps its selection.
+   *
+   * @param alternatives Alternatives to register, in the order given. An empty list runs nothing.
+   * @throws CommandExecutionError When `update-alternatives` fails, e.g. the alternative's path is missing.
+   */
+  installAlternatives(alternatives: readonly Alternative[]): Promise<void>;
 
   /**
    * Cleans local apt cache data via `<mutating-binary> autoclean`.

@@ -778,3 +778,133 @@ describe("createPackageManager", () => {
     );
   });
 });
+
+describe("alternatives", () => {
+  const updateAlternatives = Binary.UpdateAlternatives.path;
+  const alternative = {
+    name: "editor",
+    link: "/usr/bin/editor",
+    path: "/bin/nano",
+    priority: 40,
+    slaves: [
+      {
+        name: "editor.1.gz",
+        link: "/usr/share/man/man1/editor.1.gz",
+        path: "/usr/share/man/man1/nano.1.gz",
+      },
+    ],
+  };
+  const installArgs = [
+    "--quiet",
+    "--install",
+    "/usr/bin/editor",
+    "editor",
+    "/bin/nano",
+    "40",
+    "--slave",
+    "/usr/share/man/man1/editor.1.gz",
+    "editor.1.gz",
+    "/usr/share/man/man1/nano.1.gz",
+  ];
+  const createAlternativesManager = (
+    runner: MockCommandRunner,
+    isRoot: boolean,
+  ) =>
+    new AptPackageManager(
+      false,
+      runner,
+      new AptOutputParser(logger),
+      logger,
+      false,
+      isRoot,
+    );
+
+  test("listAlternatives queries each group from the selections in order", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(updateAlternatives, ["--get-selections"], {
+      stdout: "editor auto /bin/nano\nawk auto /usr/bin/gawk\n",
+      stderr: "",
+      exitCode: 0,
+    });
+    runner.setResult(updateAlternatives, ["--query", "editor"], {
+      stdout:
+        "Name: editor\nLink: /usr/bin/editor\nStatus: auto\n\nAlternative: /bin/nano\nPriority: 40\n",
+      stderr: "",
+      exitCode: 0,
+    });
+    runner.setResult(updateAlternatives, ["--query", "awk"], {
+      stdout:
+        "Name: awk\nLink: /usr/bin/awk\nStatus: auto\n\nAlternative: /usr/bin/gawk\nPriority: 10\n",
+      stderr: "",
+      exitCode: 0,
+    });
+
+    const alternatives = await createAlternativesManager(
+      runner,
+      true,
+    ).listAlternatives();
+
+    expect(alternatives.map((item) => item.path)).toEqual([
+      "/bin/nano",
+      "/usr/bin/gawk",
+    ]);
+    expect(runner.calls.map((call) => call.args)).toEqual([
+      ["--get-selections"],
+      ["--query", "editor"],
+      ["--query", "awk"],
+    ]);
+  });
+
+  test("installAlternatives as root registers each alternative with its slaves", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(updateAlternatives, installArgs, {
+      stdout: "",
+      stderr: "",
+      exitCode: 0,
+    });
+
+    await createAlternativesManager(runner, true).installAlternatives([
+      alternative,
+    ]);
+
+    expect(runner.calls).toHaveLength(1);
+    expect(runner.calls[0]?.command).toBe(updateAlternatives);
+    expect(runner.calls[0]?.args).toEqual(installArgs);
+  });
+
+  test("installAlternatives as non-root runs through sudo without prompting", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(
+      "sudo",
+      ["-n", "env", ...debianConfEnv, updateAlternatives, ...installArgs],
+      { stdout: "", stderr: "", exitCode: 0 },
+    );
+
+    await createAlternativesManager(runner, false).installAlternatives([
+      alternative,
+    ]);
+
+    expect(runner.calls[0]?.command).toBe("sudo");
+  });
+
+  test("installAlternatives empty list runs nothing", async () => {
+    const runner = new MockCommandRunner();
+
+    await createAlternativesManager(runner, true).installAlternatives([]);
+
+    expect(runner.calls).toEqual([]);
+  });
+
+  test("listAlternatives as non-root runs without sudo", async () => {
+    const runner = new MockCommandRunner();
+    runner.setResult(updateAlternatives, ["--get-selections"], {
+      stdout: "",
+      stderr: "",
+      exitCode: 0,
+    });
+
+    await createAlternativesManager(runner, false).listAlternatives();
+
+    expect(runner.calls[0]?.command).toBe(updateAlternatives);
+  });
+});

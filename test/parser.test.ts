@@ -528,4 +528,85 @@ describe("apt output parser", () => {
 
     expectPackagesOrError(result, parsed, expected);
   });
+
+  test("parseAlternativeNamesOutput selections returns the group names", () => {
+    const names = parser.parseAlternativeNamesOutput(
+      deserialize("alternatives_selections.log"),
+    );
+
+    expect(names).toEqual([
+      "animate",
+      "animate-im7",
+      "arptables",
+      "awk",
+      "builtins.7.gz",
+    ]);
+  });
+
+  test("parseAlternativesQueryOutput group without slaves returns its alternative", () => {
+    const alternatives = parser.parseAlternativesQueryOutput(
+      deserialize("alternatives_query_libblas.log"),
+    );
+
+    expect(alternatives).toEqual([
+      {
+        name: "libblas.so.3-x86_64-linux-gnu",
+        link: "/usr/lib/x86_64-linux-gnu/libblas.so.3",
+        path: "/usr/lib/x86_64-linux-gnu/blas/libblas.so.3",
+        priority: 10,
+        slaves: [],
+      },
+    ]);
+  });
+
+  test("parseAlternativesQueryOutput group with slaves returns each alternative with the slave links from the header", () => {
+    const alternatives = parser.parseAlternativesQueryOutput(
+      deserialize("alternatives_query_editor.log"),
+    );
+
+    expect(alternatives.map((alternative) => alternative.path)).toEqual([
+      "/bin/ed",
+      "/bin/nano",
+      "/usr/bin/vim.basic",
+      "/usr/bin/vim.tiny",
+    ]);
+    expect(alternatives).toContainEqual({
+      name: "editor",
+      link: "/usr/bin/editor",
+      path: "/bin/nano",
+      priority: 40,
+      slaves: [
+        {
+          name: "editor.1.gz",
+          link: "/usr/share/man/man1/editor.1.gz",
+          path: "/usr/share/man/man1/nano.1.gz",
+        },
+      ],
+    });
+  });
+
+  test("parseAlternativesQueryOutput negative priority returns the negative number", () => {
+    const alternatives = parser.parseAlternativesQueryOutput(
+      deserialize("alternatives_query_editor.log"),
+    );
+
+    expect(alternatives[0]?.priority).toBe(-100);
+  });
+
+  test.each([
+    ["no header fields", "Status: auto\n"],
+    [
+      "an alternative without a priority",
+      "Name: x\nLink: /usr/bin/x\n\nAlternative: /usr/bin/y\n",
+    ],
+  ])(
+    "parseAlternativesQueryOutput %s throws a validation error",
+    (_case, stdout) => {
+      const result = { cmdLine: "", stdout, stderr: "", exitCode: 0 };
+
+      expect(() => parser.parseAlternativesQueryOutput(result)).toThrow(
+        ValidationError,
+      );
+    },
+  );
 });

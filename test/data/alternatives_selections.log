@@ -1,0 +1,9 @@
+*** CMD_LINE /usr/bin/update-alternatives --get-selections
+*** EXIT_CODE 0
+*** STDOUT
+animate                        auto     /usr/bin/animate-im7.q16
+animate-im7                    auto     /usr/bin/animate-im7.q16
+arptables                      auto     /usr/sbin/arptables-nft
+awk                            auto     /usr/bin/gawk
+builtins.7.gz                  auto     /usr/share/man/man7/bash-builtins.7.gz
+*** STDERR

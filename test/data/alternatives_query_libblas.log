@@ -1,0 +1,12 @@
+*** CMD_LINE /usr/bin/update-alternatives --query libblas.so.3-x86_64-linux-gnu
+*** EXIT_CODE 0
+*** STDOUT
+Name: libblas.so.3-x86_64-linux-gnu
+Link: /usr/lib/x86_64-linux-gnu/libblas.so.3
+Status: auto
+Best: /usr/lib/x86_64-linux-gnu/blas/libblas.so.3
+Value: /usr/lib/x86_64-linux-gnu/blas/libblas.so.3
+
+Alternative: /usr/lib/x86_64-linux-gnu/blas/libblas.so.3
+Priority: 10
+*** STDERR
