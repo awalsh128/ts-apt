@@ -8,7 +8,8 @@ const tsconfigRootDir = fileURLToPath(new URL(".", import.meta.url));
 
 export default [
   {
-    ignores: ["dist/**", "node_modules/**"],
+    // scripts/repo-settings is synced from the powerpack bootstrap set; keep it byte-identical.
+    ignores: ["dist/**", "node_modules/**", "scripts/repo-settings/**"],
   },
   ...tsPlugin.configs["flat/recommended-type-checked"].map((config) => ({
     ...config,
