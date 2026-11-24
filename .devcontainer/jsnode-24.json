@@ -6,10 +6,12 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": [
-        "vitest-dev.vitest-vscode"
-      ]
+      "extensions": ["vitest-dev.vitest-vscode", "dbaeumer.vscode-eslint"],
+      "settings": {
+        "js/ts.tsdk.path": "node_modules/typescript/lib",
+        "js/ts.tsdk.promptToUseWorkspaceVersion": false
+      }
     }
   },
-  "postCreateCommand": "npm install"
-}   
+  "postCreateCommand": "npm ci"
+}

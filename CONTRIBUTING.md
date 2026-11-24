@@ -9,12 +9,13 @@ This document contains maintainer-oriented notes that are intentionally separate
 > may be outdated. Ensure all type checks are performed with `npx tsc` and that `npm install` is executed so
 > this version is installed in the context of your project.
 
-`./scripts/dev` containing all development related concerns. To get started after cloning the repository you
-can run `./scripts/dev/setup_devenv.mts run --ide [your IDE]`. This will setup some of the common settings and
-extensions typically used. You do not have to use this though.
+To get started after cloning the repository, run `npm ci` (or open the repository in the dev container, which
+runs it for you). The `prepare` script installs the git hooks and builds the library. The dev container
+([.devcontainer/jsnode-24.json](.devcontainer/jsnode-24.json)) sets the editor extensions and TypeScript
+settings. The Node version lives in `.node_ver` and is used by CI and the dev container tests.
 
-To quickly establish credentials you can run `./scripts/dev/gh_auth.sh`. It is just a helper script to get you
-authenticated with GitHub.
+To quickly establish credentials you can run `npm run gh:auth`. It is just a helper to get you authenticated
+with GitHub.
 
 ## Workflow Concerns
 
@@ -127,14 +128,11 @@ git commit -m "feat!: remove deprecated API"
 
 ## Repository Scripts
 
-Repository scripts are grouped under [scripts/dev](scripts/dev) and [scripts/ops](scripts/ops).
+Repository scripts are grouped under [scripts/dev](scripts/dev), [scripts/ops](scripts/ops) and [scripts/repo-settings](scripts/repo-settings).
 
-- [check_latest_action_pin.mts](scripts/ops/check_latest_action_pin.mts): checks whether pinned GitHub Action refs are up to date against upstream releases.
 - [create_testcase_logs.mts](scripts/dev/create_testcase_logs.mts): regenerates command execution logs used by integration/parser fixtures.
 - [hotfix_pr.mts](scripts/dev/hotfix_pr.mts): automates hotfix branch creation and PR creation/update flow.
-- [gh_sync.mts](scripts/dev/gh_sync.mts): synchronizes repository settings, rulesets, variables, and tags JSON. **These are not for source control** since they leak information.
-- [setup_devenv.mts](scripts/dev/setup_devenv.mts): bootstraps local developer dependencies, workspace settings, and npm audit remediation.
-- [node_ver.mts](scripts/dev/node_ver.mts): verifies or updates Node version alignment across repo files and local Node installation.
+- [gh-sync.mts](scripts/repo-settings/gh-sync.mts): synchronizes repository settings, rulesets, variables, and tags JSON. **These are not for source control** since they leak information.
 
 ## Integration Test Notes
 
@@ -154,9 +152,10 @@ Integration test suite is [test/ubuntu.integration.test.ts](test/ubuntu.integrat
 
 - Node.js baseline is managed in [package.json](package.json) engines.
 - Keep `package-lock.json` committed and synchronized with dependency changes.
+- Dependabot (`github-actions` ecosystem in [.github/dependabot.yml](.github/dependabot.yml)) proposes action SHA updates.
 - Prefer updating workflow action SHAs with care and validate in CI.
 - Prefer full commit SHA pinning for all third-party GitHub Actions.
-- Repository settings, rulesets, variables, and tags are synchronized via `scripts/dev/gh_sync.mts`.
+- Repository settings, rulesets, variables, and tags are synchronized via `scripts/repo-settings/gh-sync.mts`.
 - Repository settings are tracked in [.github/repo-settings.json](.github/repo-settings.json) and can be applied with `npm run repo:settings:upload`.
 - Repository rulesets are tracked in [.github/repo-rulesets.json](.github/repo-rulesets.json) and can be applied with `npm run repo:rulesets:upload`.
 - Repository variables are tracked in `.github/repo-vars.json` and can be applied with `npm run repo:vars:upload`.
